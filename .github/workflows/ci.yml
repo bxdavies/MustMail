@@ -97,6 +97,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
   build-and-push-image:
+    needs: version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
