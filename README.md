@@ -248,10 +248,6 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
-
-Distributed under the AGPL-3.0 License. See `LICENSE.txt` for more information.
-
 ## Acknowledgments
 
 [Cain O'Sullivan](https://github.com/cosullivan) - [SmtpServer](https://github.com/cosullivan/SmtpServer) developer (an SMTP Server component written in C#)
@@ -259,3 +255,7 @@ Distributed under the AGPL-3.0 License. See `LICENSE.txt` for more information.
 [balanv](https://stackoverflow.com/users/651016/balanv) - [StackOverflow Answer- How to check if SMTP is working from commandline (Linux) ](https://stackoverflow.com/a/11988455)
 
 [Georg Felgitsch](https://github.com/georgjf) - [SMTPtool](https://github.com/georgjf/SMTPtool) A slim .NET based UI tool to communicate with SMTP servers and to quickly compose, mail and remail messages 
+
+## License
+
+Distributed under the AGPL-3.0 License. See `LICENSE.txt` for more information.
