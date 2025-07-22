@@ -1,6 +1,4 @@
-﻿// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable ClassNeverInstantiated.Global
-namespace MustMail;
+﻿namespace MustMail;
 
 public class Configuration
 {

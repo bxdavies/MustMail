@@ -1,16 +1,16 @@
 ﻿using System.Buffers;
-using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Users.Item.SendMail;
 using MimeKit;
+using Serilog;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 
 namespace MustMail;
 
-public class MessageHandler(GraphServiceClient graphClient, ILogger logger, string sendFrom) : MessageStore
+public class MessageHandler(GraphServiceClient graphClient, ILogger logger,  string sendFrom) : MessageStore
 {
     public override async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
@@ -35,7 +35,7 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
         // If message is null then return an error
         if (message == null)
         {
-            logger.LogWarning("Unable to read message as Mime Message!");
+            Log.Warning("Unable to read message as Mime Message!");
             return SmtpResponse.SyntaxError;
         }
 
@@ -76,7 +76,7 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
         await graphClient.Users[sendFrom].SendMail.PostAsync(requestBody, cancellationToken: cancellationToken);
         
         // Log success message
-        logger.LogInformation("The email with the subject `{MessageSubject}` was received and sent to `{MessageTo}` as `{From}`!", message.Subject, message.To, sendFrom);
+        logger.Information("The email with the subject `{MessageSubject}` was received and sent to `{MessageTo}` as `{From}`!", message.Subject, message.To, sendFrom);
        
         // Return email received successfully
         return SmtpResponse.Ok;
