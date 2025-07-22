@@ -50,7 +50,7 @@ Application sends email → MustMail receives the email → MustMail sends the e
 
 ## Installation
 > [!CAUTION]
-> It is not recommended to set the SMTP Host to anything other than `localhost` because the server does not have authentication or encryption!
+> Do not set SMTP Host to anything other than `localhost` because the server does not have authentication or encryption!
 
 ### Binary
 
@@ -139,7 +139,7 @@ Run MustMail in a container with these simple steps.
 #### Docker run
 Start MustMail listening on localhost port 9025. Override any environment variable below to match your setup.
 ```bash
-docker run --name MustMail -p 9025:9025 \
+docker run --name MustMail
 -e Smtp__Host="localhost" \
 -e Smtp__Port=9025 \
 -e Graph__TenantId="" \
@@ -159,8 +159,6 @@ services:
   mustmail:
     image: ghcr.io/bxdavies/mustmail
     container_name: mustmail
-    ports:
-      - 9025:9025
     environment:
       - Smtp__Host="localhost"
       - Smtp__Port=9025
