@@ -54,7 +54,18 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
         }
 
         // Create list of recipients
-        List<Recipient> recipients = message.To.Select(address => new Recipient { EmailAddress = new EmailAddress { Address = address.ToString() } }).ToList();
+        List<Recipient> recipients = message.To
+        .OfType<MimeKit.MailboxAddress>() // only process mailbox addresses
+        .Select(addr => new Recipient
+        {
+            EmailAddress = new EmailAddress
+            {
+                Address = addr.Address,      // plain email only
+                Name = addr.Name             // optional, can be null or empty
+            }
+        }).ToList();
+
+        logger.Debug("Recipients list: {Recipients}", string.Join(", ", recipients.Select(r => r.EmailAddress.Address)));
 
         // Create message 
         SendMailPostRequestBody requestBody = new()
@@ -67,49 +78,23 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
 
         };
 
-        // Prefer HTML if available
-        if (!string.IsNullOrEmpty(message.HtmlBody))
+        // If message does contain a HTML body then use it
+        if (message.HtmlBody != null)
         {
-            logger.Debug($"HTML Body:\n{message.HtmlBody}");
             requestBody.Message.Body = new ItemBody
             {
                 ContentType = BodyType.Html,
                 Content = message.HtmlBody
             };
         }
-        // If neither HtmlBody nor TextBody are populated, we need to dig deeper
-        if (message.Body is TextPart textPart)
-        {
-            logger.Debug($"Text part:\n{textPart.Text}");
-            requestBody.Message.Body = new ItemBody
-            {
-                ContentType = BodyType.Text,
-                Content = textPart.Text
-            };
-        }
-        else if (message.Body is Multipart multipart)
-        {
-            logger.Debug("Multipart");
-            // Try to pick the first text/* part
-            foreach (var part in multipart.OfType<TextPart>())
-            {
-                requestBody.Message.Body = new ItemBody
-                {
-                    ContentType = part.IsHtml ? BodyType.Html : BodyType.Text,
-                    Content = part.Text
-                };
-            }
-        }
+        // Else use the text body instead
         else
         {
-            // Nothing usable found
-            logger.Warning("No usable body found in message with subject {Subject}", message.Subject);
             requestBody.Message.Body = new ItemBody
             {
                 ContentType = BodyType.Text,
-                Content = string.Empty
+                Content = message.TextBody
             };
-
         }
 
         try
