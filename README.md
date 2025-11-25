@@ -41,11 +41,11 @@ Application sends email → MustMail receives the email → MustMail sends the e
 5. Choose 'Microsoft Graph', then select 'Application permissions', then find `Mail.Send` and tick it. Do the same for `User.Read.All` and `MailboxSettings.Read`. Finally, press 'Add permissions'.
 6. Grant admin consent by clicking 'Grant admin consent for Tenant Name' (where Tenant Name is the name of your Microsoft 365 tenant). Hit 'Yes' at confirmation.
 7. Navigate to 'Certificates & secrets', choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value.
-    > [!TIP]
-    > Set a reminder in your calendar now for 24 months' time to renew and update this secret.
+> [!TIP]
+> Set a reminder in your calendar now for 24 months' time to renew and update this secret.
 8. Copy the secret value and make note of it.
-    > [!IMPORTANT]
-    > The secret value is only displayed once.
+> [!IMPORTANT]
+> The secret value is only displayed once.
 9. The Client ID and Tenant ID can be found in the overview tab.
 
 ## Installation
