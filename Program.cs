@@ -79,8 +79,9 @@ GraphServiceClient graphClient = new(clientSecretCredential, new[] { "https://gr
 // SendFrom checks
 try
 {
-    User? user = await graphClient.Users[config.SendFrom].GetAsync();
-     
+
+    User? user = await graphClient.Users[config.SendFrom].GetAsync(rc => rc.QueryParameters.Select = new[] { "displayName", "mail", "mailboxSettings" });
+
     if (user == null)
     {
         Log.Error("The specifed SendFrom address: '{From}' does not exist in the tenant!", config.SendFrom);
@@ -98,10 +99,12 @@ try
         Log.Warning("Mailbox settings for user '{From}' not found. Sending mail might not be available.", config.SendFrom);
     }
 
+    Log.Information("The user '{From}' has an email address configured and can send mail, the display name for the SendFrom address is: '{DisplayName}'", config.SendFrom, user.DisplayName);
+
 }
 catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
 {
-    Log.Error("The specifed SendFrom address: '{From}' does not exist in the tenant!\nThe Micrsoft Graph error message is: '{error}'", config.SendFrom, error.Message);
+    Log.Error("The specifed SendFrom address: '{From}' does not exist in the tenant! The Micrsoft Graph error message is: '{Error}'", config.SendFrom, error.Message);
     Environment.Exit(1);
 }
 
