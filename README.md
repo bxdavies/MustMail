@@ -30,7 +30,7 @@ Application sends email → MustMail receives the email → MustMail sends the e
 
 ## Prerequisites
 - A Microsoft 365 Tenant.
-- A user with appropriate admin roles (Global Administrator, Privileged Role Administrator, Application Administrator, or Cloud Application Administrator) who can grant Application `Mail.Send` and `User.Read.All` API permissions.
+- A user with appropriate admin roles (Global Administrator, Privileged Role Administrator, Application Administrator, or Cloud Application Administrator) who can grant Application `Mail.Send`, `User.Read.All` and `MailboxSettings.Read` API permissions.
 - The email address used as the SendFrom address must be a valid address within the tenant.
 
 ## Azure App Creation
@@ -38,7 +38,7 @@ Application sends email → MustMail receives the email → MustMail sends the e
 2. Click 'New Registration'.
 3. Enter a name and leave everything else as default.
 4. Navigate to 'API permissions' and click 'Add a permission'.
-5. Choose 'Microsoft Graph', then select 'Application permissions', then find `Mail.Send` and tick it. Do the same for `User.Read.All`. Finally, press 'Add permissions'.
+5. Choose 'Microsoft Graph', then select 'Application permissions', then find `Mail.Send` and tick it. Do the same for `User.Read.All` and `MailboxSettings.Read`. Finally, press 'Add permissions'.
 6. Grant admin consent by clicking 'Grant admin consent for Tenant Name' (where Tenant Name is the name of your Microsoft 365 tenant). Hit 'Yes' at confirmation.
 7. Navigate to 'Certificates & secrets', choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value.
     > [!TIP]
