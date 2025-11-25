@@ -46,6 +46,8 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
         // Debug log for the Mime Message
         logger.Debug($"Mime Message:\n {message.ToString()}");
 
+        Console.WriteLine(message.Attachments.Count());
+
         // If message is null then return an error
         if (message == null)
         {
@@ -75,9 +77,8 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
                 Subject = message.Subject,
                 ToRecipients = recipients
             }
-
         };
-
+        
         // If message does contain a HTML body then use it
         if (message.HtmlBody != null)
         {
@@ -95,6 +96,28 @@ public class MessageHandler(GraphServiceClient graphClient, ILogger logger, stri
                 ContentType = BodyType.Text,
                 Content = message.TextBody
             };
+        }
+
+        // If the message has attachments then add them
+        if (message.Attachments.Any())
+        {
+            requestBody.Message.Attachments ??= new List<Attachment>();
+
+            foreach (MimeEntity mimeEntity in message.Attachments)
+            {
+                if (mimeEntity is MimePart mimePart)
+                {
+                    using var memory = new MemoryStream();
+                    mimePart.Content?.DecodeTo(memory);
+
+                    requestBody.Message.Attachments.Add(new FileAttachment
+                    {
+                        OdataType = "#microsoft.graph.fileAttachment",
+                        Name = mimePart.FileName,
+                        ContentBytes = memory.ToArray()
+                    });
+                }
+            }
         }
 
         try
