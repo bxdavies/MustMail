@@ -1,0 +1,216 @@
+﻿using Isopoh.Cryptography.Argon2;
+using Microsoft.JSInterop;
+using MustMail.Db;
+using System.Text.Json;
+
+namespace MustMail.Components.Pages
+{
+    public class AdminBase : ComponentBase
+    {
+        // Page variables
+        protected MudForm? SettingsForm;
+        protected Configuration Config = null!;
+        protected string _newAllowedFrom = "";
+        protected string _newAllowedTo = "";
+
+        protected List<User> Users = [];
+        protected MudDataGrid<User> UserGrid = default!;
+
+        protected List<SMTPAccount> SMTPAccounts = [];
+        protected MudDataGrid<SMTPAccount> SMTPAccountGrid = default!;
+
+        // Component parameters and dependency injection
+        [Inject] public IJSRuntime JS { get; set; } = default!;
+        [Inject] public ISnackbar Snackbar { get; set; } = default!;
+        [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = default!;
+        [Inject] public IConfiguration Configuration { get; set; } = default!;
+        [CascadingParameter] private Action<string>? SetTitle { get; set; }
+
+        // Lifecycle method called after parameters and property values are set
+        protected override async Task OnInitializedAsync()
+        {
+            // Set page title
+            SetTitle?.Invoke("Admin");
+
+            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+
+            Config = Configuration.Get<Configuration>()!;
+
+            Users = await dbContext.User.ToListAsync();
+            SMTPAccounts = await dbContext.SMTPAccount.ToListAsync();
+        }
+
+        // New SMTP account - start editing a new SMTP account in form modal
+        protected async Task NewSMTPAccount()
+        {
+            await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount() { Name = "", Password = "", Description = "" });
+        }
+
+        // Remove SMTP account - remove acount
+        protected async Task RemoveSMTPAccount(SMTPAccount item)
+        {
+            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+
+            _ = SMTPAccounts.Remove(item);
+
+            _ = dbContext.SMTPAccount.Remove(item);
+            _ = await dbContext.SaveChangesAsync();
+        }
+
+        // SMTP account item changes - called when creating or editing a SMTP account
+        protected async Task<DataGridEditFormAction> SMTPAccountItemChanges(SMTPAccount item)
+        {
+            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+
+            // New item
+            if (item.Id == 0)
+            {
+                // Hash the password
+                item.Password = Argon2.Hash(item.Password);
+
+                // Add the account to the database
+                _ = await dbContext.SMTPAccount.AddAsync(item);
+                _ = await dbContext.SaveChangesAsync();
+
+                // Add the account to the grid
+                SMTPAccounts.Add(item);
+
+                _ = Snackbar.Add($"SMTP Account added successfully!", Severity.Success);
+
+                return DataGridEditFormAction.Close;
+            }
+
+            // Get item from database
+            SMTPAccount? SMTPAccount = await dbContext.SMTPAccount.FindAsync(item.Id);
+
+            if (SMTPAccount == null)
+                return DataGridEditFormAction.Close;
+
+            // If the user has updated the password we need to hash it
+            if (item.Password != SMTPAccount.Password)
+                item.Password = Argon2.Hash(item.Password);
+
+            // Update values in DB
+            dbContext.Entry(SMTPAccount).CurrentValues.SetValues(item);
+
+            _ = await dbContext.SaveChangesAsync();
+
+            _ = Snackbar.Add($"SMTP Account updated successfully!", Severity.Success);
+
+            return DataGridEditFormAction.Close;
+        }
+
+        // Remove user - remove user but check their is at least one admin
+        protected async Task RemoveUser(User item)
+        {
+            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+
+            // At least one admin check
+            int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
+            if (numberOfAdminUsers == 1 && item.Admin)
+            {
+                _ = Snackbar.Add("There must be at least one admin!", Severity.Error);
+                return;
+            }
+
+            _ = Users.Remove(item);
+
+            // Create file path
+            string path = Path.Combine(
+               AppContext.BaseDirectory,
+               "maildrop",
+               item.Id);
+
+            // Remove users emails
+            Directory.Delete(path);
+
+            _ = dbContext.User.Remove(item);
+            _ = await dbContext.SaveChangesAsync();
+        }
+
+        // User item changed - called when editing a user
+        protected async Task<DataGridEditFormAction> UserItemChanges(User item)
+        {
+            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+
+            User? user = await dbContext.User.FindAsync(item.Id);
+            if (user == null)
+                return DataGridEditFormAction.Close;
+
+            // At least one admin check
+            int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
+            if (numberOfAdminUsers == 1 && item.Admin == false && user.Admin == true)
+            {
+                _ = Snackbar.Add("There must be at least one admin!", Severity.Error);
+                item.Admin = true;
+                return DataGridEditFormAction.Close;
+            }
+
+            // Update values in DB
+            dbContext.Entry(user).CurrentValues.SetValues(item);
+
+            _ = await dbContext.SaveChangesAsync();
+
+            _ = Snackbar.Add($"User updated successfully!", Severity.Success);
+
+            return DataGridEditFormAction.Close;
+        }
+
+        // Add allowed from - add new allowed from to config
+        protected void AddAllowedFrom()
+        {
+            string v = (_newAllowedFrom ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(v)) return;
+
+            Config.MustMail.AllowedFrom.Add(v);
+            _newAllowedFrom = "";
+        }
+
+        // Remove allowed from - remove allowed from
+        protected void RemoveAllowedFrom(string value)
+        {
+            _ = (Config.MustMail.AllowedFrom?.Remove(value));
+        }
+
+        // Add allowed to - add new allowed to 
+        protected void AddAllowedTo()
+        {
+            string v = (_newAllowedTo ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(v)) return;
+
+            Config.MustMail.AllowedTo.Add(v);
+            _newAllowedTo = "";
+        }
+
+        // Removed allowed to - remove allowed to from to config
+        protected void RemoveAllowedTo(string value)
+        {
+            _ = (Config.MustMail.AllowedTo?.Remove(value));
+        }
+
+        // Validate and save - validate from and save to appsettings.json
+        protected async Task ValidateAndSave()
+        {
+            if (SettingsForm is null) return;
+
+            await SettingsForm.ValidateAsync();
+
+            if (!SettingsForm.IsValid)
+            {
+                _ = Snackbar.Add("Fix validation errors before saving.", Severity.Error);
+                return;
+            }
+
+            File.WriteAllText(@"appsettings.json", JsonSerializer.Serialize(Config, JsonDefaults.Options));
+
+            _ = Snackbar.Add("Settings saved.", Severity.Success);
+        }
+
+        // Copy to clipboard - Using JavaScript copy the string to the clipboard
+        protected async Task CopyToClipboard(string value)
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", value);
+            _ = Snackbar.Add("Environment variable copied", Severity.Success);
+        }
+    }
+}

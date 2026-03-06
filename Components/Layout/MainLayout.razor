@@ -1,0 +1,141 @@
+﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationState
+@inject NavigationManager Nav
+
+<MudThemeProvider @ref="_mudThemeProvider" Theme="_mustMailTheme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="4">
+
+        <MudStack Row Justify="Justify.SpaceBetween" Style="width: 100%">
+            <a href="/">
+                <MudImage Src="logo-transparent.png" Height="64" />
+            </a>
+            <MudText Typo="Typo.h1">@_title</MudText>
+            <AuthorizeView>
+                <Authorized Context="auth">
+                    <form method="post" action="/authentication/logout">
+
+                        <MudButton ButtonType="ButtonType.Submit" Class="my-3"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.Logout">
+                            Sign out
+                        </MudButton>
+                    </form>
+                </Authorized>
+
+                <NotAuthorized>
+                    <form method="get" action="/authentication/login">
+                        <AntiforgeryToken />
+
+                        <MudButton ButtonType="ButtonType.Submit" Class="my-3"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Success"
+                                   StartIcon="@Icons.Material.Filled.Login">
+                            Sign in
+                        </MudButton>
+                    </form>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudStack>
+    </MudAppBar>
+    <MudMainContent>
+          <MudContainer MaxWidth="MaxWidth.ExtraLarge" class="pt-2 pb-4">
+            <CascadingValue Value="(Action<string>)SetTitle">
+                @Body
+            </CascadingValue>
+          </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code{
+    private string? _name = "Unknown User";
+    private bool _isDarkMode;
+    private MudThemeProvider _mudThemeProvider = default!;
+    private object _formModel = new();
+
+    // Default title
+    private string _title = "Must Mail";
+
+    // Function to update page title from within a page
+    void SetTitle(string title)
+    {
+        _title = title;
+        StateHasChanged();
+    }
+
+
+    protected async override Task OnParametersSetAsync()
+    {
+        AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _name = user?.Identity?.Name ?? "";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
+            await _mudThemeProvider.WatchSystemDarkModeAsync(OnSystemDarkModeChanged);
+            StateHasChanged();
+        }
+    }
+
+
+    private Task OnSystemDarkModeChanged(bool newValue)
+    {
+        _isDarkMode = newValue;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+
+    private MudTheme _mustMailTheme = new MudTheme()
+    {
+        PaletteDark = new PaletteDark()
+        {
+            AppbarBackground = "#BFBBAE",
+            AppbarText = "rgba(66, 66, 66, 1)",
+            Primary = "#e1dfd3",
+            Secondary = "#4C7EFF"
+        },
+        PaletteLight = new PaletteLight()
+        {
+            AppbarBackground = "#e1dfd3",
+            AppbarText = "rgba(66, 66, 66, 1)",
+            Primary = "#C9A84A",
+            Secondary = "#4C7EFF"
+        },
+        Typography = new Typography()
+        {
+            Default = new DefaultTypography()
+            {
+                FontFamily = new[] { "Quicksand", "sans-serif" },
+                FontWeight = "400"
+            },
+            H1 = new H1Typography
+            {
+                FontWeight = "600",
+                FontSize = "4em",
+            },
+            Body1 = new Body1Typography()
+            {
+                FontSize = "0.8em"
+            },
+            Body2 = new Body2Typography()
+            {
+                FontSize = "0.9em"
+            },
+            Subtitle2 = new Subtitle2Typography()
+            {
+                FontSize = ".9rem",
+                FontWeight = "300"
+            },
+        }
+    };
+}

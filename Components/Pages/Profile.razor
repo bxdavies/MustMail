@@ -1,0 +1,44 @@
+﻿@page "/profile"
+@inherits ProfileBase
+@attribute [Authorize]
+<PageTitle> MustMail - Profile </PageTitle>
+
+
+<EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+	<DataAnnotationsValidator />
+	<MudGrid Justify="Justify.Center">
+		<MudItem xs="12" sm="6">
+			<MudPaper Class="pa-4" Elevation="4" MaxWidth="900px">
+				<MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+					This section allows you to change how values are displayed. <br />
+					All timestamps will be converted into the selected time zone.
+				</MudAlert>
+
+				<MudCardContent>
+					<MudAutocomplete T="TimeZoneInfo" Label="Time zone" @bind-Value="Model.TimeZone"
+									 For="@(() => Model.TimeZone)" SearchFunc="@TimeZoneSearch" MaxItems="20"
+									 ToStringFunc="@(t => t?.DisplayName)" />
+					<MudTextField T="string" Label="Date format" @bind-Value="Model.DateFormat"
+								  For="@(() => Model.DateFormat)"/>
+					<MudText Class="mud-input-helper-text">
+						A list of the format specifiers can be found in a table
+						<MudLink Href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings" Color="Color.Secondary"> here</MudLink>.
+					</MudText>
+					
+					<MudTextField T="string" Label="Time format" @bind-Value="Model.TimeFormat"
+								  For="@(() => Model.TimeFormat)" />
+					<MudText Class="mud-input-helper-text">
+						A list of the format specifiers can be found in a table
+						<MudLink Href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings" Color="Color.Secondary"> here</MudLink>.
+					</MudText>
+				</MudCardContent>
+				<MudCardActions>
+					<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success"
+							   Class="ml-auto">
+						Save Profile
+					</MudButton>
+				</MudCardActions>
+			</MudPaper>
+		</MudItem>
+	</MudGrid>
+</EditForm>

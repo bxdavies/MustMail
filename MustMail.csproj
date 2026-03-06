@@ -1,31 +1,57 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <Version>0.2.0</Version>
-        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileContext>.</DockerfileContext>
+	</PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Azure.Identity" Version="1.17.1" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Graph" Version="5.97.0" />
-      <PackageReference Include="MimeKit" Version="4.14.0" />
-      <PackageReference Include="Serilog" Version="4.3.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-      <PackageReference Include="SmtpServer" Version="11.1.0" />
-    </ItemGroup>
 
-    <ItemGroup>
-      <None Update="appsettings.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="dbup" Version="5.0.41" />
+		<PackageReference Include="dbup-sqlite" Version="6.0.4" />
+		<PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.1.1" />
+		<PackageReference Include="HtmlSanitizer" Version="9.0.892" />
+		<PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
+		<PackageReference Include="MudBlazor" Version="9.*" />
+		<PackageReference Include="Azure.Identity" Version="1.18.0" />
+		<PackageReference Include="Microsoft.Graph" Version="5.103.0" />
+		<PackageReference Include="MimeKit" Version="4.15.1" />
+		<PackageReference Include="PasswordGenerator" Version="2.1.0" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.16.1" />
+		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+		<PackageReference Include="SmtpServer" Version="11.1.0" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<Using Include="Microsoft.AspNetCore.Components" />
+		<Using Include="Microsoft.EntityFrameworkCore" />
+		<Using Include="MudBlazor" />
+		<Using Include="MustMail.Db" />
+		<Using Include="MustMail.Models" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Migrations\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Db\Scripts\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>

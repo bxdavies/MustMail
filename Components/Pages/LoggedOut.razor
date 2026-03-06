@@ -1,0 +1,72 @@
+﻿@page "/logged-out"
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Medium"
+              Class="d-flex align-center justify-center"
+              Style="min-height: calc(100vh - 120px);">
+
+    <MudPaper Elevation="6"
+              Class="pa-8"
+              Style="width: 100%; max-width: 720px; border-radius: 18px;">
+
+        <MudStack Spacing="3" AlignItems="AlignItems.Center">
+
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline"
+                     Size="Size.Large"
+                     Color="Color.Success" />
+
+            <MudText Typo="Typo.h4"
+                     Class="mt-2"
+                     Style="font-weight: 800;">
+                You’ve been signed out
+            </MudText>
+
+            <MudText Typo="Typo.body1"
+                     Align="Align.Center"
+                     Color="Color.Secondary">
+                Your session has ended successfully.
+                If this was not intentional, you can sign back in at any time.
+            </MudText>
+
+            <MudDivider Class="my-2" Style="width: 100%;" />
+
+            <MudStack Row="true"
+                      Spacing="2"
+                      Class="mt-2"
+                      Justify="Justify.Center">
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Login"
+                           OnClick="@GoToLogin">
+                    Sign in again
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.Home"
+                           OnClick="@GoHome">
+                    Back to Home
+                </MudButton>
+
+            </MudStack>
+
+            <MudText Typo="Typo.caption"
+                     Color="Color.Secondary"
+                     Align="Align.Center"
+                     Class="mt-4">
+                For security, close your browser if you’re using a shared device.
+            </MudText>
+
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private void GoHome() => Nav.NavigateTo("/");
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo("/authentication/login", true);
+    }
+}
