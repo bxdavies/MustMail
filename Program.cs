@@ -160,7 +160,7 @@ Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
     ?? throw new InvalidOperationException(
         "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
-// If we have overidden the conifg then save it and log
+// If we have overridden the configuration then save it and log
 if (configChanged)
 {
     string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
