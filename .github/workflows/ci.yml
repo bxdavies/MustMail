@@ -1,8 +1,6 @@
-name: Publish
+name: Release
 
-permissions:
-  contents: write
-  packages: write
+permissions: {}
   
 on:
   release:
@@ -15,96 +13,53 @@ env:
 jobs:
   version:
     runs-on: ubuntu-latest
-    name: Bump version
+    name: Bump version and update .csproj file
+    permissions: 
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: main
+          persist-credentials: false
 
       - name: Get version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          tag=${{ github.event.release.tag_name }}
-          echo "VERSION=${tag#v}" >> $GITHUB_ENV
+          tag="$TAG"
+          echo "VERSION=${tag#v}" >> "$GITHUB_ENV"
 
       - name: Bump build version
         id: bump
-        uses: vers-one/dotnet-project-version-updater@v1.3
+        uses: vers-one/dotnet-project-version-updater@6d4de57b8f089d58a00b6ede1f3f05c77bb8e541
         with:
           file: "MustMail.csproj"
           version: ${{ env.VERSION }}
 
-      - run: |
+      - name: Commit version bump
+        env:
+          VERSION: ${{ steps.bump.outputs.newVersion }}
+        run: |
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
           git add .
-          git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
+          git commit -m "Bump project version to $VERSION"
           git push
 
-  release:
-    needs: version
-    name: Binary Release
-    strategy:
-      matrix:
-        kind: ['linux', 'windows', 'macOS']
-        include:
-          - kind: linux
-            os: ubuntu-latest
-            target: linux-x64
-          - kind: windows
-            os: windows-latest
-            target: win-x64
-          - kind: macOS
-            os: macos-latest
-            target: osx-x64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.103
-
-      - name: Build
-        shell: bash
-        run: |
-          tag=${{ github.event.release.tag_name }}
-          release_name="MustMail-$tag-${{ matrix.target }}"
-
-          # Build everything
-          dotnet publish MustMail.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:PublishSingleFile=true --self-contained false 
-
-          # Pack files
-          if [ "${{ matrix.target }}" == "win-x64" ]; then
-            # Pack to zip for Windows
-            7z a -tzip "${release_name}.zip" "./${release_name}/*" "MustMail.xml"
-          else
-          tar czvf "${release_name}.tar.gz" "$release_name"
-          fi
-
-          # Delete output directory
-          rm -r "$release_name"
-
-      - name: Publish
-        uses: softprops/action-gh-release@v1
-        with:
-          files: "MustMail-*"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
   build-and-push-image:
     needs: version
-    name: Docker Release
+    name: Build & Publish Container
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: main
+          persist-credentials: false
       # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
