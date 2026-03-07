@@ -8,6 +8,7 @@ using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 using System.Buffers;
+using System.Text.Json;
 
 namespace MustMail.MailServer;
 
@@ -59,9 +60,11 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             return SmtpResponse.SyntaxError;
         }
 
-        // Create list of recipients
-        // We know EmailAddress or Address will never be null in this list
-        List<Recipient> recipients = [.. message.To
+        List<Recipient>
+            allRecipients = [];
+
+        // Create list of To recipients
+        List<Recipient> toRecipients = [.. message.To
             .OfType<MimeKit.MailboxAddress>()
             .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
             .Select(address => new Recipient
@@ -73,28 +76,86 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 }
             })];
 
-        // Debug log the recipients
-        if (logger.IsEnabled(LogLevel.Debug))
+        // Create list of Cc recipients
+        List<Recipient> ccRecipients = [.. message.Cc
+            .OfType<MimeKit.MailboxAddress>()
+            .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
+            .Select(address => new Recipient
+            {
+                EmailAddress = new EmailAddress
+                {
+                    Address = address.Address,  // plain email only
+                    Name = address.Name        // optional, can be null or empty
+                }
+            })];
+
+        // Create list of Bcc recipients
+        List<Recipient> bccRecipients = [.. message.Bcc
+            .OfType<MimeKit.MailboxAddress>()
+            .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
+            .Select(address => new Recipient
+            {
+                EmailAddress = new EmailAddress
+                {
+                    Address = address.Address,  // plain email only
+                    Name = address.Name        // optional, can be null or empty
+                }
+            })];
+
+        if (toRecipients.Count != 0)
         {
+            allRecipients.AddRange(from Recipient recipient in toRecipients
+                                select recipient);
+            // Debug log the to recipients
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
 #pragma warning disable CA1873 // Avoid potentially expensive logging
-            LogRecipientsResolved(recipients.Select(r => r.EmailAddress!.Address!));
+                LogToRecipientsResolved(toRecipients.Select(r => r.EmailAddress!.Address!));
 #pragma warning restore CA1873 // Avoid potentially expensive logging
+            }
         }
 
+        if (ccRecipients.Count != 0)
+        {
+            allRecipients.AddRange(from Recipient recipient in ccRecipients
+                                select recipient);
+            // Debug log the cc recipients
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+#pragma warning disable CA1873 // Avoid potentially expensive logging
+                LogCcRecipientsResolved(ccRecipients.Select(r => r.EmailAddress!.Address!));
+#pragma warning restore CA1873 // Avoid potentially expensive logging
+            }
+        }
+
+        if (bccRecipients.Count != 0)
+        {
+            allRecipients.AddRange(from Recipient recipient in bccRecipients
+                                select recipient);
+            // Debug log the cc recipients
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+#pragma warning disable CA1873 // Avoid potentially expensive logging
+                LogBccRecipientsResolved(bccRecipients.Select(r => r.EmailAddress!.Address!));
+#pragma warning restore CA1873 // Avoid potentially expensive logging
+            }
+        }
+
+
         // Check we have recipients - this should never happen but for sanity we check
-        if (recipients == null || recipients.Count == 0)
+        if (allRecipients == null || allRecipients.Count == 0)
         {
             LogNoRecipients();
             return SmtpResponse.NoValidRecipientsGiven;
         }
 
         // If allowedTo is not wildcarded
-        if (!mustMailConfiguration.AllowedTo.Contains("*") && mustMailConfiguration.AllowedTo.Count > 0)
+        if (!mustMailConfiguration.AllowedRecipients.Contains("*") && mustMailConfiguration.AllowedRecipients.Count > 0)
         {
-            foreach (Recipient recipient in recipients)
+            foreach (Recipient recipient in allRecipients)
             {
                 // If the sender does not exist in the allowedFrom list then throw an error and return
-                if (!mustMailConfiguration.AllowedTo.Contains(recipient.EmailAddress!.Address!))
+                if (!mustMailConfiguration.AllowedRecipients.Contains(recipient.EmailAddress!.Address!))
                 {
                     LogRecipientRejected(recipient.EmailAddress!.Address!);
                     return SmtpResponse.SyntaxError;
@@ -201,24 +262,85 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         }
 
         // If the sender does not exist in the allowedFrom list then throw an error and return
-        if (!mustMailConfiguration.AllowedFrom.Contains("*") && mustMailConfiguration.AllowedFrom.Count > 0)
+        if (!mustMailConfiguration.AllowedSenders.Contains("*") && mustMailConfiguration.AllowedSenders.Count > 0)
         {
-            if (!mustMailConfiguration.AllowedFrom.Contains(sender))
+            if (!mustMailConfiguration.AllowedSenders.Contains(sender))
             {
                 LogSenderRejected(sender!);
                 return SmtpResponse.SyntaxError;
             }
         }
 
+        // Extract and process attachments
+        List<Microsoft.Graph.Models.Attachment> attachments = [];
+
+        // If the message has attachments then add them
+        if (message.Attachments.Any())
+        {
+
+            foreach (MimeEntity mimeEntity in message.Attachments)
+            {
+                // Regular file attachment
+                if (mimeEntity is MimePart mimePart && mimePart.Content != null)
+                {
+                    using MemoryStream memory = new();
+                    await mimePart.Content.DecodeToAsync(memory, cancellationToken);
+                    byte[] attachmentBytes = memory.ToArray();
+
+                    string fileName = mimePart.FileName ?? "unnamed-attachment";
+
+                    // Replace invalid characters with hyphens
+                    Array.ForEach(Path.GetInvalidFileNameChars(),
+                        c => fileName = fileName.Replace(c.ToString(), "-"));
+
+                    attachments.Add(new FileAttachment
+                    {
+                        OdataType = "#microsoft.graph.fileAttachment",
+                        Name = fileName,
+                        ContentType = mimePart.ContentType.MimeType,
+                        ContentBytes = attachmentBytes
+                    });
+
+                    LogAttachment(fileName, attachmentBytes.Length, mimePart.ContentType.MimeType);
+                }
+                // Embedded email message
+                else if (mimeEntity is MessagePart messagePart && messagePart.Message != null)
+                {
+                   
+                    string embeddedName = messagePart.Message.Subject ?? "embedded-message";
+
+                    // Replace invalid characters with hyphens
+                    Array.ForEach(Path.GetInvalidFileNameChars(),
+                        c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
+
+                    using MemoryStream memory = new();
+                    await messagePart.Message.WriteToAsync(memory, cancellationToken);
+                    byte[] messageBytes = memory.ToArray();
+
+                    attachments.Add(new FileAttachment
+                    {
+                        OdataType = "#microsoft.graph.fileAttachment",
+                        Name = embeddedName + ".eml",
+                        ContentType = "message/rfc822",
+                        ContentBytes = messageBytes
+                    });
+
+                    LogEmbeddedMessage(embeddedName, messageBytes.Length);
+                }
+            }
+        }
+
+
         // If store emails is enabled for each recipient that has an account store a copy of the email on disk
         if (mustMailConfiguration.StoreEmails)
         {
-            foreach (Recipient recipient in recipients)
+            foreach (Recipient recipient in allRecipients)
             {
                 await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync(cancellationToken);
 
+                Console.WriteLine(recipient.EmailAddress.Address);
                 // If email address is null skip
-                if (recipient.EmailAddress == null)
+                if (recipient.EmailAddress.Address == null)
                     continue;
 
                 // Get user from database
@@ -248,6 +370,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 // Create a path maildrop/userId/messageId.eml
                 string emailPath = Path.Combine(
                    AppContext.BaseDirectory,
+                   "Data",
                    "maildrop",
                    user.Id,
                    $"{message.MessageId}.eml");
@@ -266,22 +389,29 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                     await message.WriteToAsync(fileStream, cancellationToken);
                 }
 
+                // If the message has attachments then add them
                 if (message.Attachments.Any())
                 {
+
                     foreach (MimeEntity mimeEntity in message.Attachments)
                     {
-                        if (mimeEntity is MimePart mimePart && mimePart.FileName != null && mimePart.Content != null)
+                        // Regular file attachment
+                        if (mimeEntity is MimePart mimePart && mimePart.Content != null)
                         {
+
+                            string fileName = mimePart.FileName ?? "unnamed-attachment";
+
                             // Create path maildrop/userId/messageId/filename
                             string attachmentPath = Path.Combine(
                                 AppContext.BaseDirectory,
+                                "Data",
                                 "maildrop",
                                 user.Id,
                                 message.MessageId,
-                                mimePart.FileName);
+                                fileName);
 
                             // Sanitize file path
-                            emailPath = Helpers.SanitizeFilePath(attachmentPath);
+                            attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
 
                             // Ensure directory exists
                             _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
@@ -290,9 +420,33 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                             await mimePart.Content.DecodeToAsync(fileStream, cancellationToken);
                         }
+                        // Embedded email message
+                        else if (mimeEntity is MessagePart messagePart && messagePart.Message != null)
+                        {
+
+                            string embeddedName = messagePart.Message.Subject ?? "embedded-message";
+
+                             // Create path maildrop/userId/messageId/filename
+                            string attachmentPath = Path.Combine(
+                                AppContext.BaseDirectory,
+                                "Data",
+                                "maildrop",
+                                user.Id,
+                                message.MessageId,
+                                $"{embeddedName}.eml");
+
+                            // Sanitize file path
+                            attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
+
+                            // Ensure directory exists
+                            _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
+
+                            await using FileStream fileStream = File.Create(attachmentPath);
+
+                            await messagePart.Message.WriteToAsync(fileStream, cancellationToken);
+                        }
                     }
                 }
-
 
                 // Trigger update service to update any clients
                 await updates.NewMessageForUserAsync(user.Id);
@@ -306,7 +460,10 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             Message = new Microsoft.Graph.Models.Message
             {
                 Subject = message.Subject,
-                ToRecipients = recipients
+                ToRecipients = toRecipients,
+                CcRecipients = ccRecipients,
+                BccRecipients = bccRecipients,
+                Attachments = attachments,
             }
         };
 
@@ -325,33 +482,23 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 Content = message.TextBody + (mustMailConfiguration.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail)" : "")
             };
 
-        // If the message has attachments then add them
-        if (message.Attachments.Any())
+        // Log email details if debug log level is enabled 
+        if (logger.IsEnabled(LogLevel.Debug))
         {
-            requestBody.Message.Attachments ??= [];
-
-            foreach (MimeEntity mimeEntity in message.Attachments)
+            var emailInfo = new
             {
-                if (mimeEntity is MimePart mimePart && mimePart.FileName != null && mimePart.Content != null)
-                {
-                    using MemoryStream memory = new();
-                    await mimePart.Content.DecodeToAsync(memory, cancellationToken);
-
-                    // Replace invalid characters with hyphens
-                    Array.ForEach(Path.GetInvalidFileNameChars(),
-                        c => mimePart.FileName = mimePart.FileName.Replace(c.ToString(), "-"));
-
-                    requestBody.Message.Attachments.Add(new FileAttachment
-                    {
-                        OdataType = "#microsoft.graph.fileAttachment",
-                        Name = mimePart.FileName,
-                        ContentBytes = memory.ToArray()
-                    });
-                }
-            }
+                Subject = message.Subject ?? "(no subject)",
+                From = sender,
+                To = toRecipients,
+                Cc = ccRecipients,
+                BccRecipients = bccRecipients,
+                AttachmentCount = attachments.Count,
+                requestBody.Message.Body
+            };
+            string emailInfoJson = JsonSerializer.Serialize(emailInfo);
+            LogGraphSendAttempt(emailInfoJson);
         }
-
-        LogGraphSendAttempt(sender!, recipients.Count);
+            
         try
         {
             // Send email
@@ -371,7 +518,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             LogEmailForwarded(
                 message.Subject,
                 sender!,
-                recipients.Select(r => r.EmailAddress!.Address!));
+                allRecipients.Select(r => r.EmailAddress!.Address!));
 #pragma warning restore CA1873 // Avoid potentially expensive logging
         }
 
@@ -394,8 +541,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
     [LoggerMessage(EventId = 1104, Level = LogLevel.Warning, Message = "Unable to read message as MIME message")]
     private partial void LogMimeMessageNull();
 
-    [LoggerMessage(EventId = 1105, Level = LogLevel.Debug, Message = "Recipients resolved: {Recipients}")]
-    private partial void LogRecipientsResolved(IEnumerable<string> recipients);
+    [LoggerMessage(EventId = 11051, Level = LogLevel.Debug, Message = "To recipients resolved: {Recipients}")]
+    private partial void LogToRecipientsResolved(IEnumerable<string> recipients);
+    [LoggerMessage(EventId = 11052, Level = LogLevel.Debug, Message = "Cc recipients resolved: {Recipients}")]
+    private partial void LogCcRecipientsResolved(IEnumerable<string> recipients);
+    [LoggerMessage(EventId = 11053, Level = LogLevel.Debug, Message = "Bcc recipients resolved: {Recipients}")]
+    private partial void LogBccRecipientsResolved(IEnumerable<string> recipients);
 
     [LoggerMessage(EventId = 1106, Level = LogLevel.Warning, Message = "Message rejected: no valid recipients were found")]
     private partial void LogNoRecipients();
@@ -432,14 +583,18 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 1117, Level = LogLevel.Information, Message = "Email stored locally for {Recipient} at {Path}")]
     private partial void LogEmailStored(string recipient, string path);
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Processing attachment: {FileName}, Size: {Size} bytes, Type: {ContentType}")]
+    private partial void LogAttachment(string fileName, int size, string contentType);
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Processing embedded message: {Name}, Size: {Size} bytes")]
+    private partial void LogEmbeddedMessage(string name, int size);
 
-    [LoggerMessage(EventId = 1118, Level = LogLevel.Debug, Message = "Sending email via Microsoft Graph as {Sender} to {RecipientCount} recipient(s)")]
-    private partial void LogGraphSendAttempt(string sender, int recipientCount);
+    [LoggerMessage(EventId = 1118, Level = LogLevel.Debug, Message = "Sending email via Microsoft Graph: \n{Message}")]
+    private partial void LogGraphSendAttempt(string message);
 
     [LoggerMessage(EventId = 1119, Level = LogLevel.Error, Message = "Failed to send email via Microsoft Graph for sender {Sender}")]
     private partial void LogGraphSendFailed(Exception exception, string sender);
 
-    [LoggerMessage(EventId = 1120, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender}, Recipients: {Recipients}")]
+    [LoggerMessage(EventId = 1120, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender}, Recipients (To, Cc, Bcc): {Recipients}")]
     private partial void LogEmailForwarded(string? subject, string sender, IEnumerable<string> recipients);
 
     [LoggerMessage(EventId = 1121, Level = LogLevel.Debug, Message = "Notified clients of mailbox update for user {UserId}")]
