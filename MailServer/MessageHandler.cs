@@ -472,14 +472,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             ? new ItemBody
             {
                 ContentType = BodyType.Html,
-                Content = message.HtmlBody + (mustMailConfiguration.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail\">MustMail</a></p>" : "")
+                Content = message.HtmlBody + (mustMailConfiguration.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail.net\">MustMail</a></p>" : "")
             }
             // Else use the text body instead
             : new ItemBody
             {
                 ContentType = BodyType.Text,
 
-                Content = message.TextBody + (mustMailConfiguration.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail)" : "")
+                Content = message.TextBody + (mustMailConfiguration.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail.net)" : "")
             };
 
         // Log email details if debug log level is enabled 
@@ -489,9 +489,9 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             {
                 Subject = message.Subject ?? "(no subject)",
                 From = sender,
-                To = toRecipients,
-                Cc = ccRecipients,
-                BccRecipients = bccRecipients,
+                To = toRecipients.Select(r => r.EmailAddress.Address).ToList(),
+                Cc = ccRecipients.Select(r => r.EmailAddress.Address).ToList(),
+                BccRecipients = bccRecipients.Select(r => r.EmailAddress.Address).ToList(),
                 AttachmentCount = attachments.Count,
                 requestBody.Message.Body
             };
