@@ -4,6 +4,7 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<Version>0.3.0</Version>
 		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileContext>.</DockerfileContext>
@@ -30,7 +31,6 @@
 		<PackageReference Include="Azure.Identity" Version="1.18.0" />
 		<PackageReference Include="Microsoft.Graph" Version="5.103.0" />
 		<PackageReference Include="MimeKit" Version="4.15.1" />
-		<PackageReference Include="PasswordGenerator" Version="2.1.0" />
 		<PackageReference Include="Quartz.AspNetCore" Version="3.16.1" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
