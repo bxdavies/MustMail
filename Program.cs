@@ -24,6 +24,15 @@ using System.Text.Json;
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Create the Data folder
+string dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
+Directory.CreateDirectory(dataFolder);
+
+// Load the  configuration
+builder.Configuration
+    .SetBasePath(dataFolder)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
 // Create Serilog logger
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Is(Serilog.Events.LogEventLevel.Information)
@@ -80,14 +89,6 @@ if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Certificate__P
     throw new InvalidOperationException(
         "The environment variable 'Certificate__Password' must be set.");
 
-// Create the Data folder
-string dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
-Directory.CreateDirectory(dataFolder);
-
-// Load the  configuration
-builder.Configuration
-    .SetBasePath(dataFolder)
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
