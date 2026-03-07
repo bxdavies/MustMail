@@ -14,7 +14,7 @@ public partial class UserAuthenticator(ILogger<UserAuthenticator> logger, IDbCon
         await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync(cancellationToken);
 
         SMTPAccount? account = await dbContext.SMTPAccount
-            .SingleOrDefaultAsync(a => a.Name == user, cancellationToken: cancellationToken);
+            .SingleOrDefaultAsync(a => a.Username == user, cancellationToken: cancellationToken);
 
         if (account is null)
         {

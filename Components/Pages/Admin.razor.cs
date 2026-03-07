@@ -11,7 +11,7 @@ namespace MustMail.Components.Pages
         protected MudForm? SettingsForm;
         protected Configuration Config = null!;
         protected string _newAllowedFrom = "";
-        protected string _newAllowedTo = "";
+        protected string _newAllowedRecipients = "";
 
         protected List<User> Users = [];
         protected MudDataGrid<User> UserGrid = default!;
@@ -43,7 +43,7 @@ namespace MustMail.Components.Pages
         // New SMTP account - start editing a new SMTP account in form modal
         protected async Task NewSMTPAccount()
         {
-            await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount() { Name = "", Password = "", Description = "" });
+            await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount() { Username = "", Password = "", Description = "" });
         }
 
         // Remove SMTP account - remove acount
@@ -162,30 +162,30 @@ namespace MustMail.Components.Pages
             string v = (_newAllowedFrom ?? "").Trim();
             if (string.IsNullOrWhiteSpace(v)) return;
 
-            Config.MustMail.AllowedFrom.Add(v);
+            Config.MustMail.AllowedSenders.Add(v);
             _newAllowedFrom = "";
         }
 
         // Remove allowed from - remove allowed from
         protected void RemoveAllowedFrom(string value)
         {
-            _ = (Config.MustMail.AllowedFrom?.Remove(value));
+            _ = (Config.MustMail.AllowedSenders?.Remove(value));
         }
 
         // Add allowed to - add new allowed to 
         protected void AddAllowedTo()
         {
-            string v = (_newAllowedTo ?? "").Trim();
+            string v = (_newAllowedRecipients ?? "").Trim();
             if (string.IsNullOrWhiteSpace(v)) return;
 
-            Config.MustMail.AllowedTo.Add(v);
-            _newAllowedTo = "";
+            Config.MustMail.AllowedRecipients.Add(v);
+            _newAllowedRecipients = "";
         }
 
         // Removed allowed to - remove allowed to from to config
         protected void RemoveAllowedTo(string value)
         {
-            _ = (Config.MustMail.AllowedTo?.Remove(value));
+            _ = (Config.MustMail.AllowedRecipients?.Remove(value));
         }
 
         // Validate and save - validate from and save to appsettings.json

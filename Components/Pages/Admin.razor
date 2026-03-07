@@ -391,7 +391,7 @@
 									</MudButton>
 								</MudStack>
 
-								<MudTable Items="Config.MustMail.AllowedFrom" Dense="true" Hover="true">
+								<MudTable Items="Config.MustMail.AllowedSenders" Dense="true" Hover="true">
 									<HeaderContent>
 										<MudTh>Value</MudTh>
 										<MudTh></MudTh>
@@ -412,14 +412,14 @@
 						<MudExpansionPanel Text="Allowed To">
 							<MudStack Spacing="2">
 								<MudText Class="mud-input-helper-text">
-									If an email contains any recipients addresses not specified the entire email will be rejected and sent to none of the recipients. The asterisk (*) means allow all or if empty all addresses will be allowed.
+									If an email contains any recipients (To, Cc and Bcc) addresses not specified the entire email will be rejected and sent to none of the recipients. The asterisk (*) means allow all or if empty all addresses will be allowed.
 								</MudText>
 
 								<MudStack Row Spacing="2" AlignItems="AlignItems.Center">
 
 
 									<MudTextField Label="Add address or *"
-												  @bind-Value="_newAllowedTo"
+												  @bind-Value="_newAllowedRecipients"
 												  Immediate="true"
 												  Placeholder="user@example.com or *" />
 									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAllowedTo">
@@ -427,7 +427,7 @@
 									</MudButton>
 								</MudStack>
 
-								<MudTable Items="Config.MustMail.AllowedTo" Dense="true" Hover="true">
+								<MudTable Items="Config.MustMail.AllowedRecipients" Dense="true" Hover="true">
 									<HeaderContent>
 										<MudTh>Value</MudTh>
 										<MudTh></MudTh>
@@ -599,7 +599,7 @@
 						</MudButtonGroup>
 					</ToolBarContent>
 					<Columns>
-						<PropertyColumn Property="x => x.Name" />
+						<PropertyColumn Property="x => x.Username" />
 						<PropertyColumn Property="x => x.Password">
 							<CellTemplate>
 								<MudTextField InputType="InputType.Password" Value="@context.Item.Password" Disabled="true" Underline="false"> </MudTextField>

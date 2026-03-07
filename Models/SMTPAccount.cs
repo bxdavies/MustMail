@@ -8,7 +8,7 @@ public class SMTPAccount
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public required string Name { get; set; }
+    public required string Username { get; set; }
     public required string Password { get; set; }
     public required string Description { get; set; }
 

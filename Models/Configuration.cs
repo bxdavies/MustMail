@@ -37,8 +37,8 @@ public class MustMailConfiguration
     public bool TrustFrom { get; set; } = false;
     public bool StoreEmails { get; set; } = true;
     public int RetentionDays { get; set; } = 7;
-    public List<string> AllowedFrom { get; set; } = [];
-    public List<string> AllowedTo { get; set; } = [];
+    public List<string> AllowedSenders { get; set; } = [];
+    public List<string> AllowedRecipients { get; set; } = [];
     public bool FooterBranding { get; set; } = true;
 }
 
