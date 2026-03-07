@@ -24,6 +24,7 @@ public class HomeBase : ComponentBase
     protected MudTabs MessageTabs = default!;
     protected MimeMessage? ActiveMessage;
     protected bool StoreEmails;
+    protected string maildropFolder;
 
 
     // Component parameters and dependency injection
@@ -65,6 +66,7 @@ public class HomeBase : ComponentBase
         if (StoreEmails)
         {
 
+            maildropFolder = Path.Combine(AppContext.BaseDirectory, "Data", "maildrop");
 
 
             // Subscribe to events for the current user id using the UpdateServer
@@ -107,8 +109,7 @@ public class HomeBase : ComponentBase
 
             // Create file path
             string path = Path.Combine(
-                AppContext.BaseDirectory,
-                "maildrop",
+                maildropFolder,
                 user.Id,
                 $"{mostRecentMessage.Id}.eml");
 
@@ -204,8 +205,7 @@ public class HomeBase : ComponentBase
 
         // Create file path
         string path = Path.Combine(
-            AppContext.BaseDirectory,
-            "maildrop",
+            maildropFolder,
             UserId,
             $"{messageId}.eml");
 
