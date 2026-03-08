@@ -57,7 +57,7 @@ builder.Services.AddSerilog();
 
 // Version and copyright message
 Log.Information("MustMail");
-Log.Information(Assembly.GetEntryAssembly()!.GetName().Version?.ToString(3));
+Log.Information(Assembly.GetEntryAssembly()!.GetName().Version?.ToString(3)!);
 
 // Validate required environment variables
 
@@ -338,6 +338,9 @@ if (certificate.NotAfter <= DateTime.UtcNow)
 
 // Create the SMTP server
 builder.Services.AddHostedService<ServerService>();
+
+// Add graph user helper for finding users in M365 by UPN, Mail or aliais address 
+builder.Services.AddSingleton<GraphUserHelper>();
 
 // If we are storing emails create the cleanup job
 if (mustMailConfig.MustMail.StoreEmails)

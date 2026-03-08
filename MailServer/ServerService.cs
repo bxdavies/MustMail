@@ -9,7 +9,7 @@ namespace MustMail.MailServer;
 public partial class ServerService(
     GraphServiceClient graphClient,
     IConfiguration config,
-        ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, UpdateService updates) : BackgroundService
+        ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, UpdateService updates, GraphUserHelper graphUserHelper) : BackgroundService
 {
     private SmtpServer.SmtpServer? _smtpServer;
 
@@ -62,7 +62,8 @@ public partial class ServerService(
             graphClient,
             dbFactory,
             mustMailConfig.MustMail,
-            updates
+            updates, 
+            graphUserHelper
         ));
 
         // Register user authenticator 

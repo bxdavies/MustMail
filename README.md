@@ -33,7 +33,7 @@ Features:
 - Web interface for browsing messages and configuring the application 
 - OAuth authentication with Microsoft Graph for outbound delivery
 - Restrict allowed sender or recipient addresses
-- Send from any user or shared mailbox  in your Microsoft 365 Tenant
+- Send from any user or shared mailbox in your Microsoft 365 Tenant including shared mailboxes and aliases
 
 <img src=".images/architecture.excalidraw.svg">
 
@@ -53,7 +53,7 @@ Features:
 ## Roadmap
 
 ### v0.3.1
- - See if the application can support sending from aliases
+ - ~~See if the application can support sending from aliases~~ Implemented 
 
 ### v0.4.x
 - Support additional database types

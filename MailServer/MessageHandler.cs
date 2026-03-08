@@ -3,7 +3,6 @@ using Microsoft.Graph.Models;
 using Microsoft.Graph.Users.Item.SendMail;
 using MimeKit;
 using MimeKit.Utils;
-using MustMail.Db;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
@@ -12,7 +11,7 @@ using System.Text.Json;
 
 namespace MustMail.MailServer;
 
-public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IDbContextFactory<DatabaseContext> dbFactory, MustMailConfiguration mustMailConfiguration, UpdateService updates) : MessageStore
+public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IDbContextFactory<DatabaseContext> dbFactory, MustMailConfiguration mustMailConfiguration, UpdateService updates, GraphUserHelper graphUserHelper) : MessageStore
 {
     public override async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
@@ -105,42 +104,38 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         if (toRecipients.Count != 0)
         {
             allRecipients.AddRange(from Recipient recipient in toRecipients
-                                select recipient);
+                                   select recipient);
             // Debug log the to recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
-#pragma warning disable CA1873 // Avoid potentially expensive logging
-                LogToRecipientsResolved(toRecipients.Select(r => r.EmailAddress!.Address!));
-#pragma warning restore CA1873 // Avoid potentially expensive logging
+                IEnumerable<string> to = toRecipients.Select(r => r.EmailAddress!.Address!);
+                LogToRecipientsResolved(to);
             }
         }
 
         if (ccRecipients.Count != 0)
         {
             allRecipients.AddRange(from Recipient recipient in ccRecipients
-                                select recipient);
+                                   select recipient);
             // Debug log the cc recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
-#pragma warning disable CA1873 // Avoid potentially expensive logging
-                LogCcRecipientsResolved(ccRecipients.Select(r => r.EmailAddress!.Address!));
-#pragma warning restore CA1873 // Avoid potentially expensive logging
+                IEnumerable<string> cc = ccRecipients.Select(r => r.EmailAddress!.Address!);
+                LogCcRecipientsResolved(cc);
             }
         }
 
         if (bccRecipients.Count != 0)
         {
             allRecipients.AddRange(from Recipient recipient in bccRecipients
-                                select recipient);
-            // Debug log the cc recipients
+                                   select recipient);
+            // Debug log the bcc recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
-#pragma warning disable CA1873 // Avoid potentially expensive logging
-                LogBccRecipientsResolved(bccRecipients.Select(r => r.EmailAddress!.Address!));
-#pragma warning restore CA1873 // Avoid potentially expensive logging
+                IEnumerable<string> bcc = bccRecipients.Select(r => r.EmailAddress!.Address!);
+                LogBccRecipientsResolved(bcc);
             }
         }
-
 
         // Check we have recipients - this should never happen but for sanity we check
         if (allRecipients == null || allRecipients.Count == 0)
@@ -163,42 +158,31 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             }
         }
 
+        Microsoft.Graph.Models.User? user;
+
         // Try MAIL FROM first (preferred)
-        string? sender = transaction.From == null
-    ? null
-    : $"{transaction.From.User.Trim()}@{transaction.From.Host.Trim()}";
+        string? senderAddress = transaction.From == null ? null : $"{transaction.From.User.Trim()}@{transaction.From.Host.Trim()}";
         string? senderName = message.Sender?.Name?.Trim();
 
         // Check MAIL FROM was found
-        if (!string.IsNullOrWhiteSpace(sender))
+        if (!string.IsNullOrWhiteSpace(senderAddress))
         {
-            // Carry out M365 sender checks
+            // Attempt to get the user from graph by UPN, Mail or any alias addresses
             try
             {
-                Microsoft.Graph.Models.User? user = await graphClient.Users[sender].GetAsync(rc => rc.QueryParameters.Select = ["displayName", "mail", "mailboxSettings"], cancellationToken);
+                user = await graphUserHelper.FindSenderUserAsync(
+                    "MAIL FROM",
+                    senderAddress,
+                    cancellationToken);
 
                 if (user == null)
                 {
-                    LogSenderTenantMissing("MAIL FROM", sender);
+                    return SmtpResponse.MailboxUnavailable;
                 }
-                else if (user.Mail == null && user.UserPrincipalName == null)
-                {
-                    LogSenderTenantNoMailbox("MAIL FROM", sender);
-                }
-                else if (user.MailboxSettings == null)
-                {
-                    LogSenderMailboxSettingsMissing("MAIL FROM", sender);
-                }
-                else
-                {
-                    // All checks have passed update the send from address
-                    LogUsingSender("MAIL FROM", sender, user.DisplayName);
-                }
-
             }
             catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
             {
-                LogSenderTenantLookupFailed(error, "MAIL FROM", sender);
+                LogSenderTenantLookupFailed(error, "MAIL FROM", senderAddress);
                 return SmtpResponse.SyntaxError;
             }
 
@@ -214,7 +198,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             }
 
             // Get first FROM Header Field
-            sender = message.From.OfType<MimeKit.MailboxAddress>()
+            senderAddress = message.From.OfType<MimeKit.MailboxAddress>()
                   .Select(a => a.Address)
                   .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
 
@@ -223,40 +207,30 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
 
             // Check a FROM address was found
-            if (string.IsNullOrWhiteSpace(sender))
+            if (string.IsNullOrWhiteSpace(senderAddress))
             {
                 LogFromHeaderMissing();
-                return SmtpResponse.SyntaxError;
+                return SmtpResponse.MailboxUnavailable;
             }
 
-            LogUsingFromFallback(sender);
-            // Carry out M365 sender checks
+            LogUsingFromFallback(senderAddress);
+
+            // Attempt to get the user from graph by UPN, Mail or any alias addresses
             try
             {
-                Microsoft.Graph.Models.User? user = await graphClient.Users[sender].GetAsync(rc => rc.QueryParameters.Select = ["displayName", "mail", "mailboxSettings"], cancellationToken);
+                user = await graphUserHelper.FindSenderUserAsync(
+                    "FROM",
+                    senderAddress,
+                    cancellationToken);
 
                 if (user == null)
                 {
-                    LogSenderTenantMissing("FROM", sender);
+                    return SmtpResponse.MailboxUnavailable;
                 }
-                else if (user.Mail == null && user.UserPrincipalName == null)
-                {
-                    LogSenderTenantNoMailbox("FROM", sender);
-                }
-                else if (user.MailboxSettings == null)
-                {
-                    LogSenderMailboxSettingsMissing("FROM", sender);
-                }
-                else
-                {
-                    // All checks have passed update the send from address
-                    LogUsingSender("FROM", sender, user.DisplayName);
-                }
-
             }
             catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
             {
-                LogSenderTenantLookupFailed(error, "FROM", sender);
+                LogSenderTenantLookupFailed(error, "FROM", senderAddress);
                 return SmtpResponse.SyntaxError;
             }
         }
@@ -264,15 +238,15 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         // If the sender does not exist in the allowedFrom list then throw an error and return
         if (!mustMailConfiguration.AllowedSenders.Contains("*") && mustMailConfiguration.AllowedSenders.Count > 0)
         {
-            if (!mustMailConfiguration.AllowedSenders.Contains(sender))
+            if (!mustMailConfiguration.AllowedSenders.Contains(senderAddress))
             {
-                LogSenderRejected(sender!);
+                LogSenderRejected(senderAddress!);
                 return SmtpResponse.SyntaxError;
             }
         }
 
         // Extract and process attachments
-        List<Microsoft.Graph.Models.Attachment> attachments = [];
+        List<Attachment> attachments = [];
 
         // If the message has attachments then add them
         if (message.Attachments.Any())
@@ -283,16 +257,18 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 // Regular file attachment
                 if (mimeEntity is MimePart mimePart && mimePart.Content != null)
                 {
-                    using MemoryStream memory = new();
-                    await mimePart.Content.DecodeToAsync(memory, cancellationToken);
-                    byte[] attachmentBytes = memory.ToArray();
-
                     string fileName = mimePart.FileName ?? "unnamed-attachment";
 
                     // Replace invalid characters with hyphens
                     Array.ForEach(Path.GetInvalidFileNameChars(),
                         c => fileName = fileName.Replace(c.ToString(), "-"));
 
+                    // Write to byte stream
+                    using MemoryStream memory = new();
+                    await mimePart.Content.DecodeToAsync(memory, cancellationToken);
+                    byte[] attachmentBytes = memory.ToArray();
+
+                    // Create graph attachment 
                     attachments.Add(new FileAttachment
                     {
                         OdataType = "#microsoft.graph.fileAttachment",
@@ -306,17 +282,19 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 // Embedded email message
                 else if (mimeEntity is MessagePart messagePart && messagePart.Message != null)
                 {
-                   
+
                     string embeddedName = messagePart.Message.Subject ?? "embedded-message";
 
                     // Replace invalid characters with hyphens
                     Array.ForEach(Path.GetInvalidFileNameChars(),
                         c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
 
+                    // Write to byte stream
                     using MemoryStream memory = new();
                     await messagePart.Message.WriteToAsync(memory, cancellationToken);
                     byte[] messageBytes = memory.ToArray();
 
+                    // Create graph attachment 
                     attachments.Add(new FileAttachment
                     {
                         OdataType = "#microsoft.graph.fileAttachment",
@@ -338,28 +316,33 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             {
                 await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-                Console.WriteLine(recipient.EmailAddress.Address);
                 // If email address is null skip
-                if (recipient.EmailAddress.Address == null)
+                if (recipient == null || recipient.EmailAddress == null || recipient.EmailAddress.Address == null)
+                {
                     continue;
+                }
 
                 // Get user from database
-                Models.User? user = await dbContext.User.SingleOrDefaultAsync(u => u.Email == recipient.EmailAddress.Address, cancellationToken: cancellationToken);
+                Models.User? appUser = await dbContext.User.SingleOrDefaultAsync(u => u.Email == recipient.EmailAddress.Address, cancellationToken: cancellationToken);
 
                 // Handel users that don't have an account
-                if (user == null)
+                if (appUser == null)
+                {
                     continue;
+                }
 
                 // If there is no message id create one
                 if (string.IsNullOrWhiteSpace(message.MessageId))
+                {
                     message.MessageId = MimeUtils.GenerateMessageId();
+                }
 
                 // Add message to database
-                user.Messages.Add(new Models.Message
+                appUser.Messages.Add(new Models.Message
                 {
                     Id = message.MessageId,
-                    SenderName = senderName ?? sender,
-                    SenderEmail = sender,
+                    SenderName = senderName ?? senderAddress,
+                    SenderEmail = senderAddress,
                     Timestamp = message.Date.DateTime.ToUniversalTime(),
                     Subject = message.Subject ?? "(No subject)",
                     AttachmentCount = message.Attachments.Count()
@@ -372,7 +355,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                    AppContext.BaseDirectory,
                    "Data",
                    "maildrop",
-                   user.Id,
+                   appUser.Id,
                    $"{message.MessageId}.eml");
 
                 // Sanitize file path
@@ -406,7 +389,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                                 AppContext.BaseDirectory,
                                 "Data",
                                 "maildrop",
-                                user.Id,
+                                appUser.Id,
                                 message.MessageId,
                                 fileName);
 
@@ -416,8 +399,8 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                             // Ensure directory exists
                             _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
 
+                            // Write file
                             await using FileStream fileStream = File.Create(attachmentPath);
-
                             await mimePart.Content.DecodeToAsync(fileStream, cancellationToken);
                         }
                         // Embedded email message
@@ -426,12 +409,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                             string embeddedName = messagePart.Message.Subject ?? "embedded-message";
 
-                             // Create path maildrop/userId/messageId/filename
+                            // Create path maildrop/userId/messageId/filename
                             string attachmentPath = Path.Combine(
                                 AppContext.BaseDirectory,
                                 "Data",
                                 "maildrop",
-                                user.Id,
+                                appUser.Id,
                                 message.MessageId,
                                 $"{embeddedName}.eml");
 
@@ -441,16 +424,16 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                             // Ensure directory exists
                             _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
 
+                            // Write file
                             await using FileStream fileStream = File.Create(attachmentPath);
-
                             await messagePart.Message.WriteToAsync(fileStream, cancellationToken);
                         }
                     }
                 }
 
                 // Trigger update service to update any clients
-                await updates.NewMessageForUserAsync(user.Id);
-                LogClientUpdate(user.Id);
+                await updates.NewMessageForUserAsync(appUser.Id);
+                LogClientUpdate(appUser.Id);
             }
         }
 
@@ -460,6 +443,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             Message = new Microsoft.Graph.Models.Message
             {
                 Subject = message.Subject,
+                From = new Recipient
+                {
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = senderAddress,  // plain email only
+                        Name = senderName,
+                    }
+                },
                 ToRecipients = toRecipients,
                 CcRecipients = ccRecipients,
                 BccRecipients = bccRecipients,
@@ -488,38 +479,41 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             var emailInfo = new
             {
                 Subject = message.Subject ?? "(no subject)",
-                From = sender,
-                To = toRecipients.Select(r => r.EmailAddress.Address).ToList(),
-                Cc = ccRecipients.Select(r => r.EmailAddress.Address).ToList(),
-                BccRecipients = bccRecipients.Select(r => r.EmailAddress.Address).ToList(),
+                From = senderAddress,
+                To = toRecipients.Select(u => u.EmailAddress?.Address).OfType<string>(),
+                Cc = ccRecipients.Select(u => u.EmailAddress?.Address).OfType<string>(),
+                BccRecipients = bccRecipients.Select(u => u.EmailAddress?.Address).OfType<string>(),
                 AttachmentCount = attachments.Count,
                 requestBody.Message.Body
             };
             string emailInfoJson = JsonSerializer.Serialize(emailInfo);
             LogGraphSendAttempt(emailInfoJson);
         }
-            
+
         try
         {
             // Send email
-            await graphClient.Users[sender].SendMail.PostAsync(requestBody, cancellationToken: cancellationToken);
+            await graphClient.Users[user.UserPrincipalName].SendMail.PostAsync(requestBody, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
-            LogGraphSendFailed(ex, sender!);
+            LogGraphSendFailed(ex, senderAddress);
             return SmtpResponse.SyntaxError;
         }
 
         if (logger.IsEnabled(LogLevel.Information))
         {
+            // Build lists of to, cc and bcc
+            IEnumerable<string> to = toRecipients.Select(u => u.EmailAddress?.Address).OfType<string>();
+            IEnumerable<string> cc = ccRecipients.Select(u => u.EmailAddress?.Address).OfType<string>();
+            IEnumerable<string> bcc = bccRecipients.Select(u => u.EmailAddress?.Address).OfType<string>();
 
             // Log success message
-#pragma warning disable CA1873 // Avoid potentially expensive logging
             LogEmailForwarded(
                 message.Subject,
-                sender!,
-                allRecipients.Select(r => r.EmailAddress!.Address!));
-#pragma warning restore CA1873 // Avoid potentially expensive logging
+                senderAddress,
+                user.UserPrincipalName!,
+                to, cc, bcc);
         }
 
         // Return email received successfully
@@ -543,8 +537,10 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 11051, Level = LogLevel.Debug, Message = "To recipients resolved: {Recipients}")]
     private partial void LogToRecipientsResolved(IEnumerable<string> recipients);
+
     [LoggerMessage(EventId = 11052, Level = LogLevel.Debug, Message = "Cc recipients resolved: {Recipients}")]
     private partial void LogCcRecipientsResolved(IEnumerable<string> recipients);
+
     [LoggerMessage(EventId = 11053, Level = LogLevel.Debug, Message = "Bcc recipients resolved: {Recipients}")]
     private partial void LogBccRecipientsResolved(IEnumerable<string> recipients);
 
@@ -553,9 +549,6 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 1107, Level = LogLevel.Warning, Message = "Recipient {Recipient} rejected because it is not in the allowed recipient list")]
     private partial void LogRecipientRejected(string recipient);
-
-    [LoggerMessage(EventId = 1108, Level = LogLevel.Information, Message = "Using {HeaderType} sender {Sender} ({DisplayName}) for outgoing email")]
-    private partial void LogUsingSender(string headerType, string sender, string? displayName);
 
     [LoggerMessage(EventId = 1109, Level = LogLevel.Information, Message = "Falling back to From header sender {Sender}")]
     private partial void LogUsingFromFallback(string sender);
@@ -568,15 +561,6 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 1112, Level = LogLevel.Warning, Message = "Sender {Sender} rejected because it is not in the allowed sender list")]
     private partial void LogSenderRejected(string sender);
-
-    [LoggerMessage(EventId = 1113, Level = LogLevel.Warning, Message = "{HeaderType} address {Sender} does not exist in the Microsoft 365 tenant")]
-    private partial void LogSenderTenantMissing(string headerType, string sender);
-
-    [LoggerMessage(EventId = 1114, Level = LogLevel.Warning, Message = "{HeaderType} address {Sender} has no mailbox configured in the tenant")]
-    private partial void LogSenderTenantNoMailbox(string headerType, string sender);
-
-    [LoggerMessage(EventId = 1115, Level = LogLevel.Warning, Message = "Mailbox settings missing for {HeaderType} address {Sender}")]
-    private partial void LogSenderMailboxSettingsMissing(string headerType, string sender);
 
     [LoggerMessage(EventId = 1116, Level = LogLevel.Warning, Message = "Microsoft Graph lookup failed for {HeaderType} address {Sender}")]
     private partial void LogSenderTenantLookupFailed(Exception exception, string headerType, string sender);
@@ -594,8 +578,8 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
     [LoggerMessage(EventId = 1119, Level = LogLevel.Error, Message = "Failed to send email via Microsoft Graph for sender {Sender}")]
     private partial void LogGraphSendFailed(Exception exception, string sender);
 
-    [LoggerMessage(EventId = 1120, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender}, Recipients (To, Cc, Bcc): {Recipients}")]
-    private partial void LogEmailForwarded(string? subject, string sender, IEnumerable<string> recipients);
+    [LoggerMessage(EventId = 1120, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender} as the User(UPN): {User},  Recipients; To: {To}, Cc: {Cc}, Bcc: {Bcc}")]
+    private partial void LogEmailForwarded(string? subject, string sender, string user, IEnumerable<string> to, IEnumerable<string> cc, IEnumerable<string> bcc);
 
     [LoggerMessage(EventId = 1121, Level = LogLevel.Debug, Message = "Notified clients of mailbox update for user {UserId}")]
     private partial void LogClientUpdate(string userId);
