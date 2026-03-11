@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using MimeKit;
 using MudBlazor.Extensions;
-using MustMail.Db;
 using MustMail.MailServer;
 using System.Security.Claims;
 
@@ -17,21 +16,21 @@ public class HomeBase : ComponentBase
     // Page variables
     protected string? UserId;
     protected string Name = "";
-    protected int MessageCount = 0;
-    protected string MostRecentEmailSubject = "Unknown";
+    protected int MessageCount;
+    protected string? MostRecentEmailSubject = "Unknown";
     protected DateTime MostRecentEmailTimestamp = DateTime.MinValue;
     protected List<Message> Messages = [];
-    protected MudTabs MessageTabs = default!;
+    protected MudTabs MessageTabs = null!;
     protected MimeMessage? ActiveMessage;
     protected bool StoreEmails;
-    protected string maildropFolder;
+    private string _maildropFolder = null!;
 
 
     // Component parameters and dependency injection
-    [Inject] private AuthenticationStateProvider AuthenticationState { get; set; } = default!;
-    [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = default!;
-    [Inject] private UpdateService Updates { get; set; } = default!;
-    [Inject] public IConfiguration Configuration { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthenticationState { get; set; } = null!;
+    [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
+    [Inject] private UpdateService Updates { get; set; } = null!;
+    [Inject] public IConfiguration Configuration { get; set; } = null!;
     [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
     // Lifecycle method called after parameters and property values are set
@@ -45,12 +44,12 @@ public class HomeBase : ComponentBase
         AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
 
         // Set name
-        Name = authState?.User?.Identity?.Name ?? "";
+        Name = authState.User.Identity?.Name ?? "";
 
-        using DatabaseContext dbContext = DbFactory.CreateDbContext();
+        await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         // Get user
-        User? user = await dbContext.User.FindAsync(authState?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        User? user = await dbContext.User.FindAsync(authState.User.FindFirstValue(ClaimTypes.NameIdentifier));
         if (user == null)
         {
             return;
@@ -66,7 +65,7 @@ public class HomeBase : ComponentBase
         if (StoreEmails)
         {
 
-            maildropFolder = Path.Combine(AppContext.BaseDirectory, "Data", "maildrop");
+            _maildropFolder = Path.Combine(AppContext.BaseDirectory, "Data", "maildrop");
 
 
             // Subscribe to events for the current user id using the UpdateServer
@@ -82,10 +81,10 @@ public class HomeBase : ComponentBase
 
     }
 
-    // Get messages - get's the users messages from the database and gathers some details about the most recent message 
-    protected async Task GetMessages()
+    // Get messages - gets the users messages from the database and gathers some details about the most recent message 
+    private async Task GetMessages()
     {
-        using DatabaseContext dbContext = DbFactory.CreateDbContext();
+        await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         // Get user including messages
         User user = await dbContext.User.Include(u => u.Messages).SingleAsync(u => u.Id == UserId);
@@ -97,11 +96,7 @@ public class HomeBase : ComponentBase
         if (MessageCount > 0)
         {
             // Get the most recent message 
-            Message? mostRecentMessage = user.Messages.OrderByDescending(m => m.Timestamp).First();
-            if (mostRecentMessage == null)
-            {
-                return;
-            }
+            Message mostRecentMessage = user.Messages.OrderByDescending(m => m.Timestamp).First();
 
             // Grab details for panel 
             MostRecentEmailTimestamp = mostRecentMessage.Timestamp;
@@ -109,7 +104,7 @@ public class HomeBase : ComponentBase
 
             // Create file path
             string path = Path.Combine(
-                maildropFolder,
+                _maildropFolder,
                 user.Id,
                 $"{mostRecentMessage.Id}.eml");
 
@@ -117,7 +112,7 @@ public class HomeBase : ComponentBase
             path = Helpers.SanitizeFilePath(path);
 
             // Load the eml file
-            ActiveMessage = MimeMessage.Load(path);
+            ActiveMessage = await MimeMessage.LoadAsync(path);
 
         }
 
@@ -126,7 +121,7 @@ public class HomeBase : ComponentBase
 
     }
 
-    // Sanitized body - Prevent Cross-site scripting (XSS) by Sanitizing html string
+    // Sanitized body - Prevent Cross-site scripting (XSS) by Sanitizing HTML string
     protected string SanitizedBody(string html)
     {
         HtmlSanitizer sanitizer = new();
@@ -134,7 +129,7 @@ public class HomeBase : ComponentBase
         // Allow inline images
         _ = sanitizer.AllowedSchemes.Add("data");
 
-        sanitizer.FilterUrl += (sender, e) =>
+        sanitizer.FilterUrl += (_, e) =>
         {
             if (e.OriginalUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
                 return;
@@ -157,7 +152,7 @@ public class HomeBase : ComponentBase
     }
 
     // Format friendly date - style date
-    public string FormatFriendlyDate(DateTime dateTime)
+    protected string FormatFriendlyDate(DateTime dateTime)
     {
         DateTime now = DateTime.Now;
         DateTime today = now.Date;
@@ -205,7 +200,7 @@ public class HomeBase : ComponentBase
 
         // Create file path
         string path = Path.Combine(
-            maildropFolder,
+            _maildropFolder,
             UserId,
             $"{messageId}.eml");
 
@@ -221,15 +216,15 @@ public class HomeBase : ComponentBase
     protected static string FormatAttachmentMeta(MimePart part)
     {
         // ContentType like "image/png"
-        string type = part.ContentType?.MimeType ?? "file";
+        string type = part.ContentType.MimeType;
 
-        // Size if known (may be null/unknown depending on how you stored it)
+        // Size if known
         // MimeKit sometimes has ContentDisposition?.Size, or you may track size elsewhere.
         long? size = part.ContentDisposition?.Size;
         return size is null ? type : $"{type} • {FormatBytes(size.Value)}";
     }
 
-    protected static string FormatBytes(long bytes)
+    private static string FormatBytes(long bytes)
     {
         string[] units = ["B", "KB", "MB", "GB", "TB"];
         double size = bytes;

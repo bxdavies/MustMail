@@ -60,35 +60,7 @@ Log.Information("MustMail");
 Log.Information(Assembly.GetEntryAssembly()!.GetName().Version?.ToString(3)!);
 
 // Validate required environment variables
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__TenantId")))
-    throw new InvalidOperationException(
-        "The environment variable 'Graph__TenantId' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__ClientId")))
-    throw new InvalidOperationException(
-        "The environment variable 'Graph__ClientId' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__ClientSecret")))
-    throw new InvalidOperationException(
-        "The environment variable 'Graph__ClientSecret' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__Authority")))
-    throw new InvalidOperationException(
-        "The environment variable 'OpenIdConnect__Authority' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__ClientId")))
-    throw new InvalidOperationException(
-        "The environment variable 'OpenIdConnect__ClientId' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__ClientSecret")))
-    throw new InvalidOperationException(
-        "The environment variable 'OpenIdConnect__ClientSecret' must be set.");
-
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Certificate__Password")))
-    throw new InvalidOperationException(
-        "The environment variable 'Certificate__Password' must be set.");
-
+Helpers.ValidateEnvironmentVariables();
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
@@ -222,18 +194,15 @@ if (!result.Successful)
 Log.Information("Database migration completed successfully.");
 
 // Create client secret credential to authenticate against Microsoft graph
-builder.Services.AddSingleton<TokenCredential>(sp =>
-{
-    return new ClientSecretCredential(
-        Environment.GetEnvironmentVariable("Graph__TenantId"),
-        Environment.GetEnvironmentVariable("Graph__ClientId"),
-        Environment.GetEnvironmentVariable("Graph__ClientSecret"),
-        new ClientSecretCredentialOptions
-        {
-            AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
-        }
-    );
-});
+builder.Services.AddSingleton<TokenCredential>(_ => new ClientSecretCredential(
+    Environment.GetEnvironmentVariable("Graph__TenantId"),
+    Environment.GetEnvironmentVariable("Graph__ClientId"),
+    Environment.GetEnvironmentVariable("Graph__ClientSecret"),
+    new ClientSecretCredentialOptions
+    {
+        AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
+    }
+));
 
 // Create the Microsoft graph client
 builder.Services.AddSingleton(sp =>

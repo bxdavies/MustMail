@@ -1,13 +1,20 @@
-﻿namespace MustMail.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MustMail.Models;
 
 public class Message
 {
-    public required string Id { get; set; }
-    public DateTime Timestamp { get; set; }
-    public required string SenderName { get; set; }
-    public required string SenderEmail { get; set; }
-    public required string Subject { get; set; }
-    public int AttachmentCount { get; set; }
-    public string UserId { get; set; } = default!; // Required foreign key property
-    public User User { get; set; } = null!; // Required reference navigation to principal
+    [MaxLength(255)]
+    public required string Id { get; init; }
+    public DateTime Timestamp { get; init; }
+    [MaxLength(255)]
+    public required string SenderName { get; init; }
+    [MaxLength(254)]
+    public required string SenderEmail { get; init; }
+    [MaxLength(255)]
+    public required string Subject { get; init; }
+    public int AttachmentCount { get; init; }
+    [MaxLength(255)]
+    public string UserId { get; init; } = null!; // Required foreign key property
+    public User User { get; init; } = null!; // Required reference navigation to principal
 }

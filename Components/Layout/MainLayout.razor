@@ -1,6 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject AuthenticationStateProvider AuthenticationState
-@inject NavigationManager Nav
 
 <MudThemeProvider @ref="_mudThemeProvider" Theme="_mustMailTheme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -16,7 +14,7 @@
             </a>
             <MudText Typo="Typo.h1">@_title</MudText>
             <AuthorizeView>
-                <Authorized Context="auth">
+                <Authorized Context="_">
                     <form method="post" action="/authentication/logout">
 
                         <MudButton ButtonType="ButtonType.Submit" Class="my-3"
@@ -53,10 +51,8 @@
 </MudLayout>
 
 @code{
-    private string? _name = "Unknown User";
     private bool _isDarkMode;
-    private MudThemeProvider _mudThemeProvider = default!;
-    private object _formModel = new();
+    private MudThemeProvider _mudThemeProvider = null!;
 
     // Default title
     private string _title = "Must Mail";
@@ -67,15 +63,7 @@
         _title = title;
         StateHasChanged();
     }
-
-
-    protected async override Task OnParametersSetAsync()
-    {
-        AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
-        var user = authState.User;
-        _name = user?.Identity?.Name ?? "";
-    }
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -95,7 +83,7 @@
     }
 
 
-    private MudTheme _mustMailTheme = new MudTheme()
+    private readonly MudTheme _mustMailTheme = new()
     {
         PaletteDark = new PaletteDark()
         {
@@ -115,7 +103,7 @@
         {
             Default = new DefaultTypography()
             {
-                FontFamily = new[] { "Quicksand", "sans-serif" },
+                FontFamily = ["Quicksand", "sans-serif"],
                 FontWeight = "400"
             },
             H1 = new H1Typography

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using MustMail.Db;
 using System.Security.Claims;
 
 namespace MustMail.Auth;

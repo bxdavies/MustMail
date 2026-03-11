@@ -113,16 +113,31 @@
 
 								<MudItem xs="12">
 									<MudTextField T="string" Label="Client Secret"
-												  Disabled="true"
-												  HelperText="Only configurable by the environment variable." />
+									              Disabled="true"
+									              HelperText="Only configurable by the environment variable." />
 
 									<div>
 										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code> OpenIdConnect__ClientSecret </code></MudText>
 
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-													   Size="Size.Small"
-													   Class="env-copy-btn"
-													   OnClick="@(() => CopyToClipboard("OpenIdConnect__ClientSecret"))" />
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("OpenIdConnect__ClientSecret"))" />
+									</div>
+								</MudItem>
+								
+								<MudItem xs="12">
+									<MudTextField Label="Name Claim"
+									              @bind-Value="Config.OpenIdConnect.NameClaim"
+									              HelperText="Default is 'name'" />
+
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code> OpenIdConnect__NameClaim </code></MudText>
+
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("OpenIdConnect__NameClaim"))" />
 									</div>
 								</MudItem>
 							</MudGrid>
@@ -383,10 +398,10 @@
 
 								<MudStack Row Spacing="2" AlignItems="AlignItems.Center">
 									<MudTextField Label="Add address or *"
-												  @bind-Value="_newAllowedFrom"
+												  @bind-Value="NewAllowedFrom"
 												  Immediate="true"
 												  Placeholder="user@example.com or *" />
-									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAllowedFrom">
+									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddAllowedFrom">
 										Add
 									</MudButton>
 								</MudStack>
@@ -419,10 +434,10 @@
 
 
 									<MudTextField Label="Add address or *"
-												  @bind-Value="_newAllowedRecipients"
+												  @bind-Value="NewAllowedRecipients"
 												  Immediate="true"
 												  Placeholder="user@example.com or *" />
-									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAllowedTo">
+									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddAllowedTo">
 										Add
 									</MudButton>
 								</MudStack>
@@ -521,7 +536,7 @@
 					<MudDivider Class="my-4" />
 
 					<MudStack Direction="Row" Spacing="2" Justify="Justify.FlexEnd">
-						<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ValidateAndSave">
+						<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@ValidateAndSave">
 							Save
 						</MudButton>
 					</MudStack>
@@ -593,7 +608,7 @@
 						<MudText Typo="Typo.h5"> SMTP Accounts </MudText>
 						<MudSpacer />
 						<MudButtonGroup Class="ma-0 pa-0" Color="Color.Success" Variant="Variant.Filled">
-							<MudButton OnClick="NewSMTPAccount">
+							<MudButton OnClick="@NewSMTPAccount">
 								Add new SMTP account
 							</MudButton>
 						</MudButtonGroup>

@@ -1,6 +1,5 @@
 ﻿using Isopoh.Cryptography.Argon2;
 using Microsoft.JSInterop;
-using MustMail.Db;
 using System.Text.Json;
 
 namespace MustMail.Components.Pages
@@ -10,20 +9,20 @@ namespace MustMail.Components.Pages
         // Page variables
         protected MudForm? SettingsForm;
         protected Configuration Config = null!;
-        protected string _newAllowedFrom = "";
-        protected string _newAllowedRecipients = "";
+        protected string NewAllowedFrom = "";
+        protected string NewAllowedRecipients = "";
 
         protected List<User> Users = [];
-        protected MudDataGrid<User> UserGrid = default!;
+        protected MudDataGrid<User> UserGrid = null!;
 
         protected List<SMTPAccount> SMTPAccounts = [];
-        protected MudDataGrid<SMTPAccount> SMTPAccountGrid = default!;
+        protected MudDataGrid<SMTPAccount> SMTPAccountGrid = null!;
 
         // Component parameters and dependency injection
-        [Inject] public IJSRuntime JS { get; set; } = default!;
-        [Inject] public ISnackbar Snackbar { get; set; } = default!;
-        [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = default!;
-        [Inject] public IConfiguration Configuration { get; set; } = default!;
+        [Inject] public IJSRuntime JS { get; set; } = null!;
+        [Inject] public ISnackbar Snackbar { get; set; } = null!;
+        [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
+        [Inject] public IConfiguration Configuration { get; set; } = null!;
         [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
         // Lifecycle method called after parameters and property values are set
@@ -32,7 +31,7 @@ namespace MustMail.Components.Pages
             // Set page title
             SetTitle?.Invoke("Admin");
 
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             Config = Configuration.Get<Configuration>()!;
 
@@ -46,10 +45,10 @@ namespace MustMail.Components.Pages
             await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount() { Username = "", Password = "", Description = "" });
         }
 
-        // Remove SMTP account - remove acount
+        // Remove SMTP account - remove account
         protected async Task RemoveSMTPAccount(SMTPAccount item)
         {
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             _ = SMTPAccounts.Remove(item);
 
@@ -57,10 +56,10 @@ namespace MustMail.Components.Pages
             _ = await dbContext.SaveChangesAsync();
         }
 
-        // SMTP account item changes - called when creating or editing a SMTP account
+        // SMTP account item changes - called when creating or editing an SMTP account
         protected async Task<DataGridEditFormAction> SMTPAccountItemChanges(SMTPAccount item)
         {
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             // New item
             if (item.Id == 0)
@@ -100,10 +99,10 @@ namespace MustMail.Components.Pages
             return DataGridEditFormAction.Close;
         }
 
-        // Remove user - remove user but check their is at least one admin
+        // Remove user - remove user but check there is at least one admin
         protected async Task RemoveUser(User item)
         {
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             // At least one admin check
             int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
@@ -131,7 +130,7 @@ namespace MustMail.Components.Pages
         // User item changed - called when editing a user
         protected async Task<DataGridEditFormAction> UserItemChanges(User item)
         {
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             User? user = await dbContext.User.FindAsync(item.Id);
             if (user == null)
@@ -139,7 +138,7 @@ namespace MustMail.Components.Pages
 
             // At least one admin check
             int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
-            if (numberOfAdminUsers == 1 && item.Admin == false && user.Admin == true)
+            if (numberOfAdminUsers == 1 && !item.Admin && user.Admin)
             {
                 _ = Snackbar.Add("There must be at least one admin!", Severity.Error);
                 item.Admin = true;
@@ -159,33 +158,33 @@ namespace MustMail.Components.Pages
         // Add allowed from - add new allowed from to config
         protected void AddAllowedFrom()
         {
-            string v = (_newAllowedFrom ?? "").Trim();
+            string v = (NewAllowedFrom).Trim();
             if (string.IsNullOrWhiteSpace(v)) return;
 
             Config.MustMail.AllowedSenders.Add(v);
-            _newAllowedFrom = "";
+            NewAllowedFrom = "";
         }
 
         // Remove allowed from - remove allowed from
         protected void RemoveAllowedFrom(string value)
         {
-            _ = (Config.MustMail.AllowedSenders?.Remove(value));
+            _ = (Config.MustMail.AllowedSenders.Remove(value));
         }
 
         // Add allowed to - add new allowed to 
         protected void AddAllowedTo()
         {
-            string v = (_newAllowedRecipients ?? "").Trim();
+            string v = (NewAllowedRecipients).Trim();
             if (string.IsNullOrWhiteSpace(v)) return;
 
             Config.MustMail.AllowedRecipients.Add(v);
-            _newAllowedRecipients = "";
+            NewAllowedRecipients = "";
         }
 
         // Removed allowed to - remove allowed to from to config
         protected void RemoveAllowedTo(string value)
         {
-            _ = (Config.MustMail.AllowedRecipients?.Remove(value));
+            _ = (Config.MustMail.AllowedRecipients.Remove(value));
         }
 
         // Validate and save - validate from and save to appsettings.json
@@ -201,7 +200,7 @@ namespace MustMail.Components.Pages
                 return;
             }
 
-            File.WriteAllText(@"appsettings.json", JsonSerializer.Serialize(Config, JsonDefaults.Options));
+            await File.WriteAllTextAsync(@"appsettings.json", JsonSerializer.Serialize(Config, JsonDefaults.Options));
 
             _ = Snackbar.Add("Settings saved.", Severity.Success);
         }

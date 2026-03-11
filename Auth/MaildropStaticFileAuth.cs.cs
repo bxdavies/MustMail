@@ -8,10 +8,10 @@ public static class MaildropStaticFileAuth
 {
     public static void OnPrepareResponse(StaticFileResponseContext ctx)
     {
-        ClaimsPrincipal? user = ctx.Context.User;
+        ClaimsPrincipal user = ctx.Context.User;
 
         // Require authentication
-        if (user?.Identity?.IsAuthenticated != true)
+        if (user.Identity?.IsAuthenticated != true)
         {
             Deny(ctx, HttpStatusCode.Unauthorized);
             return;

@@ -6,17 +6,17 @@ public class Configuration
 {
     public string AllowedHosts { get; set; } = "*";
     public string Urls { get; set; } = "http://0.0.0.0:5000";
-    public required SmtpConfiguration Smtp { get; set; } = new();
-    public required OpenIdConnectConfiguration OpenIdConnect { get; set; }
-    public required MustMailConfiguration MustMail { get; set; } = new();
-    public required CertificateConfiguration Certificate { get; set; } = new();
-    public SerilogConfiguration Serilog { get; set; } = new();
+    public required SmtpConfiguration Smtp { get; init; } = new();
+    public required OpenIdConnectConfiguration OpenIdConnect { get; init; } = new();
+    public required MustMailConfiguration MustMail { get; init; } = new();
+    public required CertificateConfiguration Certificate { get; init; } = new();
+    public SerilogConfiguration Serilog { get; init; } = new();
    
 }
 public class SmtpConfiguration
 {
     public string Host { get; set; } = "localhost";
-    public bool AllowInsecure { get; set; } = false;
+    public bool AllowInsecure { get; set; }
     [Range(1, 65535)]
     public int InsecurePort { get; set; } = 25;
 
@@ -34,7 +34,7 @@ public class OpenIdConnectConfiguration
 
 public class MustMailConfiguration
 {
-    public bool TrustFrom { get; set; } = false;
+    public bool TrustFrom { get; set; }
     public bool StoreEmails { get; set; } = true;
     public int RetentionDays { get; set; } = 7;
     public List<string> AllowedSenders { get; set; } = [];

@@ -187,10 +187,7 @@
 									@if (ActiveMessage.Attachments.Any())
 									{
 										<MudPaper Elevation="0"
-												  Class="pa-2"
-												  Style="border: 1px solid var(--mud-palette-lines-default);
-														 background: var(--mud-palette-background-grey);
-														 border-radius: 12px;">
+												  Class="pa-2">
 											<MudStack Spacing="1">
 												<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
 													<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
@@ -202,55 +199,52 @@
 												<MudStack Row="true" Spacing="1" Style="flex-wrap: wrap;">
 													@foreach (MimeEntity mimeEntity in ActiveMessage.Attachments)
 													{
-														if (mimeEntity is MimePart mimePart && mimePart.FileName != null && mimePart.Content != null)
+														switch (mimeEntity)
 														{
-															// Create path maildrop/userId/messageId/filename
-															var attachmentPath = Path.Combine(
-																"maildrop",
-																UserId,
-																message.Id,
-																mimePart.FileName);
+															case MimePart { FileName: not null, Content: not null } mimePart:
+															{
+																// Create path maildrop/userId/messageId/filename
+																string attachmentPath = Path.Combine(
+																	"maildrop",
+																	UserId,
+																	message.Id,
+																	mimePart.FileName);
 
-															// Sanitize file path
-															attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
+																// Sanitize file path
+																attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
 
-															<MudChip Class="me-1 mb-1"
-																	T="string"
-																	 Variant="Variant.Outlined"
-																	 Color="Color.Default"
-																	 Href="@attachmentPath"
-																	 Target="_blank">
-																<MudText Typo="Typo.body2" Class="me-2">@mimePart.FileName</MudText>
+																<MudChip Class="me-1 mb-1"
+																         T="string"
+																         Variant="Variant.Outlined"
+																         Color="Color.Default"
+																         Href="@attachmentPath"
+																         Target="_blank">
+																	<MudText Typo="Typo.body2" Class="me-2">@mimePart.FileName</MudText>
 
-																@* Optional: tiny meta *@
-																<MudText Typo="Typo.caption" Color="Color.Secondary">
-																	@FormatAttachmentMeta(mimePart)
-																</MudText>
+																	@* Optional: tiny meta *@
+																	<MudText Typo="Typo.caption" Color="Color.Secondary">
+																		@FormatAttachmentMeta(mimePart)
+																	</MudText>
 
-																<MudIcon Icon="@Icons.Material.Filled.Download"
-																		 Size="Size.Small"
-																		 Class="ms-2"
-																		 Style="opacity: .8;" />
-															</MudChip>
+																	<MudIcon Icon="@Icons.Material.Filled.Download"
+																	         Size="Size.Small"
+																	         Class="ms-2"
+																	         Style="opacity: .8;" />
+																</MudChip>
+																break;
+															}
 														}
 													}
 												</MudStack>
 											</MudStack>
 										</MudPaper>
 									}
-									else
-									{
-										
-									}
 
-								
 
 									<MudDivider Class="mb-2" />
 
 									<MudPaper Elevation="0"
-											  Class="pa-3"
-											  Style="border-left: 4px solid var(--mud-palette-primary);
-													 background: var(--mud-palette-background-grey);">
+											  Class="pa-3">
 										<MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
 											@if (ActiveMessage.HtmlBody != null)
 											{

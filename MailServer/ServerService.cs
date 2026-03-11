@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.Graph;
-using MustMail.Db;
+﻿using Microsoft.Graph;
 using SmtpServer;
 using System.Security.Cryptography.X509Certificates;
 
@@ -32,21 +30,17 @@ public partial class ServerService(
              .Port(mustMailConfig.Smtp.ImplicitTLSPort)
              .IsSecure(true)
              .AllowUnsecureAuthentication(false)
-             .AuthenticationRequired(true)
              .Certificate(certificate))
          .Endpoint(builder => builder
              .Port(mustMailConfig.Smtp.StartTLSPort)
              .AllowUnsecureAuthentication(false)
-             .AuthenticationRequired(true)
              .Certificate(certificate));
 
         if (mustMailConfig.Smtp.AllowInsecure)
         {
             _ = smtpBuilder.Endpoint(builder => builder
                 .Port(mustMailConfig.Smtp.InsecurePort)
-                .IsSecure(false)
-                .AllowUnsecureAuthentication(true)
-                .AuthenticationRequired(true));
+                .IsSecure(false));
         }
 
         ISmtpServerOptions smtpOptions = smtpBuilder.Build();
@@ -83,16 +77,14 @@ public partial class ServerService(
         }
 
         LogSmtpStarted(mustMailConfig.Smtp.Host, ports);
-
-        // StartAsync completes when server stops; tie it to app lifetime cancellation
+        
         await _smtpServer.StartAsync(stoppingToken);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         LogSmtpStopping();
-
-        // SmtpServer stops when the token is cancelled; this is mostly for logging symmetry.
+        
         await base.StopAsync(cancellationToken);
 
         LogSmtpStopped();

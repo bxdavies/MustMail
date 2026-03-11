@@ -11,7 +11,8 @@ public class Profile
     [MaxLength(100)] public required string TimeZone { get; set; }
     [MaxLength(50)] public required string DateFormat { get; set; }
     [MaxLength(50)] public required string TimeFormat { get; set; }
-    public string UserId { get; set; } = default!; // Required foreign key property
+    [MaxLength(255)]
+    public string UserId { get; set; } = null!; // Required foreign key property
     public User User { get; set; } = null!; // Required reference navigation to principal
 
 }

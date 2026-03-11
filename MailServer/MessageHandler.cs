@@ -21,19 +21,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
         // Create memory stream
         await using MemoryStream stream = new();
-
-        // Get position 0 
-        SequencePosition position = buffer.GetPosition(0);
-
-        // Read buffer and write to memory stream
-        while (buffer.TryGet(ref position, out ReadOnlyMemory<byte> memory))
+        
+        foreach (ReadOnlyMemory<byte> memory in buffer)
         {
             await stream.WriteAsync(memory, cancellationToken);
         }
-
-        // Get position 0 
-        position = buffer.GetPosition(0);
-
+        
         // Debug log for the raw message
         LogMessageSize(buffer.Length);
 
@@ -41,7 +34,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         stream.Position = 0;
 
         // Load the memory stream as a Mime Message
-        MimeMessage? message = await MimeMessage.LoadAsync(stream, cancellationToken);
+        MimeMessage message = await MimeMessage.LoadAsync(stream, cancellationToken);
 
         // Debug log for the Mime Message
         if (logger.IsEnabled(LogLevel.Debug))
@@ -50,21 +43,13 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             LogMimeParsed(message.Subject, message.Attachments.Count());
 #pragma warning restore CA1873 // Avoid potentially expensive logging
         }
-
-
-        // If message is null then return an error
-        if (message == null)
-        {
-            LogMimeMessageNull();
-            return SmtpResponse.SyntaxError;
-        }
-
+        
         List<Recipient>
             allRecipients = [];
 
         // Create list of To recipients
         List<Recipient> toRecipients = [.. message.To
-            .OfType<MimeKit.MailboxAddress>()
+            .OfType<MailboxAddress>()
             .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
             .Select(address => new Recipient
             {
@@ -77,7 +62,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
         // Create list of Cc recipients
         List<Recipient> ccRecipients = [.. message.Cc
-            .OfType<MimeKit.MailboxAddress>()
+            .OfType<MailboxAddress>()
             .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
             .Select(address => new Recipient
             {
@@ -90,7 +75,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
         // Create list of Bcc recipients
         List<Recipient> bccRecipients = [.. message.Bcc
-            .OfType<MimeKit.MailboxAddress>()
+            .OfType<MailboxAddress>()
             .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
             .Select(address => new Recipient
             {
@@ -105,7 +90,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         {
             allRecipients.AddRange(from Recipient recipient in toRecipients
                                    select recipient);
-            // Debug log the to recipients
+            // Debug log the To recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
                 IEnumerable<string> to = toRecipients.Select(r => r.EmailAddress!.Address!);
@@ -117,7 +102,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         {
             allRecipients.AddRange(from Recipient recipient in ccRecipients
                                    select recipient);
-            // Debug log the cc recipients
+            // Debug log the Cc recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
                 IEnumerable<string> cc = ccRecipients.Select(r => r.EmailAddress!.Address!);
@@ -129,7 +114,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         {
             allRecipients.AddRange(from Recipient recipient in bccRecipients
                                    select recipient);
-            // Debug log the bcc recipients
+            // Debug log the Bcc recipients
             if (logger.IsEnabled(LogLevel.Debug))
             {
                 IEnumerable<string> bcc = bccRecipients.Select(r => r.EmailAddress!.Address!);
@@ -138,13 +123,13 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         }
 
         // Check we have recipients - this should never happen but for sanity we check
-        if (allRecipients == null || allRecipients.Count == 0)
+        if (allRecipients.Count == 0)
         {
             LogNoRecipients();
             return SmtpResponse.NoValidRecipientsGiven;
         }
 
-        // If allowedTo is not wildcarded
+        // If allowedTo is not wildcard
         if (!mustMailConfiguration.AllowedRecipients.Contains("*") && mustMailConfiguration.AllowedRecipients.Count > 0)
         {
             foreach (Recipient recipient in allRecipients)
@@ -198,11 +183,11 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             }
 
             // Get first FROM Header Field
-            senderAddress = message.From.OfType<MimeKit.MailboxAddress>()
+            senderAddress = message.From.OfType<MailboxAddress>()
                   .Select(a => a.Address)
                   .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
 
-            senderName = message.From.OfType<MimeKit.MailboxAddress>()
+            senderName = message.From.OfType<MailboxAddress>()
                 .Select(a => a.Name)
                 .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
 
@@ -240,7 +225,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         {
             if (!mustMailConfiguration.AllowedSenders.Contains(senderAddress))
             {
-                LogSenderRejected(senderAddress!);
+                LogSenderRejected(senderAddress);
                 return SmtpResponse.SyntaxError;
             }
         }
@@ -254,56 +239,60 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
             foreach (MimeEntity mimeEntity in message.Attachments)
             {
-                // Regular file attachment
-                if (mimeEntity is MimePart mimePart && mimePart.Content != null)
+                switch (mimeEntity)
                 {
-                    string fileName = mimePart.FileName ?? "unnamed-attachment";
-
-                    // Replace invalid characters with hyphens
-                    Array.ForEach(Path.GetInvalidFileNameChars(),
-                        c => fileName = fileName.Replace(c.ToString(), "-"));
-
-                    // Write to byte stream
-                    using MemoryStream memory = new();
-                    await mimePart.Content.DecodeToAsync(memory, cancellationToken);
-                    byte[] attachmentBytes = memory.ToArray();
-
-                    // Create graph attachment 
-                    attachments.Add(new FileAttachment
+                    // Regular file attachment
+                    case MimePart { Content: not null } mimePart:
                     {
-                        OdataType = "#microsoft.graph.fileAttachment",
-                        Name = fileName,
-                        ContentType = mimePart.ContentType.MimeType,
-                        ContentBytes = attachmentBytes
-                    });
+                        string fileName = mimePart.FileName ?? "unnamed-attachment";
 
-                    LogAttachment(fileName, attachmentBytes.Length, mimePart.ContentType.MimeType);
-                }
-                // Embedded email message
-                else if (mimeEntity is MessagePart messagePart && messagePart.Message != null)
-                {
+                        // Replace invalid characters with hyphens
+                        Array.ForEach(Path.GetInvalidFileNameChars(),
+                            c => fileName = fileName.Replace(c.ToString(), "-"));
 
-                    string embeddedName = messagePart.Message.Subject ?? "embedded-message";
+                        // Write to byte stream
+                        using MemoryStream memory = new();
+                        await mimePart.Content.DecodeToAsync(memory, cancellationToken);
+                        byte[] attachmentBytes = memory.ToArray();
 
-                    // Replace invalid characters with hyphens
-                    Array.ForEach(Path.GetInvalidFileNameChars(),
-                        c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
+                        // Create graph attachment 
+                        attachments.Add(new FileAttachment
+                        {
+                            OdataType = "#microsoft.graph.fileAttachment",
+                            Name = fileName,
+                            ContentType = mimePart.ContentType.MimeType,
+                            ContentBytes = attachmentBytes
+                        });
 
-                    // Write to byte stream
-                    using MemoryStream memory = new();
-                    await messagePart.Message.WriteToAsync(memory, cancellationToken);
-                    byte[] messageBytes = memory.ToArray();
-
-                    // Create graph attachment 
-                    attachments.Add(new FileAttachment
+                        LogAttachment(fileName, attachmentBytes.Length, mimePart.ContentType.MimeType);
+                        break;
+                    }
+                    // Embedded email message
+                    case MessagePart { Message: not null } messagePart:
                     {
-                        OdataType = "#microsoft.graph.fileAttachment",
-                        Name = embeddedName + ".eml",
-                        ContentType = "message/rfc822",
-                        ContentBytes = messageBytes
-                    });
+                        string embeddedName = messagePart.Message.Subject ?? "embedded-message";
 
-                    LogEmbeddedMessage(embeddedName, messageBytes.Length);
+                        // Replace invalid characters with hyphens
+                        Array.ForEach(Path.GetInvalidFileNameChars(),
+                            c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
+
+                        // Write to byte stream
+                        using MemoryStream memory = new();
+                        await messagePart.Message.WriteToAsync(memory, cancellationToken);
+                        byte[] messageBytes = memory.ToArray();
+
+                        // Create graph attachment 
+                        attachments.Add(new FileAttachment
+                        {
+                            OdataType = "#microsoft.graph.fileAttachment",
+                            Name = embeddedName + ".eml",
+                            ContentType = "message/rfc822",
+                            ContentBytes = messageBytes
+                        });
+
+                        LogEmbeddedMessage(embeddedName, messageBytes.Length);
+                        break;
+                    }
                 }
             }
         }
@@ -317,25 +306,18 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync(cancellationToken);
 
                 // If email address is null skip
-                if (recipient == null || recipient.EmailAddress == null || recipient.EmailAddress.Address == null)
-                {
+                if (recipient.EmailAddress?.Address == null)
                     continue;
-                }
 
                 // Get user from database
                 Models.User? appUser = await dbContext.User.SingleOrDefaultAsync(u => u.Email == recipient.EmailAddress.Address, cancellationToken: cancellationToken);
 
                 // Handel users that don't have an account
                 if (appUser == null)
-                {
                     continue;
-                }
 
                 // If there is no message id create one
-                if (string.IsNullOrWhiteSpace(message.MessageId))
-                {
-                    message.MessageId = MimeUtils.GenerateMessageId();
-                }
+                if (string.IsNullOrWhiteSpace(message.MessageId)) message.MessageId = MimeUtils.GenerateMessageId();
 
                 // Add message to database
                 appUser.Messages.Add(new Models.Message
@@ -378,55 +360,58 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                     foreach (MimeEntity mimeEntity in message.Attachments)
                     {
-                        // Regular file attachment
-                        if (mimeEntity is MimePart mimePart && mimePart.Content != null)
+                        switch (mimeEntity)
                         {
+                            // Regular file attachment
+                            case MimePart { Content: not null } mimePart:
+                            {
+                                string fileName = mimePart.FileName ?? "unnamed-attachment";
 
-                            string fileName = mimePart.FileName ?? "unnamed-attachment";
+                                // Create path maildrop/userId/messageId/filename
+                                string attachmentPath = Path.Combine(
+                                    AppContext.BaseDirectory,
+                                    "Data",
+                                    "maildrop",
+                                    appUser.Id,
+                                    message.MessageId,
+                                    fileName);
 
-                            // Create path maildrop/userId/messageId/filename
-                            string attachmentPath = Path.Combine(
-                                AppContext.BaseDirectory,
-                                "Data",
-                                "maildrop",
-                                appUser.Id,
-                                message.MessageId,
-                                fileName);
+                                // Sanitize file path
+                                attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
 
-                            // Sanitize file path
-                            attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
+                                // Ensure directory exists
+                                _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
 
-                            // Ensure directory exists
-                            _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
+                                // Write file
+                                await using FileStream fileStream = File.Create(attachmentPath);
+                                await mimePart.Content.DecodeToAsync(fileStream, cancellationToken);
+                                break;
+                            }
+                            // Embedded email message
+                            case MessagePart { Message: not null } messagePart:
+                            {
+                                string embeddedName = messagePart.Message.Subject ?? "embedded-message";
 
-                            // Write file
-                            await using FileStream fileStream = File.Create(attachmentPath);
-                            await mimePart.Content.DecodeToAsync(fileStream, cancellationToken);
-                        }
-                        // Embedded email message
-                        else if (mimeEntity is MessagePart messagePart && messagePart.Message != null)
-                        {
+                                // Create path maildrop/userId/messageId/filename
+                                string attachmentPath = Path.Combine(
+                                    AppContext.BaseDirectory,
+                                    "Data",
+                                    "maildrop",
+                                    appUser.Id,
+                                    message.MessageId,
+                                    $"{embeddedName}.eml");
 
-                            string embeddedName = messagePart.Message.Subject ?? "embedded-message";
+                                // Sanitize file path
+                                attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
 
-                            // Create path maildrop/userId/messageId/filename
-                            string attachmentPath = Path.Combine(
-                                AppContext.BaseDirectory,
-                                "Data",
-                                "maildrop",
-                                appUser.Id,
-                                message.MessageId,
-                                $"{embeddedName}.eml");
+                                // Ensure directory exists
+                                _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
 
-                            // Sanitize file path
-                            attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
-
-                            // Ensure directory exists
-                            _ = Directory.CreateDirectory(Path.GetDirectoryName(attachmentPath)!);
-
-                            // Write file
-                            await using FileStream fileStream = File.Create(attachmentPath);
-                            await messagePart.Message.WriteToAsync(fileStream, cancellationToken);
+                                // Write file
+                                await using FileStream fileStream = File.Create(attachmentPath);
+                                await messagePart.Message.WriteToAsync(fileStream, cancellationToken);
+                                break;
+                            }
                         }
                     }
                 }
@@ -458,7 +443,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             }
         };
 
-        // If message does contain a HTML body then use it
+        // If message does contain an HTML body then use it
         requestBody.Message.Body = message.HtmlBody != null
             ? new ItemBody
             {
@@ -531,10 +516,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 1103, Level = LogLevel.Debug, Message = "MIME message parsed. Subject: {Subject}, AttachmentCount: {AttachmentCount}")]
     private partial void LogMimeParsed(string? subject, int attachmentCount);
-
-    [LoggerMessage(EventId = 1104, Level = LogLevel.Warning, Message = "Unable to read message as MIME message")]
-    private partial void LogMimeMessageNull();
-
+    
     [LoggerMessage(EventId = 11051, Level = LogLevel.Debug, Message = "To recipients resolved: {Recipients}")]
     private partial void LogToRecipientsResolved(IEnumerable<string> recipients);
 

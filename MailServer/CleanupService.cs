@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using MustMail.Db;
 using Quartz;
 
 namespace MustMail.MailServer

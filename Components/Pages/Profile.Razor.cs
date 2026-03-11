@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
-using MustMail.Db;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -14,9 +13,9 @@ namespace MustMail.Components.Pages
         protected readonly ProfileForm Model = new();
 
         // Component parameters and dependency injection
-        [Inject] private ISnackbar Snackbar { get; set; } = default!;
-        [Inject] private AuthenticationStateProvider AuthenticationState { get; set; } = default!;
-        [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = default!;
+        [Inject] private ISnackbar Snackbar { get; set; } = null!;
+        [Inject] private AuthenticationStateProvider AuthenticationState { get; set; } = null!;
+        [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
         [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
         // Lifecycle method called after parameters and property values are set
@@ -25,7 +24,7 @@ namespace MustMail.Components.Pages
             // Set page title
             SetTitle?.Invoke("Profile");
 
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
 
@@ -48,7 +47,7 @@ namespace MustMail.Components.Pages
         // Valid form submit - update user's profile in the database
         protected async Task OnValidSubmit()
         {
-            using DatabaseContext dbContext = DbFactory.CreateDbContext();
+            await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
             AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
 
