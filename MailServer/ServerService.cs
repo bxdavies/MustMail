@@ -30,10 +30,12 @@ public partial class ServerService(
              .Port(mustMailConfig.Smtp.ImplicitTLSPort)
              .IsSecure(true)
              .AllowUnsecureAuthentication(false)
+             .AuthenticationRequired()
              .Certificate(certificate))
          .Endpoint(builder => builder
              .Port(mustMailConfig.Smtp.StartTLSPort)
              .AllowUnsecureAuthentication(false)
+             .AuthenticationRequired()
              .Certificate(certificate));
 
         if (mustMailConfig.Smtp.AllowInsecure)
