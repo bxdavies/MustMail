@@ -25,6 +25,9 @@ jobs:
         run: |
           echo "${{ secrets.TEST_ENV_VARS }}" >> $GITHUB_ENV
 
+      - name: Allow binding to privileged ports
+        run: sudo setcap 'cap_net_bind_service=+ep' $(which dotnet)
+
       - name: Restore dependencies
         run: dotnet restore
 
