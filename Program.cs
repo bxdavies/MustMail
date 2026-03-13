@@ -20,6 +20,7 @@ using Serilog;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Isopoh.Cryptography.Argon2;
 
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -347,6 +348,44 @@ builder.Services.AddRazorComponents()
 
 // Build the app
 WebApplication app = builder.Build();
+
+// Bootstrap SMTP Accounts
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+    string? env = Environment.GetEnvironmentVariable("Bootstrap__SMTPAccounts");
+
+    if (!string.IsNullOrWhiteSpace(env))
+    {
+        foreach (string account in env.Split('|', StringSplitOptions.RemoveEmptyEntries)) // Split multiple accounts
+        {
+            string[] parts = account.Split(':', 2);
+            if (parts.Length != 2) continue;; // username:password
+
+            string username = parts[0];
+            string password = parts[1];
+
+            if (!dbContext.SMTPAccount.Any(u => u.Username == username))
+            {
+                // Create account
+                dbContext.SMTPAccount.Add(new SMTPAccount()
+                {
+                    Username = username,
+                    Password = Argon2.Hash(password),
+                    Description = $"Account {username} bootstrapped from environment variable"
+                });
+
+                Log.Debug("Added bootstrap SMTP account {Username}", username);
+                
+                await dbContext.SaveChangesAsync();
+            };
+         
+        }
+
+        
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
