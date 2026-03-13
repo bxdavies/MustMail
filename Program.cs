@@ -32,7 +32,8 @@ Directory.CreateDirectory(dataFolder);
 // Load the  configuration
 builder.Configuration
     .SetBasePath(dataFolder)
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 // Create Serilog logger
 Log.Logger = new LoggerConfiguration()
