@@ -173,7 +173,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         Microsoft.Graph.Models.User? user;
 
         // Try MAIL FROM first (preferred)
-        string? senderAddress = transaction.From == null ? null : $"{transaction.From.User.Trim()}@{transaction.From.Host.Trim()}";
+        string? senderAddress =
+            transaction.From == null ||
+            string.IsNullOrWhiteSpace(transaction.From.User) ||
+            string.IsNullOrWhiteSpace(transaction.From.Host)
+                ? null
+                : $"{transaction.From.User.Trim()}@{transaction.From.Host.Trim()}";
         string? senderName = message.Sender?.Name?.Trim();
 
         // Check MAIL FROM was found
