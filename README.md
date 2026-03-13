@@ -3,6 +3,9 @@
     <img src="https://img.shields.io/github/languages/top/bxdavies/MustMail">
     <img src="https://img.shields.io/github/v/release/bxdavies/MustMail">
     <img src="https://qlty.sh/gh/bxdavies/projects/MustMail/maintainability.png">
+    <a href="https://github.com/bxdavies/mustmail/actions/workflows/tests.yml">
+    <img src="https://github.com/bxdavies/mustmail/actions/workflows/tests.yml/badge.svg" alt="Tests">
+  </a>
 </div>
 <br />
 <div align="center">
