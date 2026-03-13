@@ -43,6 +43,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             LogMimeParsed(message.Subject, message.Attachments.Count());
 #pragma warning restore CA1873 // Avoid potentially expensive logging
         }
+
+        List<Recipient> envelopeRecipients = transaction.To.Select(mailbox => new Recipient
+        {
+            EmailAddress = new EmailAddress
+            {
+                Address = $"{mailbox.User.Trim()}@{mailbox.Host.Trim()}"
+            }
+        }).ToList();
         
         List<Recipient>
             allRecipients = [];
@@ -72,22 +80,23 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                     Name = address.Name        // optional, can be null or empty
                 }
             })];
-
-        // Create list of Bcc recipients
-        List<Recipient> bccRecipients = [.. message.Bcc
-            .OfType<MailboxAddress>()
-            .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
-            .Select(address => new Recipient
-            {
-                EmailAddress = new EmailAddress
-                {
-                    Address = address.Address,  // plain email only
-                    Name = address.Name        // optional, can be null or empty
-                }
-            })];
-
+        
         if (toRecipients.Count != 0)
         {
+            // For each to recipient remove them from envelopeRecipients
+            foreach (Recipient to in toRecipients)
+            {
+                Recipient? match = envelopeRecipients.FirstOrDefault(recipient =>
+                    string.Equals(recipient.EmailAddress?.Address,
+                        to.EmailAddress?.Address,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (match != null)
+                {
+                    envelopeRecipients.Remove(match);
+                }
+            }
+            
             allRecipients.AddRange(from Recipient recipient in toRecipients
                                    select recipient);
             // Debug log the To recipients
@@ -100,6 +109,20 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
         if (ccRecipients.Count != 0)
         {
+            // For each cc recipient remove them from envelopeRecipients
+            foreach (Recipient cc in ccRecipients)
+            {
+                Recipient? match = envelopeRecipients.FirstOrDefault(recipient =>
+                    string.Equals(recipient.EmailAddress?.Address,
+                        cc.EmailAddress?.Address,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (match != null)
+                {
+                    envelopeRecipients.Remove(match);
+                }
+            }
+            
             allRecipients.AddRange(from Recipient recipient in ccRecipients
                                    select recipient);
             // Debug log the Cc recipients
@@ -109,6 +132,10 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 LogCcRecipientsResolved(cc);
             }
         }
+        
+        // Bcc recipients are not included in MimeMessage as such if the address still exists in envelopeRecipients then send bcc
+        List<Recipient> bccRecipients = [];
+        bccRecipients.AddRange(envelopeRecipients);
 
         if (bccRecipients.Count != 0)
         {
