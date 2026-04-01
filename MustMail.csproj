@@ -14,11 +14,11 @@
 	<ItemGroup>
 		<PackageReference Include="dbup" Version="5.0.41" />
 		<PackageReference Include="dbup-sqlite" Version="6.0.4" />
-		<PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.1.2" />
+		<PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.2.0" />
 		<PackageReference Include="HtmlSanitizer" Version="9.0.892" />
 		<PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.5" />
-		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
@@ -28,10 +28,10 @@
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
 		<PackageReference Include="MudBlazor" Version="9.*" />
-		<PackageReference Include="Azure.Identity" Version="1.19.0" />
+		<PackageReference Include="Azure.Identity" Version="1.20.0" />
 		<PackageReference Include="Microsoft.Graph" Version="5.103.0" />
 		<PackageReference Include="MimeKit" Version="4.15.1" />
-		<PackageReference Include="Quartz.AspNetCore" Version="3.16.1" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.17.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
 		<PackageReference Include="SmtpServer" Version="11.1.0" />
