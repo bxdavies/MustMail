@@ -10,7 +10,7 @@ public class Configuration
     public required OpenIdConnectConfiguration OpenIdConnect { get; init; } = new();
     public required MustMailConfiguration MustMail { get; init; } = new();
     public required CertificateConfiguration Certificate { get; init; } = new();
-    public SerilogConfiguration Serilog { get; init; } = new();
+    public SerilogConfiguration Serilog { get; set; } = new();
    
 }
 public class SmtpConfiguration
@@ -52,10 +52,18 @@ public class CertificateConfiguration
 
 public class SerilogConfiguration
 {
-    public MinimumLevelConfiguration MinimumLevel { get; set; } = new();
+    public List<string> Using { get; set; } = [];
+    public MinimumLevelConfiguration MinimumLevel { get; init; } = new();
+    public List<WriteToConfiguration> WriteTo { get; set; } = [];
 }
 
 public class MinimumLevelConfiguration
 {
-    public string Default { get; set; } = "Information";
+    public string? Default { get; set; } 
+}
+
+public class WriteToConfiguration
+{
+    public string? Name { get; set; }
+    public Dictionary<string, object>? Args { get; set; }
 }

@@ -29,7 +29,36 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 string dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
 Directory.CreateDirectory(dataFolder);
 
-// Load the  configuration
+string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
+
+// Ensure appsettings.json exists. 
+if (!File.Exists(appSettingsPath))
+{
+    Configuration  config = builder.Configuration.Get<Configuration>()
+                            ?? throw new InvalidOperationException(
+                                "Could not load MustMail configuration. Please see the README for configuration guidance.");
+
+    // Serilog defaults
+    config.Serilog  = new SerilogConfiguration
+    {
+        Using = ["Serilog.Sinks.Console"],
+        MinimumLevel = new MinimumLevelConfiguration { Default = "Information"},
+        WriteTo = [ new WriteToConfiguration
+        {
+            Name = "Console",
+            Args = new Dictionary<string, object>
+            {
+                ["outputTemplate"] = "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+            }
+        }]
+    };
+    
+    File.WriteAllText(
+        appSettingsPath,
+        JsonSerializer.Serialize(config, JsonDefaults.Options));
+}
+
+// Load the configuration
 builder.Configuration
     .SetBasePath(dataFolder)
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -38,9 +67,6 @@ builder.Configuration
 // Create Serilog logger
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Is(Serilog.Events.LogEventLevel.Information)
-    .WriteTo.Console(
-        theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Literate,
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level} {SourceContext}] {Message:lj}{NewLine}{Exception}")
     // Set minimum levels for noisy log sources 
     .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Warning) // Request logging
     .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning) // Everything AspNetCore logging
@@ -48,6 +74,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", Serilog.Events.LogEventLevel.Warning) // Browser link logging (used in development)  
     .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", Serilog.Events.LogEventLevel.Information) // Localization logging
     .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", Serilog.Events.LogEventLevel.Information) // Quartz Thread logging
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning) // Database command logging
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
@@ -138,8 +165,6 @@ Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
 // If we have overridden the configuration then save it and log
 if (configChanged)
 {
-    string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
-
     File.WriteAllText(
         appSettingsPath,
         JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
