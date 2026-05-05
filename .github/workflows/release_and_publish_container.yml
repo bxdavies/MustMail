@@ -1,4 +1,4 @@
-name: Release
+name: Release and Publish Container
 
 permissions: {}
   
@@ -34,7 +34,7 @@ jobs:
         id: bump
         uses: vers-one/dotnet-project-version-updater@6d4de57b8f089d58a00b6ede1f3f05c77bb8e541
         with:
-          file: "MustMail.csproj"
+          file: "MustMail.App/MustMail.App.csproj"
           version: ${{ env.VERSION }}
 
       - name: Commit version bump
@@ -79,7 +79,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
-          context: .
+          context: ./MustMail.App/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
