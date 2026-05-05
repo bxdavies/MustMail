@@ -139,7 +139,7 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__
         databasePath);
     }
 
-    Environment.SetEnvironmentVariable("ConnectionStrings__DatabaseContext", $"Data Source={databasePath}");
+    Environment.SetEnvironmentVariable("ConnectionStrings__Sqlite", $"Data Source={databasePath}");
 }
 else
 {
