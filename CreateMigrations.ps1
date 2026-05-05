@@ -1,30 +1,39 @@
 # Ask user for starting migration
 $fromMigration = Read-Host "Enter the FROM migration (leave blank for initial)"
+$newMigration = Read-Host "Enter the NEW migration name (leave blank for initial)"
 
 # PostgreSQL
 Write-Host "Generating Postgres migration script..."
 
-$env:DB_PROVIDER = "Postgres"
+$env:Db_Provider = "Postgres"
 
 
 if ([string]::IsNullOrWhiteSpace($fromMigration)) {
+    dotnet ef migrations add Initial --project MustMail.Migrations.Postgres --startup-project MustMail.App
+    Start-Sleep -Seconds 5
     dotnet ef migrations script `
-        -o "Db\Scripts\Postgres\Initial.sql"
+        -o "MustMail.Migrations.Postgres\Scripts\Initial.sql" --project MustMail.Migrations.Postgres --startup-project MustMail.App
 } else {
-    dotnet ef migrations script $fromMigration `
-        -o "Db\Scripts\Postgres\$fromMigration.sql"
+    dotnet ef migrations add $newMigration --project MustMail.Migrations.Postgres --startup-project MustMail.App
+    Start-Sleep -Seconds 5
+    dotnet ef migrations script $fromMigration $newMigration `
+        -o "MustMail.Migrations.Postgres\Scripts\$fromMigration.sql" --project MustMail.Migrations.Postgres --startup-project MustMail.App
 }
 # Sqlite
 Write-Host "Generating Sqlite migration script..."
 
-$env:DB_PROVIDER = "Sqlite"
+$env:Db_Provider = "Sqlite"
 
 if ([string]::IsNullOrWhiteSpace($fromMigration)) {
+    dotnet ef migrations add Initial --project MustMail.Migrations.Sqlite --startup-project MustMail.App
+    Start-Sleep -Seconds 5
     dotnet ef migrations script `
-        -o "Db\Scripts\Sqlite\Initial.sql"
+        -o "MustMail.Migrations.Sqlite\Scripts\Initial.sql" --project MustMail.Migrations.Sqlite --startup-project MustMail.App
 } else {
-    dotnet ef migrations script $fromMigration `
-        -o "Db\Scripts\SSqlite\$fromMigration.sql"
+    dotnet ef migrations add $newMigration --project MustMail.Migrations.Sqlite --startup-project MustMail.App
+    Start-Sleep -Seconds 5
+    dotnet ef migrations script $fromMigration $newMigration `
+        -o "MustMail.Migrations.Sqlite\Scripts\$fromMigration.sql" --project MustMail.Migrations.Sqlite --startup-project MustMail.App
 }
 
 Write-Host "Done!"
