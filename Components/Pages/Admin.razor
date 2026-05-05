@@ -286,7 +286,6 @@
 
 								<MudItem xs="12">
 									<MudInput T="int" @bind-Value="Config.MustMail.RetentionDays"
-											   Color="Color.Warning"
 											   Label="Retention" />
 
 									<MudText Class="mud-input-helper-text">
@@ -535,7 +534,7 @@
 
 					<MudDivider Class="my-4" />
 
-					<MudStack Direction="Row" Spacing="2" Justify="Justify.FlexEnd">
+					<MudStack Spacing="2" Justify="Justify.FlexEnd">
 						<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@ValidateAndSave">
 							Save
 						</MudButton>
