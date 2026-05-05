@@ -1,0 +1,61 @@
+
+
+@page "/not-found"
+@layout MainLayout
+@inject NavigationManager Nav
+
+<PageTitle>MustMail= Not Found</PageTitle>
+
+<div class="d-flex align-center justify-center" style="min-height: calc(100vh - 120px);">
+    <MudPaper Elevation="6" Class="pa-8" Style="width: 100%; max-width: 720px; border-radius: 18px;">
+        <MudStack Spacing="3" AlignItems="AlignItems.Center">
+
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Warning" />
+
+            <MudText Typo="Typo.h2" Class="mt-2" Style="font-weight: 800; letter-spacing: -0.5px;">
+                404
+            </MudText>
+
+            <MudText Typo="Typo.h5" Align="Align.Center" Style="font-weight: 700;">
+                Page not found
+            </MudText>
+
+            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                Sorry there's nothing at this address. The link may be broken, or the page may have moved.
+            </MudText>
+
+            <MudDivider Class="my-2" Style="width: 100%;" />
+
+            <MudStack Row="true" Spacing="2" Class="mt-2" Justify="Justify.Center">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Home"
+                           OnClick="@GoHome">
+                    Back to Home
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@GoBack">
+                    Go Back
+                </MudButton>
+            </MudStack>
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-4">
+                If you think this is a bug, try refreshing or head back to Home.
+            </MudText>
+
+        </MudStack>
+    </MudPaper>
+</div>
+
+@code {
+    private void GoHome() => Nav.NavigateTo("/");
+
+    private void GoBack()
+    {
+        // Works even when not all hosts support history.back() perfectly, but generally fine.
+        Nav.NavigateTo("javascript:history.back()");
+    }
+}
