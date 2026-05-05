@@ -61,10 +61,12 @@
 		<Content Include="..\MustMail.Migrations.Postgres\Scripts\*">
 			<Link>Db\Scripts\Postgres\%(RecursiveDir)%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
 		</Content>
 		<Content Include="..\MustMail.Migrations.Sqlite\Scripts\*">
 			<Link>Db\Scripts\Sqlite\%(RecursiveDir)%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
 		</Content>
 	</ItemGroup>
 
