@@ -119,7 +119,7 @@ if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
 }
 
 // If database connection string is not set store MustMail.db in the data folder. 
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__DatabaseContext")))
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")))
 {
     string databasePath = Path.Combine(dataFolder, "MustMail.db");
     bool exists = File.Exists(databasePath);
@@ -190,23 +190,43 @@ Log.Logger.Information(
 // Log configuration
 Log.Information("Configuration: \n {Serialize}", JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
 
-// Database connection
-builder.Services.AddDbContextFactory<DatabaseContext>(options =>
-    options.UseSqlite(Environment.GetEnvironmentVariable("ConnectionStrings__DatabaseContext")));
+// Create DbUp upgrader for database migrations 
+UpgradeEngine upgrader;
 
-//EnsureDatabase.For(builder.Configuration.GetConnectionString("DatabaseContext"));
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")))
+{
+    // Database connection
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlite(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")));
+
+    // Initialize DbUp upgrader to use SQLite 
+    upgrader =
+            DeployChanges.To
+                .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts"))
+                .LogTo(loggerFactory)
+                .Build();
+
+}
+else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")))
+{
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseNpgsql(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")));
+
+    // Initialize DbUp upgrader to use Postgres
+    upgrader =
+            DeployChanges.To
+                .PostgresqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts"))
+                .LogTo(loggerFactory)
+                .Build();
+}
+else
+{
+    throw new InvalidOperationException("No valid database connection string found!");
+}
 
 // If running in development capture ef core migration issues
 if (builder.Environment.IsDevelopment())
     _ = builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// Create DbUp upgrader for database migrations 
-UpgradeEngine upgrader =
-        DeployChanges.To
-            .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__DatabaseContext"))
-            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts"))
-            .LogTo(loggerFactory)
-            .Build();
 
 // Run database migrations 
 DatabaseUpgradeResult result = upgrader.PerformUpgrade();
