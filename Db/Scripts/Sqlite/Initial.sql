@@ -43,7 +43,7 @@ CREATE INDEX "IX_Message_UserId" ON "Message" ("UserId");
 CREATE UNIQUE INDEX "IX_Profile_UserId" ON "Profile" ("UserId");
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260304123706_v030Init', '10.0.3');
+VALUES ('20260505190430_Initial', '10.0.7');
 
 COMMIT;
 
