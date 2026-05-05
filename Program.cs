@@ -198,11 +198,11 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings_
     // Database connection
     builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlite(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")));
 
-    // Initialize DbUp upgrader to use SQLite 
+    // Initialize DbUp upgrader to use Sqlite
     upgrader =
             DeployChanges.To
                 .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Sqlite"))
                 .LogTo(loggerFactory)
                 .Build();
 
@@ -215,7 +215,7 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
     upgrader =
             DeployChanges.To
                 .PostgresqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Postgres"))
                 .LogTo(loggerFactory)
                 .Build();
 }
