@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="MustMail.csproj" />
-  <Project Path="Tests/Tests.csproj" />
+  <Project Path="MustMail.App/MustMail.App.csproj" />
+  <Project Path="MustMail.Migrations.Postgres/MustMail.Migrations.Postgres.csproj" />
+  <Project Path="MustMail.Migrations.Sqlite/MustMail.Migrations.Sqlite.csproj" Id="572c9708-d344-4970-824a-a2d7034f39a6" />
+  <Project Path="MustMail.Tests/MustMail.Tests.csproj" />
 </Solution>

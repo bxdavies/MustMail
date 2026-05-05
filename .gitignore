@@ -420,7 +420,6 @@ test-results/
 
 # Mac bundle stuff
 *.dmg
-*.app
 
 # content below from: https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
 # General
@@ -487,3 +486,11 @@ $RECYCLE.BIN/
 .idea/
 /Properties/launchSettings.json
 /Tests/test.runsettings
+
+# Files that may contain sensitive information
+*launchSettings.json
+*MustMail.Tests.runsettings
+
+# Migrations
+MustMail.Migrations.Postgres/*.cs
+MustMail.Migrations.Sqlite/*.cs
