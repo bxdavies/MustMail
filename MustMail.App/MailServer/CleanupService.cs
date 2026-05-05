@@ -15,7 +15,7 @@ namespace MustMail.App.MailServer
 
             await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync();
 
-            DateTime expiryDate = DateTime.Now - TimeSpan.FromDays(options.Value.MustMail.RetentionDays);
+            DateTime expiryDate = DateTime.UtcNow - TimeSpan.FromDays(options.Value.MustMail.RetentionDays);
             LogExpiryCutoff(options.Value.MustMail.RetentionDays, expiryDate);
 
             while (true)
