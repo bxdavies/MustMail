@@ -1,11 +1,11 @@
 name: Release
 
 permissions: {}
-  
+
 on:
   push:
     branches:
-    - main
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -13,12 +13,11 @@ env:
 
 jobs:
   build-and-push-image:
-    needs: version
     name: Build & Publish Container
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
