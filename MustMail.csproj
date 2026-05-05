@@ -61,7 +61,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="Db\Scripts\*">
+		<Content Include="Db\Scripts\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
