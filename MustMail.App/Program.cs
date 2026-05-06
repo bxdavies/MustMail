@@ -1,8 +1,12 @@
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
 using DbUp;
 using DbUp.Engine;
 using Duende.AccessTokenManagement.OpenIdConnect;
+using Isopoh.Cryptography.Argon2;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -11,16 +15,13 @@ using Microsoft.Graph;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Extensions;
 using MudBlazor.Services;
+using MustMail.App;
+using MustMail.App.Auth;
 using MustMail.App.Components;
 using MustMail.App.MailServer;
 using Quartz;
 using Serilog;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
-using Isopoh.Cryptography.Argon2;
-using MustMail.App;
-using MustMail.App.Auth;
+using Serilog.Events;
 
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -69,20 +70,20 @@ builder.Configuration
 
 // Create Serilog logger
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Is(Serilog.Events.LogEventLevel.Information)
+    .MinimumLevel.Is(LogEventLevel.Information)
     // Set minimum levels for noisy log sources 
-    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Warning)// Request logging
-    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)// Everything AspNetCore logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Information)// Entity Framework logging
-    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", Serilog.Events.LogEventLevel.Warning)// Browser link logging (used in development)  
-    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", Serilog.Events.LogEventLevel.Information)// Localization logging
-    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", Serilog.Events.LogEventLevel.Information)// Quartz Thread logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)// Database command logging
+    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Warning)// Request logging
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)// Everything AspNetCore logging
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)// Entity Framework logging
+    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", LogEventLevel.Warning)// Browser link logging (used in development)  
+    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", LogEventLevel.Information)// Localization logging
+    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", LogEventLevel.Information)// Quartz Thread logging
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)// Database command logging
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
 // Create logger factory
-using ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger, false);
+using ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
 // Set Serilog as the logging provider
 builder.Services.AddSerilog();
@@ -224,7 +225,7 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
 }
 else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")))
 {
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")!));
 
     // Initialize DbUp upgrader to use MySql
     upgrader =
@@ -439,10 +440,9 @@ using (IServiceScope scope = app.Services.CreateScope())
     {
         foreach (string account in env.Split('|', StringSplitOptions.RemoveEmptyEntries))// Split multiple accounts
         {
+            // Split username:password
             string[] parts = account.Split(':', 2);
             if (parts.Length != 2) continue;
-
-            ;// username:password
 
             string username = parts[0];
             string password = parts[1];
@@ -461,7 +461,6 @@ using (IServiceScope scope = app.Services.CreateScope())
 
                 await dbContext.SaveChangesAsync();
             }
-            ;
 
         }
 

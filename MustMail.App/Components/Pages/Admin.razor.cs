@@ -80,17 +80,17 @@ public class AdminBase : ComponentBase
         }
 
         // Get item from database
-        SMTPAccount? SMTPAccount = await dbContext.SMTPAccount.FindAsync(item.Id);
+        SMTPAccount? smtpAccount = await dbContext.SMTPAccount.FindAsync(item.Id);
 
-        if (SMTPAccount == null)
+        if (smtpAccount == null)
             return DataGridEditFormAction.Close;
 
         // If the user has updated the password we need to hash it
-        if (item.Password != SMTPAccount.Password)
+        if (item.Password != smtpAccount.Password)
             item.Password = Argon2.Hash(item.Password);
 
         // Update values in DB
-        dbContext.Entry(SMTPAccount).CurrentValues.SetValues(item);
+        dbContext.Entry(smtpAccount).CurrentValues.SetValues(item);
 
         _ = await dbContext.SaveChangesAsync();
 

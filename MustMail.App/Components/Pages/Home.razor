@@ -127,7 +127,7 @@
 										<MudItem xs="12" sm="10">
 											<MudStack Spacing="0">
 												<MudText Typo="Typo.subtitle2">@message.SenderName</MudText>
-												@if (message.SenderEmail != message.SenderEmail)
+												@if (message.SenderEmail != message.SenderName)
 												{
 													<MudText Typo="Typo.body2"
 													         Color="Color.Secondary">@message.SenderEmail</MudText>
