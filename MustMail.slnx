@@ -1,6 +1,9 @@
 <Solution>
   <Project Path="MustMail.App/MustMail.App.csproj" />
+  <Project Path="MustMail.Migrations.AzureSql/MustMail.Migrations.AzureSql.csproj" Id="dce14e5e-e04c-4b94-8028-5d7a3553038d" />
+  <Project Path="MustMail.Migrations.MySQL/MustMail.Migrations.MySQL.csproj" Id="5f50fe80-e9eb-47b7-9a9c-21acb48e38cd" />
   <Project Path="MustMail.Migrations.Postgres/MustMail.Migrations.Postgres.csproj" />
   <Project Path="MustMail.Migrations.Sqlite/MustMail.Migrations.Sqlite.csproj" Id="572c9708-d344-4970-824a-a2d7034f39a6" />
+  <Project Path="MustMail.Migrations.SqlServer/MustMail.Migrations.SqlServer.csproj" Id="d520a825-ccd1-4f60-bc5f-9b4945b95627" />
   <Project Path="MustMail.Tests/MustMail.Tests.csproj" />
 </Solution>

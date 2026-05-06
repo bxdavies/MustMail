@@ -219,6 +219,42 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
                 .LogTo(loggerFactory)
                 .Build();
 }
+else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")))
+{
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")));
+
+    // Initialize DbUp upgrader to use MySql
+    upgrader =
+            DeployChanges.To
+                .MySqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "MySQL"))
+                .LogTo(loggerFactory)
+                .Build();
+}
+else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")))
+{
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlServer(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")));
+
+    // Initialize DbUp upgrader to use SqlServer
+    upgrader =
+            DeployChanges.To
+                .SqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "SqlServer"))
+                .LogTo(loggerFactory)
+                .Build();
+}
+else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")))
+{
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseAzureSql(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")));
+
+    // Initialize DbUp upgrader to use AzureSql
+    upgrader =
+            DeployChanges.To
+                .AzureSqlDatabaseWithIntegratedSecurity(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql"))
+                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "AzureSql"))
+                .LogTo(loggerFactory)
+                .Build();
+}
 else
 {
     throw new InvalidOperationException("No valid database connection string found!");

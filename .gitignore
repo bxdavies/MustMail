@@ -494,3 +494,6 @@ $RECYCLE.BIN/
 # Migrations
 MustMail.Migrations.Postgres/*.cs
 MustMail.Migrations.Sqlite/*.cs
+MustMail.Migrations.MySQL/*.cs
+MustMail.Migrations.SqlServer/*.cs
+MustMail.Migrations.AzureSql/*.cs

@@ -20,6 +20,15 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DatabaseCo
             case "Sqlite":
                 optionsBuilder.UseSqlite(x => x.MigrationsAssembly("MustMail.Migrations.Sqlite"));
                 break;
+            case "MySQL":
+                optionsBuilder.UseMySQL(x => x.MigrationsAssembly("MustMail.Migrations.MySQL"));
+                break;
+            case "SqlServer":
+                optionsBuilder.UseSqlServer(x => x.MigrationsAssembly("MustMail.Migrations.SqlServer"));
+                break;
+            case "AzureSql":
+                optionsBuilder.UseAzureSql(x => x.MigrationsAssembly("MustMail.Migrations.AzureSql"));
+                break;
             default:
                 break;
         }

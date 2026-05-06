@@ -29,6 +29,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -38,6 +39,7 @@
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="Microsoft.Graph" Version="5.105.0" />
 		<PackageReference Include="MimeKit" Version="4.16.0" />
+		<PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
 		<PackageReference Include="NuGet.Packaging" Version="7.3.1" />
 		<PackageReference Include="NuGet.Protocol" Version="7.3.1" />
@@ -65,6 +67,21 @@
 		</Content>
 		<Content Include="..\MustMail.Migrations.Sqlite\Scripts\*">
 			<Link>Db\Scripts\Sqlite\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+		<Content Include="..\MustMail.Migrations.MySQL\Scripts\*">
+			<Link>Db\Scripts\MySQL\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+		<Content Include="..\MustMail.Migrations.SqlServer\Scripts\*">
+			<Link>Db\Scripts\SqlServer\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+		<Content Include="..\MustMail.Migrations.AzureSql\Scripts\*">
+			<Link>Db\Scripts\AzureSql\%(RecursiveDir)%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
 		</Content>
