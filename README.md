@@ -61,7 +61,7 @@ Features:
 ### v0.4.x
 - ~~Support additional database types~~ Implemented
 - ~~Support additional logging sinks~~ File and Syslog sinks implemented
-- Add health check endpoint
+- ~~Add health check endpoint~~ Implemented
 - ~~Create SMTP accounts from environment variables so the web interface is not required for initial setup~~ Implemented
 
 ### v0.5.x 
@@ -81,7 +81,7 @@ Features:
 
 ### v0.9.x
 - Store emails that repeatedly fail to send and notify the notification address so an administrator can review them
-- Add an admin dashboard for email statistics
+- Add an admin dashboard for email statistics and API endpoint 
 - Add search in the web interface
 
 ## Prerequisites
