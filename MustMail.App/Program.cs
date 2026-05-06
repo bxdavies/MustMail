@@ -26,6 +26,8 @@ using Serilog.Events;
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHealthChecks();
+
 // Create the Data folder
 string dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
 Directory.CreateDirectory(dataFolder);
@@ -426,8 +428,14 @@ builder.Services.AddMudServices();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Healthcheck for database
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DatabaseContext>();
+
 // Build the app
 WebApplication app = builder.Build();
+
+app.MapHealthChecks("/healthz");
 
 // Bootstrap SMTP Accounts
 using (IServiceScope scope = app.Services.CreateScope())

@@ -12,51 +12,52 @@
 
 
     <ItemGroup>
-        <PackageReference Include="dbup" Version="5.0.41"/>
-        <PackageReference Include="dbup-core" Version="6.1.1"/>
-        <PackageReference Include="dbup-mysql" Version="6.1.0"/>
-        <PackageReference Include="dbup-postgresql" Version="7.0.1"/>
-        <PackageReference Include="dbup-sqlite" Version="6.0.4"/>
-        <PackageReference Include="dbup-sqlserver" Version="7.2.0"/>
-        <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.2.0"/>
-        <PackageReference Include="HtmlSanitizer" Version="9.0.892"/>
-        <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.7"/>
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.7"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7"/>
+        <PackageReference Include="dbup" Version="5.0.41" />
+        <PackageReference Include="dbup-core" Version="6.1.1" />
+        <PackageReference Include="dbup-mysql" Version="6.1.0" />
+        <PackageReference Include="dbup-postgresql" Version="7.0.1" />
+        <PackageReference Include="dbup-sqlite" Version="6.0.4" />
+        <PackageReference Include="dbup-sqlserver" Version="7.2.0" />
+        <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.2.0" />
+        <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
+        <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0"/>
-        <PackageReference Include="MudBlazor" Version="9.*"/>
-        <PackageReference Include="Azure.Identity" Version="1.21.0"/>
-        <PackageReference Include="Microsoft.Graph" Version="5.105.0"/>
-        <PackageReference Include="MimeKit" Version="4.16.0"/>
-        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.1"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1"/>
-        <PackageReference Include="NuGet.Packaging" Version="7.3.1"/>
-        <PackageReference Include="NuGet.Protocol" Version="7.3.1"/>
-        <PackageReference Include="Quartz.AspNetCore" Version="3.18.1"/>
-        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0"/>
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1"/>
-        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
-        <PackageReference Include="Serilog.Sinks.SyslogMessages" Version="4.1.0"/>
-        <PackageReference Include="SmtpServer" Version="11.1.0"/>
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.7" />
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+        <PackageReference Include="MudBlazor" Version="9.*" />
+        <PackageReference Include="Azure.Identity" Version="1.21.0" />
+        <PackageReference Include="Microsoft.Graph" Version="5.105.0" />
+        <PackageReference Include="MimeKit" Version="4.16.0" />
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.1" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+        <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
+        <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
+        <PackageReference Include="Quartz.AspNetCore" Version="3.18.1" />
+        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="Serilog.Sinks.SyslogMessages" Version="4.1.0" />
+        <PackageReference Include="SmtpServer" Version="11.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Microsoft.AspNetCore.Components"/>
-        <Using Include="Microsoft.EntityFrameworkCore"/>
-        <Using Include="MudBlazor"/>
-        <Using Include="MustMail.App.Db"/>
-        <Using Include="MustMail.App.Models"/>
+        <Using Include="Microsoft.AspNetCore.Components" />
+        <Using Include="Microsoft.EntityFrameworkCore" />
+        <Using Include="MudBlazor" />
+        <Using Include="MustMail.App.Db" />
+        <Using Include="MustMail.App.Models" />
     </ItemGroup>
 
     <ItemGroup>
