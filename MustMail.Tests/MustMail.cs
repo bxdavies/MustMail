@@ -36,7 +36,7 @@ public class MustMail
         };
 
         await client.ConnectAsync("localhost", port, socketOptions);
-        client.Timeout = 10000; // 10 seconds
+        client.Timeout = 10000;// 10 seconds
         return client;
     }
 
@@ -59,16 +59,16 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = CreateMessage(
-                subject: $"Test: NotAllowedSender_IsRejected {port}",
-                body: "NotAllowedSender_IsRejected");
+                                                subject: $"Test: NotAllowedSender_IsRejected {port}",
+                                                body: "NotAllowedSender_IsRejected");
 
             await Assert.ThrowsAsync<SmtpCommandException>(() =>
-                client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
         }
         finally
         {
@@ -95,13 +95,13 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = CreateMessage(
-                subject: $"Test: AllowedSender_IsAccepted {port}",
-                body: "AllowedSender_IsAccepted");
+                                                subject: $"Test: AllowedSender_IsAccepted {port}",
+                                                body: "AllowedSender_IsAccepted");
 
             await client.SendAsync(message, TestContext.CancellationToken);
         }
@@ -130,16 +130,16 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = CreateMessage(
-                subject: $"Test: NotAllowedRecipients_IsRejected {port}",
-                body: "NotAllowedRecipients_IsRejected");
+                                                subject: $"Test: NotAllowedRecipients_IsRejected {port}",
+                                                body: "NotAllowedRecipients_IsRejected");
 
             await Assert.ThrowsAsync<SmtpCommandException>(() =>
-                client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
         }
         finally
         {
@@ -166,13 +166,13 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = CreateMessage(
-                subject: $"Test: AllowedRecipients_IsAccepted {port}",
-                body: "AllowedRecipients_IsAccepted");
+                                                subject: $"Test: AllowedRecipients_IsAccepted {port}",
+                                                body: "AllowedRecipients_IsAccepted");
 
             await client.SendAsync(message, TestContext.CancellationToken);
         }
@@ -186,7 +186,7 @@ public class MustMail
     [TestCategory("Integration")]
     [TestCategory("MustMail")]
     [Description(
-        "Verifies that if a MAIL FROM address is not found and TrustFrom is disabled then the email is rejected")]
+                    "Verifies that if a MAIL FROM address is not found and TrustFrom is disabled then the email is rejected")]
     [DataRow(465)]
     [DataRow(587)]
     public async Task MustMail_TrustFromDisabled_IsRejected(int port)
@@ -202,9 +202,9 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = new();
             message.To.Add(MailboxAddress.Parse(Test.Config.DefaultRecipient));
@@ -214,7 +214,7 @@ public class MustMail
             List<MailboxAddress> recipients = [MailboxAddress.Parse(Test.Config.DefaultRecipient)];
 
             await Assert.ThrowsAsync<SmtpCommandException>(() => client.SendAsync(message,
-                new MailboxAddress(string.Empty, string.Empty), recipients, TestContext.CancellationToken));
+                                                                                  new MailboxAddress(string.Empty, string.Empty), recipients, TestContext.CancellationToken));
         }
         finally
         {
@@ -226,7 +226,7 @@ public class MustMail
     [TestCategory("Integration")]
     [TestCategory("MustMail")]
     [Description(
-        "Verifies that if a MAIL FROM address is not found and TrustFrom is enabled then the FROM address is used and accepted")]
+                    "Verifies that if a MAIL FROM address is not found and TrustFrom is enabled then the FROM address is used and accepted")]
     [DataRow(465)]
     [DataRow(587)]
     public async Task MustMail_TrustFromEnabled_IsAccepted(int port)
@@ -242,9 +242,9 @@ public class MustMail
             using SmtpClient client = await ConnectClientAsync(port);
 
             await client.AuthenticateAsync(
-                Test.Config.SmtpUser,
-                Test.Config.SmtpPassword,
-                TestContext.CancellationToken);
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
 
             MimeMessage message = new();
             message.From.Add(MailboxAddress.Parse(Test.Config.DefaultSender));
@@ -255,7 +255,7 @@ public class MustMail
             List<MailboxAddress> recipients = [MailboxAddress.Parse(Test.Config.DefaultRecipient)];
 
             await client.SendAsync(message, new MailboxAddress(string.Empty, string.Empty), recipients,
-                TestContext.CancellationToken);
+                                   TestContext.CancellationToken);
         }
         finally
         {

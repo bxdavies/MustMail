@@ -34,52 +34,55 @@ string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
 // Ensure appsettings.json exists. 
 if (!File.Exists(appSettingsPath))
 {
-    Configuration  config = builder.Configuration.Get<Configuration>()
-                            ?? throw new InvalidOperationException(
-                                "Could not load MustMail configuration. Please see the README for configuration guidance.");
+    Configuration config = builder.Configuration.Get<Configuration>()
+                           ?? throw new InvalidOperationException(
+                                                                  "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
     // Serilog defaults
-    config.Serilog  = new SerilogConfiguration
+    config.Serilog = new SerilogConfiguration
     {
         Using = ["Serilog.Sinks.Console"],
-        MinimumLevel = new MinimumLevelConfiguration { Default = "Information"},
-        WriteTo = [ new WriteToConfiguration
-        {
-            Name = "Console",
-            Args = new Dictionary<string, object>
+        MinimumLevel = new MinimumLevelConfiguration { Default = "Information" },
+        WriteTo =
+        [
+            new WriteToConfiguration
             {
-                ["outputTemplate"] = "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+                Name = "Console",
+                Args = new Dictionary<string, object>
+                {
+                    ["outputTemplate"] = "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+                }
             }
-        }]
+        ]
     };
-    
+
     File.WriteAllText(
-        appSettingsPath,
-        JsonSerializer.Serialize(config, JsonDefaults.Options));
+                      appSettingsPath,
+                      JsonSerializer.Serialize(config, JsonDefaults.Options));
 }
 
 // Load the configuration
 builder.Configuration
     .SetBasePath(dataFolder)
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", true, true)
     .AddEnvironmentVariables();
 
 // Create Serilog logger
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Is(Serilog.Events.LogEventLevel.Information)
     // Set minimum levels for noisy log sources 
-    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Warning) // Request logging
-    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning) // Everything AspNetCore logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Information) // Entity Framework logging
-    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", Serilog.Events.LogEventLevel.Warning) // Browser link logging (used in development)  
-    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", Serilog.Events.LogEventLevel.Information) // Localization logging
-    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", Serilog.Events.LogEventLevel.Information) // Quartz Thread logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning) // Database command logging
+    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Warning)// Request logging
+    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)// Everything AspNetCore logging
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Information)// Entity Framework logging
+    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", Serilog.Events.LogEventLevel.Warning)// Browser link logging (used in development)  
+    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", Serilog.Events.LogEventLevel.Information)// Localization logging
+    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", Serilog.Events.LogEventLevel.Information)// Quartz Thread logging
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)// Database command logging
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
 // Create logger factory
-using ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger, dispose: false);
+using ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger, false);
 
 // Set Serilog as the logging provider
 builder.Services.AddSerilog();
@@ -104,15 +107,15 @@ if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
     if (exists)
     {
         Log.Logger.Information(
-          "Managed certificates enabled. Using existing certificate at {CertificatePath}",
-          certPath);
+                               "Managed certificates enabled. Using existing certificate at {CertificatePath}",
+                               certPath);
     }
     else
     {
         configChanged = true;
         Log.Logger.Information(
-          "Managed certificates enabled. A new certificate will be created at {CertificatePath}",
-          certPath);
+                               "Managed certificates enabled. A new certificate will be created at {CertificatePath}",
+                               certPath);
     }
     builder.Configuration["Certificate:Path"] = certPath;
 
@@ -127,16 +130,16 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__
     if (exists)
     {
         Log.Logger.Information(
-          "Database connection string not set. Using existing database at {DatabasePath}",
-         databasePath);
+                               "Database connection string not set. Using existing database at {DatabasePath}",
+                               databasePath);
 
     }
     else
     {
         configChanged = true;
         Log.Logger.Information(
-          "Database connection string not set. A new database will be created at {DatabasePath}",
-        databasePath);
+                               "Database connection string not set. A new database will be created at {DatabasePath}",
+                               databasePath);
     }
 
     Environment.SetEnvironmentVariable("ConnectionStrings__Sqlite", $"Data Source={databasePath}");
@@ -153,25 +156,25 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["OpenIdConnect:NameClaim"]))
     configChanged = true;
 
     Log.Logger.Information(
-        "OpenID Connect name claim not configured. Defaulting to {NameClaim}",
-        "name");
+                           "OpenID Connect name claim not configured. Defaulting to {NameClaim}",
+                           "name");
 }
 
 // Parse configuration
 Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
-    ?? throw new InvalidOperationException(
-        "Could not load MustMail configuration. Please see the README for configuration guidance.");
+                               ?? throw new InvalidOperationException(
+                                                                      "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
 // If we have overridden the configuration then save it and log
 if (configChanged)
 {
     File.WriteAllText(
-        appSettingsPath,
-        JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
+                      appSettingsPath,
+                      JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
 
     Log.Logger.Information(
-        "Configuration defaults were applied and written to {ConfigPath}",
-        appSettingsPath);
+                           "Configuration defaults were applied and written to {ConfigPath}",
+                           appSettingsPath);
 }
 
 if (mustMailConfig.Smtp.InsecurePort is < 1 or > 65535)
@@ -184,8 +187,8 @@ if (mustMailConfig.Smtp.StartTLSPort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:StartTLSPort must be between 1 and 65535.");
 
 Log.Logger.Information(
-    "All persistent data is stored in '{DataFolder}'. Ensure this directory is mounted as a Docker volume to avoid data loss.",
-    dataFolder);
+                       "All persistent data is stored in '{DataFolder}'. Ensure this directory is mounted as a Docker volume to avoid data loss.",
+                       dataFolder);
 
 // Log configuration
 Log.Information("Configuration: \n {Serialize}", JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
@@ -200,11 +203,11 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings_
 
     // Initialize DbUp upgrader to use Sqlite
     upgrader =
-            DeployChanges.To
-                .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Sqlite"))
-                .LogTo(loggerFactory)
-                .Build();
+        DeployChanges.To
+            .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite"))
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Sqlite"))
+            .LogTo(loggerFactory)
+            .Build();
 
 }
 else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")))
@@ -213,23 +216,23 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
 
     // Initialize DbUp upgrader to use Postgres
     upgrader =
-            DeployChanges.To
-                .PostgresqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Postgres"))
-                .LogTo(loggerFactory)
-                .Build();
+        DeployChanges.To
+            .PostgresqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres"))
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Postgres"))
+            .LogTo(loggerFactory)
+            .Build();
 }
-else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")))
+else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")))
 {
     builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")));
 
     // Initialize DbUp upgrader to use MySql
     upgrader =
-            DeployChanges.To
-                .MySqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "MySQL"))
-                .LogTo(loggerFactory)
-                .Build();
+        DeployChanges.To
+            .MySqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL"))
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "MySQL"))
+            .LogTo(loggerFactory)
+            .Build();
 }
 else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")))
 {
@@ -237,11 +240,11 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
 
     // Initialize DbUp upgrader to use SqlServer
     upgrader =
-            DeployChanges.To
-                .SqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "SqlServer"))
-                .LogTo(loggerFactory)
-                .Build();
+        DeployChanges.To
+            .SqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer"))
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "SqlServer"))
+            .LogTo(loggerFactory)
+            .Build();
 }
 else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")))
 {
@@ -249,11 +252,11 @@ else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStr
 
     // Initialize DbUp upgrader to use AzureSql
     upgrader =
-            DeployChanges.To
-                .AzureSqlDatabaseWithIntegratedSecurity(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql"))
-                .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "AzureSql"))
-                .LogTo(loggerFactory)
-                .Build();
+        DeployChanges.To
+            .AzureSqlDatabaseWithIntegratedSecurity(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql"))
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "AzureSql"))
+            .LogTo(loggerFactory)
+            .Build();
 }
 else
 {
@@ -278,25 +281,23 @@ Log.Information("Database migration completed successfully.");
 
 // Create client secret credential to authenticate against Microsoft graph
 builder.Services.AddSingleton<TokenCredential>(_ => new ClientSecretCredential(
-    Environment.GetEnvironmentVariable("Graph__TenantId"),
-    Environment.GetEnvironmentVariable("Graph__ClientId"),
-    Environment.GetEnvironmentVariable("Graph__ClientSecret"),
-    new ClientSecretCredentialOptions
-    {
-        AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
-    }
-));
+                                                                               Environment.GetEnvironmentVariable("Graph__TenantId"),
+                                                                               Environment.GetEnvironmentVariable("Graph__ClientId"),
+                                                                               Environment.GetEnvironmentVariable("Graph__ClientSecret"),
+                                                                               new ClientSecretCredentialOptions
+                                                                               {
+                                                                                   AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
+                                                                               }
+                                                                              ));
 
 // Create the Microsoft graph client
-builder.Services.AddSingleton(sp =>
-{
+builder.Services.AddSingleton(sp => {
     TokenCredential credential = sp.GetRequiredService<TokenCredential>();
     return new GraphServiceClient(credential, ["https://graph.microsoft.com/.default"]);
 });
 
 // Add forward headers for reverse proxy
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
+builder.Services.Configure<ForwardedHeadersOptions>(options => {
     options.ForwardedHeaders =
         ForwardedHeaders.XForwardedFor |
         ForwardedHeaders.XForwardedProto |
@@ -307,13 +308,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 // Add ODIC Authentication
-builder.Services.AddAuthentication(options =>
-    {
+builder.Services.AddAuthentication(options => {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
-    .AddOpenIdConnect(options =>
-    {
+    .AddOpenIdConnect(options => {
         options.Authority = Environment.GetEnvironmentVariable("OpenIdConnect__Authority");
         options.ClientId = Environment.GetEnvironmentVariable("OpenIdConnect__ClientId");
         options.ClientSecret = Environment.GetEnvironmentVariable("OpenIdConnect__ClientSecret");
@@ -334,7 +333,7 @@ builder.Services.AddOpenIdConnectAccessTokenManagement();
 // Create authorization policy for admin page
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("MustMailAdmin", p =>
-        p.RequireClaim("must_mail_role", "admin"));
+                   p.RequireClaim("must_mail_role", "admin"));
 
 // Add Cascading Authentication State
 builder.Services.AddCascadingAuthenticationState();
@@ -347,33 +346,33 @@ string? certificatePath = mustMailConfig.Certificate.Path;
 if (string.IsNullOrWhiteSpace(certificatePath))
 {
     throw new InvalidOperationException(
-        "Certificate path is not configured and MustMail is not managing the certificate.");
+                                        "Certificate path is not configured and MustMail is not managing the certificate.");
 }
 
 if (File.Exists(certificatePath))
 {
     Log.Information(
-        "Using certificate at {CertificatePath}",
-        certificatePath);
+                    "Using certificate at {CertificatePath}",
+                    certificatePath);
 }
 else if (mustMailConfig.Certificate.Managed)
 {
     Log.Information(
-        "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
-        certificatePath);
+                    "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
+                    certificatePath);
 
     CertificateHelper.Create(mustMailConfig, loggerFactory);
 }
 else
 {
     throw new InvalidOperationException(
-        $"Could not find or access certificate at '{certificatePath}'.");
+                                        $"Could not find or access certificate at '{certificatePath}'.");
 }
 
 // Attempt to load certificate and check it's valid
 X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
-                 mustMailConfig.Certificate.Path!,
-                 Environment.GetEnvironmentVariable("Certificate__Password"));
+                                                                        mustMailConfig.Certificate.Path!,
+                                                                        Environment.GetEnvironmentVariable("Certificate__Password"));
 
 // If certificate has expired create a new one if managed else throw an exception
 if (certificate.NotAfter <= DateTime.UtcNow)
@@ -397,24 +396,22 @@ builder.Services.AddSingleton<GraphUserHelper>();
 // If we are storing emails create the cleanup job
 if (mustMailConfig.MustMail.StoreEmails)
 {
-    _ = builder.Services.AddQuartz(q =>
-    {
+    _ = builder.Services.AddQuartz(q => {
         // Run job now
         _ = q.ScheduleJob<CleanupService>(trigger => trigger
-            .WithIdentity("Cleanup Job Immediate")
-            .StartNow()
-        );
+                                              .WithIdentity("Cleanup Job Immediate")
+                                              .StartNow()
+                                         );
 
         // Run job on the hour every hour
         _ = q.ScheduleJob<CleanupService>(trigger => trigger
-            .WithIdentity("Cleanup Job Hourly")
-            .WithCronSchedule("0 0 * * * ?")
-            .WithDescription("Remove any emails older than the retention configuration every hour")
-        );
+                                              .WithIdentity("Cleanup Job Hourly")
+                                              .WithCronSchedule("0 0 * * * ?")
+                                              .WithDescription("Remove any emails older than the retention configuration every hour")
+                                         );
     });
 
-    _ = builder.Services.AddQuartzHostedService(options =>
-    {
+    _ = builder.Services.AddQuartzHostedService(options => {
         // when shutting down we want jobs to complete gracefully
         options.WaitForJobsToComplete = true;
     });
@@ -440,10 +437,12 @@ using (IServiceScope scope = app.Services.CreateScope())
 
     if (!string.IsNullOrWhiteSpace(env))
     {
-        foreach (string account in env.Split('|', StringSplitOptions.RemoveEmptyEntries)) // Split multiple accounts
+        foreach (string account in env.Split('|', StringSplitOptions.RemoveEmptyEntries))// Split multiple accounts
         {
             string[] parts = account.Split(':', 2);
-            if (parts.Length != 2) continue;; // username:password
+            if (parts.Length != 2) continue;
+
+            ;// username:password
 
             string username = parts[0];
             string password = parts[1];
@@ -451,7 +450,7 @@ using (IServiceScope scope = app.Services.CreateScope())
             if (!dbContext.SMTPAccount.Any(u => u.Username == username))
             {
                 // Create account
-                dbContext.SMTPAccount.Add(new SMTPAccount()
+                dbContext.SMTPAccount.Add(new SMTPAccount
                 {
                     Username = username,
                     Password = Argon2.Hash(password),
@@ -459,20 +458,21 @@ using (IServiceScope scope = app.Services.CreateScope())
                 });
 
                 Log.Debug("Added bootstrap SMTP account {Username}", username);
-                
+
                 await dbContext.SaveChangesAsync();
-            };
-         
+            }
+            ;
+
         }
 
-        
+
     }
 }
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    _ = app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    _ = app.UseExceptionHandler("/Error", true);
     _ = app.UseMigrationsEndPoint();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
@@ -511,4 +511,3 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
-

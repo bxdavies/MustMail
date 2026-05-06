@@ -3,9 +3,6 @@ using Microsoft.Graph.Models;
 using Microsoft.Graph.Users.Item.SendMail;
 using MimeKit;
 using MimeKit.Utils;
-using MustMail.App;
-using MustMail.App.Db;
-using MustMail.App.Models;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
@@ -24,12 +21,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
         // Create memory stream
         await using MemoryStream stream = new();
-        
+
         foreach (ReadOnlyMemory<byte> memory in buffer)
         {
             await stream.WriteAsync(memory, cancellationToken);
         }
-        
+
         // Debug log for the raw message
         LogMessageSize(buffer.Length);
 
@@ -42,9 +39,9 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         // Debug log for the Mime Message
         if (logger.IsEnabled(LogLevel.Debug))
         {
-#pragma warning disable CA1873 // Avoid potentially expensive logging
+#pragma warning disable CA1873// Avoid potentially expensive logging
             LogMimeParsed(message.Subject, message.Attachments.Count());
-#pragma warning restore CA1873 // Avoid potentially expensive logging
+#pragma warning restore CA1873// Avoid potentially expensive logging
         }
 
         List<Recipient> envelopeRecipients = transaction.To.Select(mailbox => new Recipient
@@ -54,52 +51,58 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 Address = $"{mailbox.User.Trim()}@{mailbox.Host.Trim()}"
             }
         }).ToList();
-        
+
         List<Recipient>
             allRecipients = [];
 
         // Create list of To recipients
-        List<Recipient> toRecipients = [.. message.To
-            .OfType<MailboxAddress>()
-            .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
-            .Select(address => new Recipient
-            {
-                EmailAddress = new EmailAddress
+        List<Recipient> toRecipients =
+        [
+            .. message.To
+                .OfType<MailboxAddress>()
+                .Where(address => !string.IsNullOrWhiteSpace(address.Address))// filter out null/empty
+                .Select(address => new Recipient
                 {
-                    Address = address.Address,  // plain email only
-                    Name = address.Name        // optional, can be null or empty
-                }
-            })];
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = address.Address,// plain email only
+                        Name = address.Name// optional, can be null or empty
+                    }
+                })
+        ];
 
         // Create list of Cc recipients
-        List<Recipient> ccRecipients = [.. message.Cc
-            .OfType<MailboxAddress>()
-            .Where(address => !string.IsNullOrWhiteSpace(address.Address))   // filter out null/empty
-            .Select(address => new Recipient
-            {
-                EmailAddress = new EmailAddress
+        List<Recipient> ccRecipients =
+        [
+            .. message.Cc
+                .OfType<MailboxAddress>()
+                .Where(address => !string.IsNullOrWhiteSpace(address.Address))// filter out null/empty
+                .Select(address => new Recipient
                 {
-                    Address = address.Address,  // plain email only
-                    Name = address.Name        // optional, can be null or empty
-                }
-            })];
-        
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = address.Address,// plain email only
+                        Name = address.Name// optional, can be null or empty
+                    }
+                })
+        ];
+
         if (toRecipients.Count != 0)
         {
             // For each to recipient remove them from envelopeRecipients
             foreach (Recipient to in toRecipients)
             {
                 Recipient? match = envelopeRecipients.FirstOrDefault(recipient =>
-                    string.Equals(recipient.EmailAddress?.Address,
-                        to.EmailAddress?.Address,
-                        StringComparison.OrdinalIgnoreCase));
+                                                                         string.Equals(recipient.EmailAddress?.Address,
+                                                                                       to.EmailAddress?.Address,
+                                                                                       StringComparison.OrdinalIgnoreCase));
 
                 if (match != null)
                 {
                     envelopeRecipients.Remove(match);
                 }
             }
-            
+
             allRecipients.AddRange(from Recipient recipient in toRecipients
                                    select recipient);
             // Debug log the To recipients
@@ -116,16 +119,16 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             foreach (Recipient cc in ccRecipients)
             {
                 Recipient? match = envelopeRecipients.FirstOrDefault(recipient =>
-                    string.Equals(recipient.EmailAddress?.Address,
-                        cc.EmailAddress?.Address,
-                        StringComparison.OrdinalIgnoreCase));
+                                                                         string.Equals(recipient.EmailAddress?.Address,
+                                                                                       cc.EmailAddress?.Address,
+                                                                                       StringComparison.OrdinalIgnoreCase));
 
                 if (match != null)
                 {
                     envelopeRecipients.Remove(match);
                 }
             }
-            
+
             allRecipients.AddRange(from Recipient recipient in ccRecipients
                                    select recipient);
             // Debug log the Cc recipients
@@ -135,7 +138,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 LogCcRecipientsResolved(cc);
             }
         }
-        
+
         // Bcc recipients are not included in MimeMessage as such if the address still exists in envelopeRecipients then send bcc
         List<Recipient> bccRecipients = [];
         bccRecipients.AddRange(envelopeRecipients);
@@ -191,9 +194,9 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             try
             {
                 user = await graphUserHelper.FindSenderUserAsync(
-                    "MAIL FROM",
-                    senderAddress,
-                    cancellationToken);
+                                                                 "MAIL FROM",
+                                                                 senderAddress,
+                                                                 cancellationToken);
 
                 if (user == null)
                 {
@@ -219,8 +222,8 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
             // Get first FROM Header Field
             senderAddress = message.From.OfType<MailboxAddress>()
-                  .Select(a => a.Address)
-                  .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
+                .Select(a => a.Address)
+                .FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
 
             senderName = message.From.OfType<MailboxAddress>()
                 .Select(a => a.Name)
@@ -239,9 +242,9 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             try
             {
                 user = await graphUserHelper.FindSenderUserAsync(
-                    "FROM",
-                    senderAddress,
-                    cancellationToken);
+                                                                 "FROM",
+                                                                 senderAddress,
+                                                                 cancellationToken);
 
                 if (user == null)
                 {
@@ -283,7 +286,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                         // Replace invalid characters with hyphens
                         Array.ForEach(Path.GetInvalidFileNameChars(),
-                            c => fileName = fileName.Replace(c.ToString(), "-"));
+                                      c => fileName = fileName.Replace(c.ToString(), "-"));
 
                         // Write to byte stream
                         using MemoryStream memory = new();
@@ -309,7 +312,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                         // Replace invalid characters with hyphens
                         Array.ForEach(Path.GetInvalidFileNameChars(),
-                            c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
+                                      c => embeddedName = embeddedName.Replace(c.ToString(), "-"));
 
                         // Write to byte stream
                         using MemoryStream memory = new();
@@ -345,7 +348,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                     continue;
 
                 // Get user from database
-                App.Models.User? appUser = await dbContext.User.SingleOrDefaultAsync(u => u.Email == recipient.EmailAddress.Address, cancellationToken: cancellationToken);
+                Models.User? appUser = await dbContext.User.SingleOrDefaultAsync(u => u.Email == recipient.EmailAddress.Address, cancellationToken);
 
                 // Handel users that don't have an account
                 if (appUser == null)
@@ -369,11 +372,11 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                 // Create a path maildrop/userId/messageId.eml
                 string emailPath = Path.Combine(
-                   AppContext.BaseDirectory,
-                   "Data",
-                   "maildrop",
-                   appUser.Id,
-                   $"{message.MessageId}.eml");
+                                                AppContext.BaseDirectory,
+                                                "Data",
+                                                "maildrop",
+                                                appUser.Id,
+                                                $"{message.MessageId}.eml");
 
                 // Sanitize file path
                 emailPath = Helpers.SanitizeFilePath(emailPath);
@@ -404,12 +407,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                                 // Create path maildrop/userId/messageId/filename
                                 string attachmentPath = Path.Combine(
-                                    AppContext.BaseDirectory,
-                                    "Data",
-                                    "maildrop",
-                                    appUser.Id,
-                                    message.MessageId,
-                                    fileName);
+                                                                     AppContext.BaseDirectory,
+                                                                     "Data",
+                                                                     "maildrop",
+                                                                     appUser.Id,
+                                                                     message.MessageId,
+                                                                     fileName);
 
                                 // Sanitize file path
                                 attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
@@ -429,12 +432,12 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
                                 // Create path maildrop/userId/messageId/filename
                                 string attachmentPath = Path.Combine(
-                                    AppContext.BaseDirectory,
-                                    "Data",
-                                    "maildrop",
-                                    appUser.Id,
-                                    message.MessageId,
-                                    $"{embeddedName}.eml");
+                                                                     AppContext.BaseDirectory,
+                                                                     "Data",
+                                                                     "maildrop",
+                                                                     appUser.Id,
+                                                                     message.MessageId,
+                                                                     $"{embeddedName}.eml");
 
                                 // Sanitize file path
                                 attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
@@ -467,14 +470,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
                 {
                     EmailAddress = new EmailAddress
                     {
-                        Address = senderAddress,  // plain email only
-                        Name = senderName,
+                        Address = senderAddress,// plain email only
+                        Name = senderName
                     }
                 },
                 ToRecipients = toRecipients,
                 CcRecipients = ccRecipients,
                 BccRecipients = bccRecipients,
-                Attachments = attachments,
+                Attachments = attachments
             }
         };
 
@@ -530,10 +533,10 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
             // Log success message
             LogEmailForwarded(
-                message.Subject,
-                senderAddress,
-                user.UserPrincipalName!,
-                to, cc, bcc);
+                              message.Subject,
+                              senderAddress,
+                              user.UserPrincipalName!,
+                              to, cc, bcc);
         }
 
         // Return email received successfully
@@ -551,7 +554,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
     [LoggerMessage(EventId = 1103, Level = LogLevel.Debug, Message = "MIME message parsed. Subject: {Subject}, AttachmentCount: {AttachmentCount}")]
     private partial void LogMimeParsed(string? subject, int attachmentCount);
-    
+
     [LoggerMessage(EventId = 11051, Level = LogLevel.Debug, Message = "To recipients resolved: {Recipients}")]
     private partial void LogToRecipientsResolved(IEnumerable<string> recipients);
 

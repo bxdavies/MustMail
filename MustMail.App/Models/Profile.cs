@@ -12,8 +12,7 @@ public class Profile
     [MaxLength(50)] public required string DateFormat { get; set; }
     [MaxLength(50)] public required string TimeFormat { get; set; }
     [MaxLength(255)]
-    public string UserId { get; set; } = null!; // Required foreign key property
-    public User User { get; set; } = null!; // Required reference navigation to principal
+    public string UserId { get; set; } = null!;// Required foreign key property
+    public User User { get; set; } = null!;// Required reference navigation to principal
 
 }
-

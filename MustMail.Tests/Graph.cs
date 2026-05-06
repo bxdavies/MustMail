@@ -52,7 +52,7 @@ public class Graph
         };
 
         await client.ConnectAsync("localhost", port, socketOptions);
-        client.Timeout = 10000; // 10 seconds
+        client.Timeout = 10000;// 10 seconds
         return client;
     }
 
@@ -69,7 +69,7 @@ public class Graph
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: UserDoesNotExistInTenant_IsRejected",
-            body: "UserDoesNotExistInTenant_IsRejected", from: "doesnotexist@example.com");
+                                            body: "UserDoesNotExistInTenant_IsRejected", from: "doesnotexist@example.com");
 
         await Assert.ThrowsAsync<SmtpCommandException>(() => client.SendAsync(message, TestContext.CancellationToken));
     }
@@ -87,7 +87,7 @@ public class Graph
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: User_IsAccepted", body: "User_IsAccepted",
-            from: Test.Config.GraphUser);
+                                            from: Test.Config.GraphUser);
 
         await client.SendAsync(message, TestContext.CancellationToken);
     }
@@ -105,7 +105,7 @@ public class Graph
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: SharedMailbox_IsAccepted", body: "SharedMailbox_IsAccepted",
-            from: Test.Config.SharedMailbox);
+                                            from: Test.Config.SharedMailbox);
 
         await client.SendAsync(message, TestContext.CancellationToken);
     }
@@ -123,7 +123,7 @@ public class Graph
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: Alias_IsAccepted", body: "Alias_IsAccepted",
-            from: Test.Config.Alias);
+                                            from: Test.Config.Alias);
 
         await client.SendAsync(message, TestContext.CancellationToken);
     }

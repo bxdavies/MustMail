@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using MustMail.App.Db;
-using MustMail.App.Models;
 using System.Security.Claims;
 
 namespace MustMail.App.Auth;
@@ -28,15 +26,15 @@ public static class OpenIdConnectHandlers
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
         {
             logger.LogWarning(
-                "Missing required claims during OIDC token validation. Sub: {Sub}, Name: {Name}, Email: {Email}",
-                userId, name, email);
+                              "Missing required claims during OIDC token validation. Sub: {Sub}, Name: {Name}, Email: {Email}",
+                              userId, name, email);
             return;
         }
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
-            "Authenticated user detected during token validation. Sub: {Sub}, Email: {Email}",
-            userId, email);
+                                  "Authenticated user detected during token validation. Sub: {Sub}, Email: {Email}",
+                                  userId, email);
 
         User? user = await dbContext.FindAsync<User>(userId);
 

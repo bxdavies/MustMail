@@ -1,5 +1,4 @@
-﻿using MustMail.App.Models;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MustMail.App.MailServer;
@@ -27,22 +26,22 @@ public static partial class CertificateHelper
 
         // Mark as server cert (not a CA)
         req.CertificateExtensions.Add(
-            new X509BasicConstraintsExtension(false, false, 0, true));
+                                      new X509BasicConstraintsExtension(false, false, 0, true));
 
         // Required for TLS server usage
         req.CertificateExtensions.Add(
-            new X509KeyUsageExtension(
-                X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
-                true));
+                                      new X509KeyUsageExtension(
+                                                                X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
+                                                                true));
 
         req.CertificateExtensions.Add(
-            new X509EnhancedKeyUsageExtension(
-                [new Oid("1.3.6.1.5.5.7.3.1")], // Server Authentication
-                true));
+                                      new X509EnhancedKeyUsageExtension(
+                                                                        [new Oid("1.3.6.1.5.5.7.3.1")],// Server Authentication
+                                                                        true));
 
         using X509Certificate2 cert = req.CreateSelfSigned(
-            DateTimeOffset.UtcNow.AddMinutes(-5),
-            DateTimeOffset.UtcNow.AddYears(5));
+                                                           DateTimeOffset.UtcNow.AddMinutes(-5),
+                                                           DateTimeOffset.UtcNow.AddYears(5));
 
         LogCertificateGenerated(logger, cert.NotAfter);
 
@@ -52,32 +51,32 @@ public static partial class CertificateHelper
     }
 
     [LoggerMessage(
-    EventId = 3001,
-    Level = LogLevel.Information,
-    Message = "Starting creation of self-signed TLS certificate for {CommonName}")]
+                      EventId = 3001,
+                      Level = LogLevel.Information,
+                      Message = "Starting creation of self-signed TLS certificate for {CommonName}")]
     private static partial void LogCertificateCreationStarted(ILogger logger, string commonName);
 
     [LoggerMessage(
-        EventId = 3002,
-        Level = LogLevel.Debug,
-        Message = "Generating RSA key with {KeySize}-bit length")]
+                      EventId = 3002,
+                      Level = LogLevel.Debug,
+                      Message = "Generating RSA key with {KeySize}-bit length")]
     private static partial void LogKeyGeneration(ILogger logger, int keySize);
 
     [LoggerMessage(
-        EventId = 3003,
-        Level = LogLevel.Debug,
-        Message = "Adding certificate extensions (SAN, BasicConstraints, KeyUsage, EKU)")]
+                      EventId = 3003,
+                      Level = LogLevel.Debug,
+                      Message = "Adding certificate extensions (SAN, BasicConstraints, KeyUsage, EKU)")]
     private static partial void LogAddingExtensions(ILogger logger);
 
     [LoggerMessage(
-        EventId = 3004,
-        Level = LogLevel.Information,
-        Message = "Self-signed certificate generated. Valid until {Expiry}")]
+                      EventId = 3004,
+                      Level = LogLevel.Information,
+                      Message = "Self-signed certificate generated. Valid until {Expiry}")]
     private static partial void LogCertificateGenerated(ILogger logger, DateTimeOffset expiry);
 
     [LoggerMessage(
-        EventId = 3005,
-        Level = LogLevel.Information,
-        Message = "Certificate written to {Path}")]
+                      EventId = 3005,
+                      Level = LogLevel.Information,
+                      Message = "Certificate written to {Path}")]
     private static partial void LogCertificateSaved(ILogger logger, string path);
 }

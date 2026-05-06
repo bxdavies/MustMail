@@ -6,11 +6,11 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DatabaseCo
 {
     public DatabaseContext CreateDbContext(string[] args)
     {
-        DbContextOptionsBuilder<DatabaseContext> optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
+        DbContextOptionsBuilder<DatabaseContext> optionsBuilder = new();
 
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Db_Provider")))
             throw new InvalidOperationException(
-                "The environment variable 'Db_Provider' must be set.");
+                                                "The environment variable 'Db_Provider' must be set.");
 
         switch (Environment.GetEnvironmentVariable("Db_Provider"))
         {
@@ -29,10 +29,8 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DatabaseCo
             case "AzureSql":
                 optionsBuilder.UseAzureSql(x => x.MigrationsAssembly("MustMail.Migrations.AzureSql"));
                 break;
-            default:
-                break;
         }
-      
+
         return new DatabaseContext(optionsBuilder.Options);
     }
 }

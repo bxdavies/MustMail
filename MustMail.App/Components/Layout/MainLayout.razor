@@ -1,16 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider @ref="_mudThemeProvider" Theme="_mustMailTheme" IsDarkMode="_isDarkMode" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+<MudThemeProvider @ref="_mudThemeProvider" Theme="_mustMailTheme" IsDarkMode="_isDarkMode"/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 
 <MudLayout>
     <MudAppBar Elevation="4">
 
         <MudStack Row Justify="Justify.SpaceBetween" Style="width: 100%">
             <a href="/">
-                <MudImage Src="logo-transparent.png" Height="64" />
+                <MudImage Src="logo-transparent.png" Height="64"/>
             </a>
             <MudText Typo="Typo.h1">@_title</MudText>
             <AuthorizeView>
@@ -28,7 +28,7 @@
 
                 <NotAuthorized>
                     <form method="get" action="/authentication/login">
-                        <AntiforgeryToken />
+                        <AntiforgeryToken/>
 
                         <MudButton ButtonType="ButtonType.Submit" Class="my-3"
                                    Variant="Variant.Filled"
@@ -42,11 +42,11 @@
         </MudStack>
     </MudAppBar>
     <MudMainContent>
-          <MudContainer MaxWidth="MaxWidth.ExtraLarge" class="pt-2 pb-4">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" class="pt-2 pb-4">
             <CascadingValue Value="(Action<string>)SetTitle">
                 @Body
             </CascadingValue>
-          </MudContainer>
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
@@ -63,7 +63,7 @@
         _title = title;
         StateHasChanged();
     }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -85,23 +85,23 @@
 
     private readonly MudTheme _mustMailTheme = new()
     {
-        PaletteDark = new PaletteDark()
+        PaletteDark = new PaletteDark
         {
             AppbarBackground = "#BFBBAE",
             AppbarText = "rgba(66, 66, 66, 1)",
             Primary = "#e1dfd3",
             Secondary = "#4C7EFF"
         },
-        PaletteLight = new PaletteLight()
+        PaletteLight = new PaletteLight
         {
             AppbarBackground = "#e1dfd3",
             AppbarText = "rgba(66, 66, 66, 1)",
             Primary = "#C9A84A",
             Secondary = "#4C7EFF"
         },
-        Typography = new Typography()
+        Typography = new Typography
         {
-            Default = new DefaultTypography()
+            Default = new DefaultTypography
             {
                 FontFamily = ["Quicksand", "sans-serif"],
                 FontWeight = "400"
@@ -109,21 +109,22 @@
             H1 = new H1Typography
             {
                 FontWeight = "600",
-                FontSize = "4em",
+                FontSize = "4em"
             },
-            Body1 = new Body1Typography()
+            Body1 = new Body1Typography
             {
                 FontSize = "0.8em"
             },
-            Body2 = new Body2Typography()
+            Body2 = new Body2Typography
             {
                 FontSize = "0.9em"
             },
-            Subtitle2 = new Subtitle2Typography()
+            Subtitle2 = new Subtitle2Typography
             {
                 FontSize = ".9rem",
                 FontWeight = "300"
-            },
+            }
         }
     };
+
 }

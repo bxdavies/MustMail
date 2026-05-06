@@ -6,14 +6,13 @@ namespace MustMail.App.MailServer;
 public partial class GraphUserHelper(ILogger<MessageHandler> logger, GraphServiceClient graphClient)
 {
     public async Task<Microsoft.Graph.Models.User?> FindSenderUserAsync(
-string headerType,
-string senderAddress,
-CancellationToken cancellationToken)
+        string headerType,
+        string senderAddress,
+        CancellationToken cancellationToken)
     {
         // Query graph for a user with the mail address, UPN, or alias matching the sender address
         UserCollectionResponse? users = await graphClient.Users
-            .GetAsync(requestConfiguration =>
-            {
+            .GetAsync(requestConfiguration => {
                 string escapedSenderAddress = senderAddress.Replace("'", "''");
 
                 requestConfiguration.QueryParameters.Filter =
@@ -33,10 +32,10 @@ CancellationToken cancellationToken)
         if (users.Value.Count > 1)
         {
             LogMultipleUsersFound(
-                senderAddress,
-                users.Value
-                    .Select(u => u.UserPrincipalName)
-                    .OfType<string>());
+                                  senderAddress,
+                                  users.Value
+                                      .Select(u => u.UserPrincipalName)
+                                      .OfType<string>());
         }
 
         Microsoft.Graph.Models.User user = users.Value.First();
@@ -61,14 +60,14 @@ CancellationToken cancellationToken)
     }
 
     [LoggerMessage(
-        EventId = 4007,
-        Level = LogLevel.Warning,
-        Message = "Could not find a user with mail, userPrincipalName, or alias {Sender} for {HeaderType}.")]
+                      EventId = 4007,
+                      Level = LogLevel.Warning,
+                      Message = "Could not find a user with mail, userPrincipalName, or alias {Sender} for {HeaderType}.")]
     private partial void LogUserNotFound(string headerType, string sender);
 
     [LoggerMessage(
-        Level = LogLevel.Warning,
-        Message = "Multiple users found for sender {Sender}: {Users}. Using the first.")]
+                      Level = LogLevel.Warning,
+                      Message = "Multiple users found for sender {Sender}: {Users}. Using the first.")]
     private partial void LogMultipleUsersFound(string sender, IEnumerable<string> users);
 
     [LoggerMessage(EventId = 1108, Level = LogLevel.Information, Message = "Using {HeaderType} sender {Sender} ({DisplayName}) for outgoing email")]

@@ -16,8 +16,7 @@ public partial class UpdateService(ILogger<UpdateService> logger)
             LogSubscriberAdded(userId);
         }
 
-        return new Unsubscriber(() =>
-        {
+        return new Unsubscriber(() => {
             if (_subscribers.TryGetValue(userId, out List<Func<Task>>? list))
             {
                 lock (list)
@@ -77,50 +76,50 @@ public partial class UpdateService(ILogger<UpdateService> logger)
     // 1300s = UpdateService
 
     [LoggerMessage(
-        EventId = 1301,
-        Level = LogLevel.Debug,
-        Message = "Subscriber registered for user {UserId}")]
+                      EventId = 1301,
+                      Level = LogLevel.Debug,
+                      Message = "Subscriber registered for user {UserId}")]
     private partial void LogSubscriberAdded(string userId);
 
 
     [LoggerMessage(
-        EventId = 1302,
-        Level = LogLevel.Debug,
-        Message = "Subscriber removed for user {UserId}")]
+                      EventId = 1302,
+                      Level = LogLevel.Debug,
+                      Message = "Subscriber removed for user {UserId}")]
     private partial void LogSubscriberRemoved(string userId);
 
 
     [LoggerMessage(
-        EventId = 1303,
-        Level = LogLevel.Debug,
-        Message = "Last subscriber removed for user {UserId}. Cleaning up subscriber list")]
+                      EventId = 1303,
+                      Level = LogLevel.Debug,
+                      Message = "Last subscriber removed for user {UserId}. Cleaning up subscriber list")]
     private partial void LogSubscriberListRemoved(string userId);
 
 
     [LoggerMessage(
-        EventId = 1304,
-        Level = LogLevel.Debug,
-        Message = "New message notification triggered for user {UserId}")]
+                      EventId = 1304,
+                      Level = LogLevel.Debug,
+                      Message = "New message notification triggered for user {UserId}")]
     private partial void LogNewMessageTriggered(string userId);
 
 
     [LoggerMessage(
-        EventId = 1305,
-        Level = LogLevel.Debug,
-        Message = "No subscribers found for user {UserId}")]
+                      EventId = 1305,
+                      Level = LogLevel.Debug,
+                      Message = "No subscribers found for user {UserId}")]
     private partial void LogNoSubscribers(string userId);
 
 
     [LoggerMessage(
-        EventId = 1306,
-        Level = LogLevel.Debug,
-        Message = "Dispatching message notification to {SubscriberCount} subscriber(s) for user {UserId}")]
+                      EventId = 1306,
+                      Level = LogLevel.Debug,
+                      Message = "Dispatching message notification to {SubscriberCount} subscriber(s) for user {UserId}")]
     private partial void LogDispatchingSubscribers(string userId, int subscriberCount);
 
 
     [LoggerMessage(
-        EventId = 1307,
-        Level = LogLevel.Warning,
-        Message = "Subscriber callback failed for user {UserId}")]
+                      EventId = 1307,
+                      Level = LogLevel.Warning,
+                      Message = "Subscriber callback failed for user {UserId}")]
     private partial void LogSubscriberFailed(Exception exception, string userId);
 }

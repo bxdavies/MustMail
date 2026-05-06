@@ -52,7 +52,7 @@ public class Smtp
         };
 
         await client.ConnectAsync("localhost", port, socketOptions);
-        client.Timeout = 10000; // 10 seconds
+        client.Timeout = 10000;// 10 seconds
         return client;
     }
 
@@ -80,7 +80,7 @@ public class Smtp
         using SmtpClient client = await ConnectClientAsync(port);
 
         await Assert.ThrowsAsync<AuthenticationException>(() =>
-            client.AuthenticateAsync("bad", "bad", TestContext.CancellationToken));
+                                                              client.AuthenticateAsync("bad", "bad", TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -111,7 +111,7 @@ public class Smtp
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: CanSendMessage_AfterAuthentication",
-            body: "CanSendMessage_AfterAuthentication");
+                                            body: "CanSendMessage_AfterAuthentication");
 
         await client.SendAsync(message, TestContext.CancellationToken);
     }
@@ -127,10 +127,10 @@ public class Smtp
         using SmtpClient client = await ConnectClientAsync(port);
 
         MimeMessage message = CreateMessage(subject: "Test: SendWithoutAuthentication_IsRejected",
-            body: "SendWithoutAuthentication_IsRejected");
+                                            body: "SendWithoutAuthentication_IsRejected");
 
         await Assert.ThrowsAsync<MailKit.ServiceNotAuthenticatedException>(() =>
-            client.SendAsync(message, TestContext.CancellationToken));
+                                                                               client.SendAsync(message, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -146,10 +146,10 @@ public class Smtp
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage("not-an-email", subject: "Test: InvalidFromAddress_IsRejected",
-            body: "InvalidFromAddress_IsRejected");
+                                            body: "InvalidFromAddress_IsRejected");
 
         await Assert.ThrowsAsync<MailKit.CommandException>(() =>
-            client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -165,10 +165,10 @@ public class Smtp
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: InvalidToAddress_IsRejected",
-            body: "InvalidToAddress_IsRejected", to: "not-an-email");
+                                            body: "InvalidToAddress_IsRejected", to: "not-an-email");
 
         await Assert.ThrowsAsync<MailKit.CommandException>(() =>
-            client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -190,7 +190,7 @@ public class Smtp
         message.Cc.Add(MailboxAddress.Parse("not-an-email"));
 
         await Assert.ThrowsAsync<MailKit.CommandException>(() =>
-            client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -212,7 +212,7 @@ public class Smtp
         message.Bcc.Add(MailboxAddress.Parse("not-an-email"));
 
         await Assert.ThrowsAsync<MailKit.CommandException>(() =>
-            client.SendAsync(message, TestContext.CancellationToken));
+                                                               client.SendAsync(message, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -245,7 +245,7 @@ public class Smtp
         await client.AuthenticateAsync(Test.Config.SmtpUser, Test.Config.SmtpPassword, TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(subject: "Test: MultipleRecipients_IsAccepted",
-            body: "MultipleRecipients_IsAccepted");
+                                            body: "MultipleRecipients_IsAccepted");
 
         message.To.Add(MailboxAddress.Parse(Test.Config.SecondRecipient));
 
@@ -313,13 +313,13 @@ public class Smtp
         using SmtpClient client = await ConnectClientAsync(port);
 
         await client.AuthenticateAsync(
-            Test.Config.SmtpUser,
-            Test.Config.SmtpPassword,
-            TestContext.CancellationToken);
+                                       Test.Config.SmtpUser,
+                                       Test.Config.SmtpPassword,
+                                       TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(
-            subject: "Test: InlineAttachment_IsAccepted",
-            body: "InlineAttachment_IsAccepted");
+                                            subject: "Test: InlineAttachment_IsAccepted",
+                                            body: "InlineAttachment_IsAccepted");
 
         BodyBuilder builder = new()
         {
@@ -352,13 +352,13 @@ public class Smtp
         using SmtpClient client = await ConnectClientAsync(port);
 
         await client.AuthenticateAsync(
-            Test.Config.SmtpUser,
-            Test.Config.SmtpPassword,
-            TestContext.CancellationToken);
+                                       Test.Config.SmtpUser,
+                                       Test.Config.SmtpPassword,
+                                       TestContext.CancellationToken);
 
         MimeMessage message = CreateMessage(
-            subject: "Test: EmbeddedMessage_IsAccepted",
-            body: "EmbeddedMessage_IsAccepted");
+                                            subject: "Test: EmbeddedMessage_IsAccepted",
+                                            body: "EmbeddedMessage_IsAccepted");
 
         BodyBuilder builder = new()
         {
@@ -384,9 +384,9 @@ public class Smtp
 
         // Attach as message/rfc822
         builder.Attachments.Add(
-            "forwarded.eml",
-            embeddedBytes,
-            ContentType.Parse("message/rfc822"));
+                                "forwarded.eml",
+                                embeddedBytes,
+                                ContentType.Parse("message/rfc822"));
 
         message.Body = builder.ToMessageBody();
 

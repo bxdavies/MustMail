@@ -2,16 +2,16 @@
 @using MimeKit
 @attribute [Authorize]
 @inherits HomeBase
-<PageTitle> MustMail - Home </PageTitle>
+<PageTitle> MustMail - Home</PageTitle>
 
 <MudGrid>
 	@* Welcome Card *@
 	<MudItem xs="12" md="4">
 		<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
 			<MudIcon Icon="@Icons.Material.Filled.AccountCircle"
-					 Color="Color.Primary"
-					 Size="Size.Large"
-					 Class="me-3" />
+			         Color="Color.Primary"
+			         Size="Size.Large"
+			         Class="me-3"/>
 			<div>
 				<MudText Typo="Typo.subtitle2" Color="Color.Secondary">
 					Welcome
@@ -21,21 +21,21 @@
 				</MudText>
 
 				<MudButton Variant="Variant.Text"
-						   Color="Color.Primary"
-						   StartIcon="@Icons.Material.Filled.ManageAccounts"
-						   Href="/profile"
-						   Class="mt-2"
-						   Size="Size.Small">
+				           Color="Color.Primary"
+				           StartIcon="@Icons.Material.Filled.ManageAccounts"
+				           Href="/profile"
+				           Class="mt-2"
+				           Size="Size.Small">
 					Profile
 				</MudButton>
 
 				<AuthorizeView Policy="MustMailAdmin">
 					<MudButton Variant="Variant.Text"
-							   Color="Color.Primary"
-							   StartIcon="@Icons.Material.Filled.AdminPanelSettings"
-							   Href="/admin"
-							   Class="mt-2"
-							   Size="Size.Small">
+					           Color="Color.Primary"
+					           StartIcon="@Icons.Material.Filled.AdminPanelSettings"
+					           Href="/admin"
+					           Class="mt-2"
+					           Size="Size.Small">
 						Admin
 					</MudButton>
 				</AuthorizeView>
@@ -47,9 +47,9 @@
 	<MudItem xs="12" md="4">
 		<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
 			<MudIcon Icon="@Icons.Material.Filled.Email"
-					 Color="Color.Info"
-					 Size="Size.Large"
-					 Class="me-3" />
+			         Color="Color.Info"
+			         Size="Size.Large"
+			         Class="me-3"/>
 			<div>
 				<MudText Typo="Typo.subtitle2" Color="Color.Secondary">
 					Emails Processed
@@ -66,9 +66,9 @@
 		<MudPaper Elevation="3" Class="pa-4">
 			<div class="d-flex align-center mb-2">
 				<MudIcon Icon="@Icons.Material.Filled.ForwardToInbox"
-						 Color="Color.Success"
-						 Size="Size.Medium"
-						 Class="me-2" />
+				         Color="Color.Success"
+				         Size="Size.Medium"
+				         Class="me-2"/>
 				<MudText Typo="Typo.subtitle1">
 					Most Recent Forwarded Email
 				</MudText>
@@ -89,19 +89,21 @@
 
 
 		@* Display messages in an inbox like style *@
-		@if(!StoreEmails)
+		@if (!StoreEmails)
 		{
 			<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">
-				MustMail has been configured to not store emails. No emails will be displayed!<br />
-				'Emails Processed' and 'Most Recent Forwarded Email' will not update! <br />
+				MustMail has been configured to not store emails. No emails will be displayed!<br/>
+				'Emails Processed' and 'Most Recent Forwarded Email' will not update! <br/>
 				Emails passed through MustMail should reach your inbox.
 			</MudAlert>
 		}
 		else if (Messages.Count > 0 && UserId != null)
 		{
-			<MudTabs @ref="MessageTabs" Outlined="true" Position="Position.Left" Rounded="true" Border="true" Elevation="3"
-					 ApplyEffectsToContainer="true" TabPanelsClass="pa-4" ActivePanelIndexChanged="MessageChanged" Style="height: 100vh;">
-				@foreach (var message in Messages)
+			<MudTabs @ref="MessageTabs" Outlined="true" Position="Position.Left" Rounded="true" Border="true"
+			         Elevation="3"
+			         ApplyEffectsToContainer="true" TabPanelsClass="pa-4" ActivePanelIndexChanged="MessageChanged"
+			         Style="height: 100vh;">
+				@foreach (Message message in Messages)
 				{
 					<MudTabPanel ID="@message.Id" Style="width: 100%">
 						<ChildContent>
@@ -111,23 +113,24 @@
 								<MudStack Row Justify="Justify.SpaceBetween">
 									<MudText Typo="Typo.h6">@message.Subject</MudText>
 									<MudButton Variant="Variant.Outlined"
-											   Size="Size.Small"
-											   StartIcon="@Icons.Material.Filled.Download"
-											   Href="@Helpers.SanitizeFilePath(Path.Combine("maildrop", UserId, $"{message.Id}.eml"))"
-											   Target="_blank">
+									           Size="Size.Small"
+									           StartIcon="@Icons.Material.Filled.Download"
+									           Href="@Helpers.SanitizeFilePath(Path.Combine("maildrop", UserId, $"{message.Id}.eml"))"
+									           Target="_blank">
 										Download email
 									</MudButton>
 								</MudStack>
-								
+
 
 								<MudStack Spacing="1">
 									<MudGrid Spacing="1">
 										<MudItem xs="12" sm="10">
 											<MudStack Spacing="0">
 												<MudText Typo="Typo.subtitle2">@message.SenderName</MudText>
-												@if(message.SenderEmail != message.SenderEmail)
+												@if (message.SenderEmail != message.SenderEmail)
 												{
-													<MudText Typo="Typo.body2" Color="Color.Secondary">@message.SenderEmail</MudText>
+													<MudText Typo="Typo.body2"
+													         Color="Color.Secondary">@message.SenderEmail</MudText>
 												}
 											</MudStack>
 										</MudItem>
@@ -137,15 +140,15 @@
 												<MudText Typo="Typo.caption" Color="Color.Secondary">
 													@DateTimeConvertAndFormat(message.Timestamp)
 												</MudText>
-												
+
 											</MudStack>
-										
+
 
 										</MudItem>
 
 									</MudGrid>
 
-									<MudDivider />
+									<MudDivider/>
 								</MudStack>
 
 
@@ -187,10 +190,11 @@
 									@if (ActiveMessage.Attachments.Any())
 									{
 										<MudPaper Elevation="0"
-												  Class="pa-2">
+										          Class="pa-2">
 											<MudStack Spacing="1">
 												<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-													<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+													<MudIcon Icon="@Icons.Material.Filled.AttachFile"
+													         Size="Size.Small"/>
 													<MudText Typo="Typo.subtitle2">
 														Attachments (@ActiveMessage.Attachments.Count())
 													</MudText>
@@ -205,10 +209,10 @@
 															{
 																// Create path maildrop/userId/messageId/filename
 																string attachmentPath = Path.Combine(
-																	"maildrop",
-																	UserId,
-																	message.Id,
-																	mimePart.FileName);
+																                                     "maildrop",
+																                                     UserId,
+																                                     message.Id,
+																                                     mimePart.FileName);
 
 																// Sanitize file path
 																attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
@@ -219,17 +223,19 @@
 																         Color="Color.Default"
 																         Href="@attachmentPath"
 																         Target="_blank">
-																	<MudText Typo="Typo.body2" Class="me-2">@mimePart.FileName</MudText>
+																	<MudText Typo="Typo.body2"
+																	         Class="me-2">@mimePart.FileName</MudText>
 
 																	@* Optional: tiny meta *@
-																	<MudText Typo="Typo.caption" Color="Color.Secondary">
+																	<MudText Typo="Typo.caption"
+																	         Color="Color.Secondary">
 																		@FormatAttachmentMeta(mimePart)
 																	</MudText>
 
 																	<MudIcon Icon="@Icons.Material.Filled.Download"
 																	         Size="Size.Small"
 																	         Class="ms-2"
-																	         Style="opacity: .8;" />
+																	         Style="opacity: .8;"/>
 																</MudChip>
 																break;
 															}
@@ -241,10 +247,10 @@
 									}
 
 
-									<MudDivider Class="mb-2" />
+									<MudDivider Class="mb-2"/>
 
 									<MudPaper Elevation="0"
-											  Class="pa-3">
+									          Class="pa-3">
 										<MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
 											@if (ActiveMessage.HtmlBody != null)
 											{
@@ -268,9 +274,9 @@
 										@message.SenderName
 									</MudText>
 
-									@if(message.AttachmentCount > 0)
+									@if (message.AttachmentCount > 0)
 									{
-										<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+										<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small"/>
 									}
 
 								</MudStack>
@@ -292,8 +298,9 @@
 		@* Display a message explaining their are no emails *@
 		else
 		{
-			<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">
-				No emails have been forwarded to your address via MustMail yet.<br />
+			<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined"
+			          ContentAlignment="HorizontalAlignment.Center">
+				No emails have been forwarded to your address via MustMail yet.<br/>
 				Once an email is received, it will appear here.
 			</MudAlert>
 		}

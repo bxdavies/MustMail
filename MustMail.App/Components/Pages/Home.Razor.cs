@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using MimeKit;
 using MudBlazor.Extensions;
-using MustMail.App;
 using MustMail.App.MailServer;
-using MustMail.App.Models;
 using System.Security.Claims;
 
 namespace MustMail.App.Components.Pages;
@@ -71,8 +69,7 @@ public class HomeBase : ComponentBase
 
 
             // Subscribe to events for the current user id using the UpdateServer
-            _subscription = Updates.Subscribe(UserId, async () =>
-            {
+            _subscription = Updates.Subscribe(UserId, async () => {
                 await GetMessages();
                 await InvokeAsync(StateHasChanged);
             });
@@ -106,9 +103,9 @@ public class HomeBase : ComponentBase
 
             // Create file path
             string path = Path.Combine(
-                _maildropFolder,
-                user.Id,
-                $"{mostRecentMessage.Id}.eml");
+                                       _maildropFolder,
+                                       user.Id,
+                                       $"{mostRecentMessage.Id}.eml");
 
             // Sanitize file path
             path = Helpers.SanitizeFilePath(path);
@@ -131,8 +128,7 @@ public class HomeBase : ComponentBase
         // Allow inline images
         _ = sanitizer.AllowedSchemes.Add("data");
 
-        sanitizer.FilterUrl += (_, e) =>
-        {
+        sanitizer.FilterUrl += (_, e) => {
             if (e.OriginalUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -191,7 +187,7 @@ public class HomeBase : ComponentBase
     // Message changed - When tab changed, get the message id and load the eml file
     protected void MessageChanged(int index)
     {
-        if (index < 0 && index > (MessageTabs.Panels.Count - 1))
+        if (index < 0 && index > MessageTabs.Panels.Count - 1)
             index = 1;
 
         if (MessageTabs.Panels[index].ID is not string messageId)
@@ -202,9 +198,9 @@ public class HomeBase : ComponentBase
 
         // Create file path
         string path = Path.Combine(
-            _maildropFolder,
-            UserId,
-            $"{messageId}.eml");
+                                   _maildropFolder,
+                                   UserId,
+                                   $"{messageId}.eml");
 
         // Sanitize file path
         path = Helpers.SanitizeFilePath(path);

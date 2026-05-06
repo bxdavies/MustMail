@@ -11,8 +11,9 @@ public class Configuration
     public required MustMailConfiguration MustMail { get; init; } = new();
     public required CertificateConfiguration Certificate { get; init; } = new();
     public SerilogConfiguration Serilog { get; set; } = new();
-   
+
 }
+
 public class SmtpConfiguration
 {
     public string Host { get; set; } = "localhost";
@@ -25,7 +26,6 @@ public class SmtpConfiguration
     [Range(1, 65535)]
     public int StartTLSPort { get; set; } = 587;
 }
-
 
 public class OpenIdConnectConfiguration
 {
@@ -59,7 +59,7 @@ public class SerilogConfiguration
 
 public class MinimumLevelConfiguration
 {
-    public string? Default { get; set; } 
+    public string? Default { get; set; }
 }
 
 public class WriteToConfiguration

@@ -15,6 +15,6 @@ public class Message
     public required string Subject { get; init; }
     public int AttachmentCount { get; init; }
     [MaxLength(255)]
-    public string UserId { get; init; } = null!; // Required foreign key property
-    public User User { get; init; } = null!; // Required reference navigation to principal
+    public string UserId { get; init; } = null!;// Required foreign key property
+    public User User { get; init; } = null!;// Required reference navigation to principal
 }
