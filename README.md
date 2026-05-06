@@ -3,8 +3,8 @@
     <img src="https://img.shields.io/github/languages/top/bxdavies/MustMail">
     <img src="https://img.shields.io/github/v/release/bxdavies/MustMail">
     <img src="https://qlty.sh/gh/bxdavies/projects/MustMail/maintainability.png">
-    <a href="https://github.com/bxdavies/mustmail/actions/workflows/tests.yml">
-    <img src="https://github.com/bxdavies/mustmail/actions/workflows/tests.yml/badge.svg" alt="Tests">
+    <a href="https://github.com/bxdavies/mustmail/actions/workflows/run_unit_tests.yml">
+    <img src="https://github.com/bxdavies/mustmail/actions/workflows/run_unit_tests.yml/badge.svg" alt="Tests">
   </a>
 </div>
 <br />
@@ -59,10 +59,10 @@ Features:
  - ~~See if the application can support sending from aliases~~ Implemented 
 
 ### v0.4.x
-- Support additional database types
-- Support additional logging sinks
+- ~~Support additional database types~~ Implemented
+- ~~Support additional logging sinks~~ File and Syslog sinks implemented
 - Add health check endpoint
-- Create SMTP accounts from environment variables so the web interface is not required for initial setup
+- ~~Create SMTP accounts from environment variables so the web interface is not required for initial setup~~ Implemented
 
 ### v0.5.x 
 - Improve To and From restrictions, for example by supporting wildcard patterns such as *@example.com
@@ -76,6 +76,7 @@ Features:
 
 ### v0.8.x 
 - Trigger webhooks when emails are received 
+- Don't require an account to already exist to store email
 - Support a mode that does not require Microsoft Graph or the Gmail Send API, allowing emails to be viewed only through the web interface
 
 ### v0.9.x
@@ -199,6 +200,9 @@ services:
 Application will start the web interface on port 5000 by default and SMTP sever on 465 and 587 using TLS and autneaction. 
 
 ## First run
+> [!TIP]
+> You can skip this step by setting the environment variable `Bootstrap__SMTPAccounts=username:password|username2:password2`
+
 Before we can use MustMail we need to login and create a SMTP account. Navigate to the web app, you should be redirect to your identity provider to login.  The first account to sign in is automatically assigned an admin role (more users can be set to admin's from the Admin page).
 
 From the homepage (Root or /) click the 'Admin' link below your name, on the admin page (/admin) click the 'Add new SMTP account' button and set name, password and description and click 'Save'.
@@ -287,6 +291,26 @@ For security reasons, the following settings must be provided using environment 
 
 If any of these environment variables are missing, MustMail will fail to start.
 
+### Databases
+
+By default MustMail will use an SQLite database stored in /app/Data, however if you wish you can change this path or use a completely different database. MustMail supports the following databases:
+- [SQLite](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.Sqlite.Core)
+- [Postgresql](https://www.nuget.org/packages/Npgsql.EntityFrameworkCore.PostgreSQL)
+- [MySQL](https://www.nuget.org/packages/MySql.EntityFrameworkCore)
+- [SQLServer](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.SqlServer)
+- [AzureSQL](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.SqlServer)
+
+Example connection strings are provided below, set the environment variable and MustMail will create the tables. 
+
+```
+ConnectionStrings__Sqlite=Data Source=/path/mounted/databasename.db
+ConnectionStrings__Postgres=Host=postgresql;Port=5432;Database=mustmail;Username=mustmail;Password=password
+ConnectionStrings__MySQL=Server=mysql;Port=3306;Database=mustmail;Uid=mustmail;Pwd=password;
+ConnectionStrings__SqlServer=Server=sqlserver;Database=mustmail;User Id=mustmail;Password=password
+ConnectionStrings__AzureSql=Server=tcp:myserver.database.windows.net,1433;Database=mustmail;User ID=mustmail@myserver;Password=password;Trusted_Connection=False;Encrypt=True;
+ ```
+
+More configuration options are available for each connection string. For detailed examples and provider-specific settings, see [ConnectionStrings.com](https://www.connectionstrings.com) or click the relevant database link above.
 ### appsettings.json reference  
 ```json
 {
@@ -312,32 +336,59 @@ If any of these environment variables are missing, MustMail will fail to start.
   },
   "Certificate": {
     "Managed": true,
-    "Path": "Z:\\Apollo\\Projects\\MustMail\\bin\\Debug\\net10.0\\Data\\MustMail.pfx",
+    "Path": "/home/test/certs/MustMail.pfx",
     "CommonName": "localhost"
   },
   "Serilog": {
     "Using": [
-      "Serilog.Sinks.Console"
+      "Serilog.Sinks.Console",
+      "Serilog.Sinks.File"
     ],
     "MinimumLevel": {
       "Default": "Debug",
       "Override": {
-        // Request logs
-        "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
+        "Microsoft.AspNetCore.Hosting.Diagnostics": "Information", // Request logging
+        "Microsoft.EntityFrameworkCore.Database.Command": "Information" // Database command logging
       }
     },
     "WriteTo": [
       {
         "Name": "Console",
         "Args": {
-          "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Literate, Serilog.Sinks.Console",
-          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level} {SourceContext}] {Message:lj}{NewLine}{Exception}"
+          "outputTemplate": "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/log-.txt",
+          "rollingInterval": "Day"
+        }
+      },
+      {
+        "Name": "UdpSyslog",
+        "Args": {
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <s:{SourceContext}>{NewLine}{Exception}",
+          "host": "syslog.host",
+          "port": 12345,
+          "format": "RFC5424",
+          "useTls": false,
+          "appName": "Application",
+          "facility": "Local7"
         }
       }
     ]
   }
 }
 ```
+
+On first run the application will automatically populate appsettings.json with the following defaults:
+- Console logging
+- Manged certificates enabled and saved in the data directory
+- Sqlite Database stored in the data directory
+- OpenID Connect name claim set to name
+
+After the first run, you can modify the appsettings.json file and the application will load the configuration. For example if you wanted to add a file logging sink you would add the sink to `Using` and add the 'Name' and 'Args' to the `WriteTo` section.  
 
 Serilog configuration details can be found on their wiki [here](https://github.com/serilog/serilog/wiki/Configuration-Basics#minimum-level).
 
