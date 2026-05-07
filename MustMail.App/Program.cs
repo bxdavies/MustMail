@@ -18,7 +18,9 @@ using MudBlazor.Services;
 using MustMail.App;
 using MustMail.App.Auth;
 using MustMail.App.Components;
-using MustMail.App.MailServer;
+using MustMail.App.Services.MailProcessing;
+using MustMail.App.Services.Maintenance;
+using MustMail.App.Services.Server;
 using Quartz;
 using Serilog;
 using Serilog.Events;
@@ -364,7 +366,7 @@ else if (mustMailConfig.Certificate.Managed)
                     "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
                     certificatePath);
 
-    CertificateHelper.Create(mustMailConfig, loggerFactory);
+    CertificateGenerator.Create(mustMailConfig, loggerFactory);
 }
 else
 {
@@ -382,7 +384,7 @@ if (certificate.NotAfter <= DateTime.UtcNow)
 {
     if (mustMailConfig.Certificate.Managed)
     {
-        CertificateHelper.Create(mustMailConfig, loggerFactory);
+        CertificateGenerator.Create(mustMailConfig, loggerFactory);
     }
     else
     {
@@ -394,7 +396,7 @@ if (certificate.NotAfter <= DateTime.UtcNow)
 builder.Services.AddHostedService<ServerService>();
 
 // Add graph user helper for finding users in M365 by UPN, Mail or aliais address 
-builder.Services.AddSingleton<GraphUserHelper>();
+builder.Services.AddSingleton<GraphUserLookupService>();
 
 // If we are storing emails create the cleanup job
 if (mustMailConfig.MustMail.StoreEmails)

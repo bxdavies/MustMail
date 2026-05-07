@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using MimeKit;
 using MudBlazor.Extensions;
-using MustMail.App.MailServer;
 using System.Security.Claims;
+using MustMail.App.Services.Maintenance;
 
 namespace MustMail.App.Components.Pages;
 
