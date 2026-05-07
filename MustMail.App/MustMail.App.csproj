@@ -40,7 +40,7 @@
         <PackageReference Include="Azure.Identity" Version="1.21.0" />
         <PackageReference Include="Microsoft.Graph" Version="5.105.0" />
         <PackageReference Include="MimeKit" Version="4.16.0" />
-        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.1" />
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.7" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
         <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
         <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
