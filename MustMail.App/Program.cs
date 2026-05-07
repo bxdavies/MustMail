@@ -398,6 +398,16 @@ builder.Services.AddHostedService<ServerService>();
 // Add graph user helper for finding users in M365 by UPN, Mail or aliais address 
 builder.Services.AddSingleton<GraphUserLookupService>();
 
+// Add recipient and sender resolvers which fetch the recipients and sender from the message and checks they are allowed to send
+builder.Services.AddSingleton<RecipientResolver>();
+builder.Services.AddSingleton<SenderResolver>();
+
+// Add attachment handler for extracting attachments from the message and then reattaching them using graph
+builder.Services.AddSingleton<AttachmentHandler>();
+
+// Add message storage for storing messages on disk and in the DB if message storage is enabled
+builder.Services.AddSingleton<MessageStorage>();
+
 // If we are storing emails create the cleanup job
 if (mustMailConfig.MustMail.StoreEmails)
 {
