@@ -29,6 +29,9 @@ public static class Test
 
         public static string Alias =>
             Environment.GetEnvironmentVariable("Test__Graph__Sender__Alias") ?? "alias@example.com";
+
+        public static string AllowedDomain =>
+          Environment.GetEnvironmentVariable("Test__MustMail__AllowedDomain") ?? "*@example.com";
     }
 }
 

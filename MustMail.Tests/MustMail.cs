@@ -49,6 +49,7 @@ public class MustMail
     public async Task MustMail_NotAllowedSender_IsRejected(int port)
     {
         Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "sender@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", "sender@example2.com");
 
         try
         {
@@ -73,6 +74,7 @@ public class MustMail
         finally
         {
             Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
         }
     }
 
@@ -84,7 +86,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_AllowedSender_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", Test.Config.DefaultSender);
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "sender@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", Test.Config.DefaultSender);
 
         try
         {
@@ -108,6 +111,84 @@ public class MustMail
         finally
         {
             Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("MustMail")]
+    [Description("Verifies that a sender domain not matching wildcard the allowed senders list is rejected")]
+    [DataRow(465)]
+    [DataRow(587)]
+    public async Task MustMail_WildcardAllowedSender_IsRejected(int port)
+    {
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", "*@example2.com");
+
+        try
+        {
+            await using CustomWebApplicationFactory factory = new();
+
+            using HttpClient webClient = factory.CreateClient();
+
+            using SmtpClient client = await ConnectClientAsync(port);
+
+            await client.AuthenticateAsync(
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
+
+            MimeMessage message = CreateMessage(
+                                                from: "user@notallowed.com",
+                                                subject: $"Test: WildcardDomainSenderNotAllowed_IsRejected {port}",
+                                                body: "WildcardDomainSenderNotAllowed_IsRejected");
+
+            await Assert.ThrowsAsync<SmtpCommandException>(async () =>
+            {
+                await client.SendAsync(message, TestContext.CancellationToken);
+            });
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("MustMail")]
+    [Description("Verifies that a sender matching wildcard the allowed senders list is accepted")]
+    [DataRow(465)]
+    [DataRow(587)]
+    public async Task MustMail_WildcardAllowedSender_IsAccepted(int port)
+    {
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", Test.Config.AllowedDomain);
+
+        try
+        {
+            await using CustomWebApplicationFactory factory = new();
+
+            using HttpClient webClient = factory.CreateClient();
+
+            using SmtpClient client = await ConnectClientAsync(port);
+
+            await client.AuthenticateAsync(
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
+
+            MimeMessage message = CreateMessage(subject: $"Test: WildcardDomainSenderAllowed_IsAccepted {port}",
+                                                body: "WildcardDomainSenderAllowed_IsAccepted");
+
+            await client.SendAsync(message, TestContext.CancellationToken);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
         }
     }
 
@@ -120,6 +201,7 @@ public class MustMail
     public async Task MustMail_NotAllowedRecipients_IsRejected(int port)
     {
         Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "user@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", "user@example2.com");
 
         try
         {
@@ -144,6 +226,7 @@ public class MustMail
         finally
         {
             Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
         }
     }
 
@@ -155,10 +238,12 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_AllowedRecipients_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", Test.Config.DefaultRecipient);
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "user@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", Test.Config.DefaultRecipient);
 
         try
         {
+
             await using CustomWebApplicationFactory factory = new();
 
             using HttpClient webClient = factory.CreateClient();
@@ -179,6 +264,87 @@ public class MustMail
         finally
         {
             Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("MustMail")]
+    [Description("Verifies attempting to send to an wildcarded domain in the allowed recipients list is rejected")]
+    [DataRow(465)]
+    [DataRow(587)]
+    public async Task MustMail_WildcardAllowedRecipients_IsRejected(int port)
+    {
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", "*@example2.com");
+
+        try
+        {
+            await using CustomWebApplicationFactory factory = new();
+
+            using HttpClient webClient = factory.CreateClient();
+
+            using SmtpClient client = await ConnectClientAsync(port);
+
+            await client.AuthenticateAsync(
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
+
+            MimeMessage message = new();
+            message.From.Add(MailboxAddress.Parse(Test.Config.DefaultSender));
+            message.To.Add(MailboxAddress.Parse(Test.Config.SecondRecipient));
+            message.Subject = $"Test: WildcardAllowedRecipients_IsRejected {port}";
+            message.Body = new TextPart("plain") { Text = "WildcardAllowedRecipients_IsRejected" };
+
+
+            await Assert.ThrowsAsync<SmtpCommandException>(() => client.SendAsync(message,
+                                                                                TestContext.CancellationToken));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("MustMail")]
+    [Description("Verifies attempting to send to an wildcarded domain in the allowed recipients list is accepted")]
+    [DataRow(465)]
+    [DataRow(587)]
+    public async Task MustMail_WildcardAllowedRecipients_IsAccepted(int port)
+    {
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", Test.Config.AllowedDomain);
+
+        try
+        {
+            await using CustomWebApplicationFactory factory = new();
+
+            using HttpClient webClient = factory.CreateClient();
+
+            using SmtpClient client = await ConnectClientAsync(port);
+
+            await client.AuthenticateAsync(
+                                           Test.Config.SmtpUser,
+                                           Test.Config.SmtpPassword,
+                                           TestContext.CancellationToken);
+
+            MimeMessage message = new();
+            message.From.Add(MailboxAddress.Parse(Test.Config.DefaultSender));
+            message.To.Add(MailboxAddress.Parse(Test.Config.DefaultRecipient));
+            message.Subject = $"Test: WildcardAllowedRecipients_IsAccepted {port}";
+            message.Body = new TextPart("plain") { Text = "WildcardAllowedRecipients_IsAccepted" };
+
+            await client.SendAsync(message, TestContext.CancellationToken);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
         }
     }
 
