@@ -78,7 +78,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         // If store emails is enabled for each recipient that has an account store a copy of the email on disk
         if (mustMailConfig.StoreEmails)
         {
-            messageStorage.StoreMessage(message, recipients, sender);
+            await messageStorage.StoreMessage(message, recipients, sender);
         }
         
         // Create message 
