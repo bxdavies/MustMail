@@ -10,8 +10,6 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
     public async Task<ResolvedSender> ResolveSender(SmtpServer.IMessageTransaction transaction, MimeMessage message)
     {
 
-        Microsoft.Graph.Models.User? user;
-
         // Try MAIL FROM first (preferred)
         string? senderAddress =
             transaction.From == null ||
@@ -21,36 +19,11 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
                 : $"{transaction.From.User.Trim()}@{transaction.From.Host.Trim()}";
         string? senderName = message.Sender?.Name?.Trim();
 
-        // Check MAIL FROM was found
-        if (!string.IsNullOrWhiteSpace(senderAddress))
-        {
-            // Attempt to get the user from graph by UPN, Mail or any alias addresses
-            try
-            {
-                user = await graphUserHelper.FindSenderUserAsync(
-                                                                 "MAIL FROM",
-                                                                 senderAddress);
+        string type = "MAIL FROM";
+   
 
-                if (user == null)
-                {
-                    return new ResolvedSender
-                    {
-                        SmtpResponse = SmtpResponse.MailboxUnavailable
-                    };
-                }
-            }
-            catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
-            {
-                LogSenderTenantLookupFailed(error, "MAIL FROM", senderAddress);
-                return new ResolvedSender
-                {
-                    SmtpResponse = SmtpResponse.SyntaxError
-                };
-            }
-
-        }
         // MAIL FROM was not found falling back to FROM
-        else
+        if (string.IsNullOrWhiteSpace(senderAddress))
         {
             // Check if we trust the FROM address
             if (!_mustMailConfig.TrustFrom)
@@ -83,35 +56,13 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
 
             LogUsingFromFallback(senderAddress);
 
-            // Attempt to get the user from graph by UPN, Mail or any alias addresses
-            try
-            {
-                user = await graphUserHelper.FindSenderUserAsync(
-                                                                 "FROM",
-                                                                 senderAddress);
-
-                if (user == null)
-                {
-                    return new ResolvedSender
-                    {
-                        SmtpResponse = SmtpResponse.MailboxUnavailable
-                    };
-                }
-            }
-            catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
-            {
-                LogSenderTenantLookupFailed(error, "FROM", senderAddress);
-                return new ResolvedSender
-                {
-                    SmtpResponse = SmtpResponse.SyntaxError
-                };
-            }
+            type = "FROM";
         }
-        
+
         // If allowedFrom is not wildcard and there are allowed recipients in the list then loop through each one
         if (!_mustMailConfig.AllowedSenders.Contains("*") && _mustMailConfig.AllowedSenders.Count > 0)
         {
-            
+
             // Check if address is allowed
             bool isAllowed = _mustMailConfig.AllowedSenders.Any(allowed => {
 
@@ -134,7 +85,7 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
 
                 return false;
             });
-            
+
             // If the address is not allowed add then return an error
             if (!isAllowed)
             {
@@ -145,7 +96,33 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
                 };
             }
         }
-        
+
+
+        // Attempt to get the user from graph by UPN, Mail or any alias addresses
+        Microsoft.Graph.Models.User? user;
+        try
+        {
+            user = await graphUserHelper.FindSenderUserAsync(
+                                                             type,
+                                                             senderAddress);
+
+            if (user == null)
+            {
+                return new ResolvedSender
+                {
+                    SmtpResponse = SmtpResponse.MailboxUnavailable
+                };
+            }
+        }
+        catch (Microsoft.Graph.Models.ODataErrors.ODataError error)
+        {
+            LogSenderTenantLookupFailed(error, type, senderAddress);
+            return new ResolvedSender
+            {
+                SmtpResponse = SmtpResponse.SyntaxError
+            };
+        }
+
         // If no sender name is provided fall back to the sender address as the sender name
         if (string.IsNullOrWhiteSpace(senderName))
         {
