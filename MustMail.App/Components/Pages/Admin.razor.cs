@@ -200,7 +200,7 @@ public class AdminBase : ComponentBase
             return;
         }
 
-        await File.WriteAllTextAsync(@"appsettings.json", JsonSerializer.Serialize(Config, JsonDefaults.Options));
+        await File.WriteAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Data", "appsettings.json"), JsonSerializer.Serialize(Config, JsonWriteDefaults.Options));
 
         _ = Snackbar.Add("Settings saved.", Severity.Success);
     }
