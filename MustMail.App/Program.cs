@@ -1,6 +1,3 @@
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
 using DbUp;
@@ -24,10 +21,14 @@ using MustMail.App.Services.Server;
 using Quartz;
 using Serilog;
 using Serilog.Events;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Add health checks
 builder.Services.AddHealthChecks();
 
 // Create the Data folder
@@ -36,55 +37,47 @@ Directory.CreateDirectory(dataFolder);
 
 string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
 
-// Ensure appsettings.json exists. 
+// If appsettings.json does not exist create one with the default config 
 if (!File.Exists(appSettingsPath))
 {
-    Configuration config = builder.Configuration.Get<Configuration>()
-                           ?? throw new InvalidOperationException(
-                                                                  "Could not load MustMail configuration. Please see the README for configuration guidance.");
-
-    // Serilog defaults
-    config.Serilog = new SerilogConfiguration
-    {
-        Using = ["Serilog.Sinks.Console"],
-        MinimumLevel = new MinimumLevelConfiguration { Default = "Information" },
-        WriteTo =
-        [
-            new WriteToConfiguration
-            {
-                Name = "Console",
-                Args = new Dictionary<string, object>
-                {
-                    ["outputTemplate"] = "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
-                }
-            }
-        ]
-    };
-
     File.WriteAllText(
                       appSettingsPath,
-                      JsonSerializer.Serialize(config, JsonDefaults.Options));
+                      JsonSerializer.Serialize(new Configuration(), JsonWriteDefaults.Options));
 }
 
-// Load the configuration
-builder.Configuration
-    .SetBasePath(dataFolder)
-    .AddJsonFile("appsettings.json", true, true)
-    .AddEnvironmentVariables();
+// If no sink is set then use the console
+if (string.IsNullOrEmpty(builder.Configuration.GetValue<string?>("Serilog:Using:0")))
+{
+    builder.Configuration["Serilog:Using:0"] = "Serilog.Sinks.Console";
 
-// Create Serilog logger
-Log.Logger = new LoggerConfiguration()
+    builder.Configuration["Serilog:MinimumLevel:Default"] = "Information";
+
+    builder.Configuration["Serilog:WriteTo:0:Name"] = "Console";
+
+    builder.Configuration["Serilog:WriteTo:0:Args:outputTemplate"] =
+        "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}";
+
+}
+
+// Create logger using default settings, appsettings.json and environment files will override this
+LoggerConfiguration loggerConfig = new LoggerConfiguration()
     .MinimumLevel.Is(LogEventLevel.Information)
     // Set minimum levels for noisy log sources 
-    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Warning)// Request logging
-    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)// Everything AspNetCore logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)// Entity Framework logging
-    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", LogEventLevel.Warning)// Browser link logging (used in development)  
-    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", LogEventLevel.Information)// Localization logging
-    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", LogEventLevel.Information)// Quartz Thread logging
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)// Database command logging
-    .ReadFrom.Configuration(builder.Configuration)
-    .CreateLogger();
+    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Extensions.Localization.ResourceManagerStringLocalizer", LogEventLevel.Information)
+    .MinimumLevel.Override("Quartz.Core.QuartzSchedulerThread", LogEventLevel.Information)
+    .MinimumLevel.Override("Quartz.Impl.StdSchedulerFactory", LogEventLevel.Warning)
+    .MinimumLevel.Override("Quartz.Core.SchedulerSignalerImpl", LogEventLevel.Warning)
+    .MinimumLevel.Override("Quartz.Simpl.RAMJobStore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+    .ReadFrom.Configuration(builder.Configuration);
+
+
+// Create Serilog logger
+Log.Logger = loggerConfig.CreateLogger();
 
 // Create logger factory
 using ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
@@ -101,23 +94,14 @@ Helpers.ValidateEnvironmentVariables();
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
-bool configChanged = false;
-
 // Store managed certificates in the data directory
 if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
 {
     string certPath = Path.Combine(dataFolder, "MustMail.pfx");
     bool exists = File.Exists(certPath);
 
-    if (exists)
+    if (!exists)
     {
-        Log.Logger.Information(
-                               "Managed certificates enabled. Using existing certificate at {CertificatePath}",
-                               certPath);
-    }
-    else
-    {
-        configChanged = true;
         Log.Logger.Information(
                                "Managed certificates enabled. A new certificate will be created at {CertificatePath}",
                                certPath);
@@ -127,7 +111,7 @@ if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
 }
 
 // If database connection string is not set store MustMail.db in the data folder. 
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")))
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")))
 {
     string databasePath = Path.Combine(dataFolder, "MustMail.db");
     bool exists = File.Exists(databasePath);
@@ -135,34 +119,25 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__
     if (exists)
     {
         Log.Logger.Information(
-                               "Database connection string not set. Using existing database at {DatabasePath}",
+                               "Database connection string not set. Defaulting to existing SQLite database at {DatabasePath}",
                                databasePath);
 
     }
     else
     {
-        configChanged = true;
         Log.Logger.Information(
-                               "Database connection string not set. A new database will be created at {DatabasePath}",
+                               "Database connection string not set. A new SQLite database will be created at {DatabasePath}",
                                databasePath);
     }
 
     Environment.SetEnvironmentVariable("ConnectionStrings__Sqlite", $"Data Source={databasePath}");
-}
-else
-{
-    Log.Logger.Information("Using configured database connection string from environment variable.");
 }
 
 // If name claim is not set use the default name
 if (string.IsNullOrWhiteSpace(builder.Configuration["OpenIdConnect:NameClaim"]))
 {
     builder.Configuration["OpenIdConnect:NameClaim"] = "name";
-    configChanged = true;
 
-    Log.Logger.Information(
-                           "OpenID Connect name claim not configured. Defaulting to {NameClaim}",
-                           "name");
 }
 
 // Parse configuration
@@ -170,17 +145,6 @@ Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
                                ?? throw new InvalidOperationException(
                                                                       "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
-// If we have overridden the configuration then save it and log
-if (configChanged)
-{
-    File.WriteAllText(
-                      appSettingsPath,
-                      JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
-
-    Log.Logger.Information(
-                           "Configuration defaults were applied and written to {ConfigPath}",
-                           appSettingsPath);
-}
 
 if (mustMailConfig.Smtp.InsecurePort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:InsecurePort must be between 1 and 65535.");
@@ -282,8 +246,6 @@ if (!result.Successful)
     throw new InvalidOperationException("Database migration failed!");
 }
 
-Log.Information("Database migration completed successfully.");
-
 // Create client secret credential to authenticate against Microsoft graph
 builder.Services.AddSingleton<TokenCredential>(_ => new ClientSecretCredential(
                                                                                Environment.GetEnvironmentVariable("Graph__TenantId"),
@@ -354,13 +316,7 @@ if (string.IsNullOrWhiteSpace(certificatePath))
                                         "Certificate path is not configured and MustMail is not managing the certificate.");
 }
 
-if (File.Exists(certificatePath))
-{
-    Log.Information(
-                    "Using certificate at {CertificatePath}",
-                    certificatePath);
-}
-else if (mustMailConfig.Certificate.Managed)
+if (!File.Exists(certificatePath) && mustMailConfig.Certificate.Managed)
 {
     Log.Information(
                     "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
@@ -368,7 +324,8 @@ else if (mustMailConfig.Certificate.Managed)
 
     CertificateGenerator.Create(mustMailConfig, loggerFactory);
 }
-else
+
+if (!File.Exists(certificatePath) && !mustMailConfig.Certificate.Managed)
 {
     throw new InvalidOperationException(
                                         $"Could not find or access certificate at '{certificatePath}'.");
@@ -447,6 +404,7 @@ builder.Services.AddHealthChecks()
 // Build the app
 WebApplication app = builder.Build();
 
+// Create a health check endpoint at /healthz
 app.MapHealthChecks("/healthz");
 
 // Bootstrap SMTP Accounts
@@ -513,7 +471,7 @@ if (mustMailConfig.MustMail.StoreEmails)
     _ = Directory.CreateDirectory(maildropFolder);
 
     if (app.Logger.IsEnabled(LogLevel.Information))
-        app.Logger.LogInformation("Using the 'folder' maildrop in the data directory. Full path: {MaildropPath}", maildropFolder);
+        app.Logger.LogInformation("Using maildrop folder in data directory: {MaildropPath}", maildropFolder);
 
     // Create a custom static path at /maildrop for eml files and attachments 
     _ = app.UseStaticFiles(new StaticFileOptions
@@ -523,7 +481,6 @@ if (mustMailConfig.MustMail.StoreEmails)
         OnPrepareResponse = MaildropStaticFileAuth.OnPrepareResponse
     });
 }
-
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

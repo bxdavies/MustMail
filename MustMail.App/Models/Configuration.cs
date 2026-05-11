@@ -6,10 +6,10 @@ public class Configuration
 {
     public string AllowedHosts { get; set; } = "*";
     public string Urls { get; set; } = "http://0.0.0.0:5000";
-    public required SmtpConfiguration Smtp { get; init; } = new();
-    public required OpenIdConnectConfiguration OpenIdConnect { get; init; } = new();
-    public required MustMailConfiguration MustMail { get; init; } = new();
-    public required CertificateConfiguration Certificate { get; init; } = new();
+    public SmtpConfiguration Smtp { get; init; } = new();
+    public OpenIdConnectConfiguration OpenIdConnect { get; init; } = new();
+    public MustMailConfiguration MustMail { get; init; } = new();
+    public CertificateConfiguration Certificate { get; init; } = new();
     public SerilogConfiguration Serilog { get; set; } = new();
 
 }
@@ -52,9 +52,9 @@ public class CertificateConfiguration
 
 public class SerilogConfiguration
 {
-    public List<string> Using { get; set; } = [];
-    public MinimumLevelConfiguration MinimumLevel { get; init; } = new();
-    public List<WriteToConfiguration> WriteTo { get; set; } = [];
+    public List<string>? Using { get; set; } = null;
+    public MinimumLevelConfiguration? MinimumLevel { get; init; } = null;
+    public List<WriteToConfiguration>? WriteTo { get; set; } = null;
 }
 
 public class MinimumLevelConfiguration

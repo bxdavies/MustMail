@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MustMail.App;
 
@@ -51,5 +52,13 @@ public static class JsonDefaults
     public static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true
+    };
+}
+public static class JsonWriteDefaults
+{
+    public static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
     };
 }
