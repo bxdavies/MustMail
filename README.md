@@ -65,7 +65,7 @@ Features:
 - ~~Create SMTP accounts from environment variables so the web interface is not required for initial setup~~ Implemented
 
 ### v0.5.x 
-- Improve To and From restrictions, for example by supporting wildcard patterns such as *@example.com
+- ~~Improve To and From restrictions, for example by supporting wildcard patterns such as *@example.com~~ Implemented
 
 ### v0.6.x 
 - Retry failed email deliveries with backoff
