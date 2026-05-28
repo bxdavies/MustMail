@@ -18,10 +18,12 @@ using MustMail.App.Components;
 using MustMail.App.Services.MailProcessing;
 using MustMail.App.Services.Maintenance;
 using MustMail.App.Services.Server;
+using Org.BouncyCastle.Asn1.IsisMtt.Ocsp;
 using Quartz;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
@@ -94,20 +96,68 @@ Helpers.ValidateEnvironmentVariables();
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
+// If no certificate type is provide default to PFX on windows and PEM on anything else
+if (string.IsNullOrEmpty(builder.Configuration["Certificate:Format"]))
+{
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    {
+        builder.Configuration["Certificate:Format"] = "PFX";
+    }
+    else
+    {
+        builder.Configuration["Certificate:Format"] = "PEM";
+    }
+        
+}
+
+// Check we support the certificate format
+if (builder.Configuration["Certificate:Format"] is not("PFX" or "PEM"))
+{
+    throw new InvalidOperationException(
+    "Invalid certificate format specified in configuration. Valid values are 'PFX' and 'PEM'.");
+}
+
+
+// PFX certificate requires a password 
+if(builder.Configuration["Certificate:Format"] == "PFX" && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Certificate__Password")))
+{
+        throw new InvalidOperationException(
+                                            "The environment variable 'Certificate__Password' must be set.");
+}
+
 // Store managed certificates in the data directory
 if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
 {
-    string certPath = Path.Combine(dataFolder, "MustMail.pfx");
-    bool exists = File.Exists(certPath);
-
-    if (!exists)
+    if (builder.Configuration["Certificate:Format"] == "PFX")
     {
-        Log.Logger.Information(
-                               "Managed certificates enabled. A new certificate will be created at {CertificatePath}",
-                               certPath);
-    }
-    builder.Configuration["Certificate:Path"] = certPath;
+        string certPath = Path.Combine(dataFolder, "MustMail.pfx");
+        bool exists = File.Exists(certPath);
 
+        if (!exists)
+        {
+            Log.Logger.Information(
+                                   "Managed certificates enabled. A new certificate will be created at {CertificatePath}",
+                                   certPath);
+        }
+
+        builder.Configuration["Certificate:PFXPath"] = certPath;
+    }
+    else if (builder.Configuration["Certificate:Format"] == "PEM")
+    {
+        string pemCertPath = Path.Combine(dataFolder, "cert.pem");
+        string pemKeyPath = Path.Combine(dataFolder, "privkey.pem");
+        bool exists = File.Exists(pemCertPath);
+
+        if (!exists)
+        {
+            Log.Logger.Information(
+                                    "Managed certificates are enabled. A new certificate will be created at {CertificatePath} and the private key will be stored at {PrivateKeyPath}.",
+                                    pemCertPath, pemKeyPath);
+        }
+
+        builder.Configuration["Certificate:PEMCertPath"] = pemCertPath;
+        builder.Configuration["Certificate:PEMKeyPath"] = pemKeyPath;
+    }
 }
 
 // If database connection string is not set store MustMail.db in the data folder. 
@@ -308,44 +358,112 @@ builder.Services.AddCascadingAuthenticationState();
 // Add update service
 builder.Services.AddSingleton<UpdateService>();
 
-string? certificatePath = mustMailConfig.Certificate.Path;
-
-if (string.IsNullOrWhiteSpace(certificatePath))
+if (mustMailConfig.Certificate.Format == "PFX")
 {
-    throw new InvalidOperationException(
-                                        "Certificate path is not configured and MustMail is not managing the certificate.");
-}
+    string? certificatePath = mustMailConfig.Certificate.PFXPath;
 
-if (!File.Exists(certificatePath) && mustMailConfig.Certificate.Managed)
-{
-    Log.Information(
-                    "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
-                    certificatePath);
-
-    CertificateGenerator.Create(mustMailConfig, loggerFactory);
-}
-
-if (!File.Exists(certificatePath) && !mustMailConfig.Certificate.Managed)
-{
-    throw new InvalidOperationException(
-                                        $"Could not find or access certificate at '{certificatePath}'.");
-}
-
-// Attempt to load certificate and check it's valid
-X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
-                                                                        mustMailConfig.Certificate.Path!,
-                                                                        Environment.GetEnvironmentVariable("Certificate__Password"));
-
-// If certificate has expired create a new one if managed else throw an exception
-if (certificate.NotAfter <= DateTime.UtcNow)
-{
-    if (mustMailConfig.Certificate.Managed)
+    if (string.IsNullOrWhiteSpace(certificatePath))
     {
+        throw new InvalidOperationException(
+                                            "Certificate path is not configured and MustMail is not managing the certificate.");
+    }
+
+    if (!File.Exists(certificatePath) && mustMailConfig.Certificate.Managed)
+    {
+        Log.Information(
+                        "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
+                        certificatePath);
+
         CertificateGenerator.Create(mustMailConfig, loggerFactory);
     }
-    else
+
+    if (!File.Exists(certificatePath) && !mustMailConfig.Certificate.Managed)
     {
-        throw new InvalidOperationException($"The certificate at '{mustMailConfig.Certificate.Path}' expired on '{certificate.NotBefore.ToIsoDateString()}'. Please renew and replace the certificate.");
+        throw new InvalidOperationException(
+                                            $"Could not find or access certificate at '{certificatePath}'.");
+    }
+
+    // Attempt to load certificate and check it's valid
+    X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
+                                                                            mustMailConfig.Certificate.PFXPath!,
+                                                                            Environment.GetEnvironmentVariable("Certificate__Password"));
+
+    // If certificate has expired create a new one if managed else throw an exception
+    if (certificate.NotAfter <= DateTime.UtcNow)
+    {
+        if (mustMailConfig.Certificate.Managed)
+        {
+            CertificateGenerator.Create(mustMailConfig, loggerFactory);
+        }
+        else
+        {
+            throw new InvalidOperationException($"The certificate at '{mustMailConfig.Certificate.PFXPath}' expired on '{certificate.NotAfter:O}'. Please renew and replace the certificate.");
+        }
+    }
+}
+else if (mustMailConfig.Certificate.Format == "PEM")
+{
+    string? certificatePath = mustMailConfig.Certificate.PEMCertPath;
+    string? keyPath = mustMailConfig.Certificate.PEMKeyPath;
+
+    if (string.IsNullOrWhiteSpace(certificatePath) ||
+        string.IsNullOrWhiteSpace(keyPath))
+    {
+        throw new InvalidOperationException(
+            "PEM certificate or private key path is not configured.");
+    }
+
+    bool certExists = File.Exists(certificatePath);
+    bool keyExists = File.Exists(keyPath);
+
+    if ((!certExists || !keyExists) && mustMailConfig.Certificate.Managed)
+    {
+        Log.Information(
+            "Managed PEM certificate not found. Creating a new self-signed certificate at {CertificatePath}.",
+            certificatePath);
+
+        CertificateGenerator.Create(mustMailConfig, loggerFactory);
+
+        certExists = File.Exists(certificatePath);
+        keyExists = File.Exists(keyPath);
+    }
+
+    if (!certExists)
+    {
+        throw new InvalidOperationException(
+            $"Could not find or access PEM certificate at '{certificatePath}'.");
+    }
+
+    if (!keyExists)
+    {
+        throw new InvalidOperationException(
+            $"Could not find or access PEM private key at '{keyPath}'.");
+    }
+
+    // Load certificate and private key
+    X509Certificate2 certificate =
+        X509Certificate2.CreateFromPemFile(certificatePath, keyPath);
+
+    // Check expiry
+    if (certificate.NotAfter <= DateTime.UtcNow)
+    {
+        if (mustMailConfig.Certificate.Managed)
+        {
+            Log.Information(
+                "Managed PEM certificate expired on {ExpiryDate}. Creating a new certificate.",
+                certificate.NotAfter);
+
+            CertificateGenerator.Create(mustMailConfig, loggerFactory);
+
+            certificate = X509Certificate2.CreateFromPemFile(
+                certificatePath,
+                keyPath);
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"The certificate at '{certificatePath}' expired on '{certificate.NotAfter:O}'. Please renew and replace the certificate.");
+        }
     }
 }
 

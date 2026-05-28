@@ -40,10 +40,6 @@ public static class Helpers
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__ClientSecret")))
             throw new InvalidOperationException(
                                                 "The environment variable 'OpenIdConnect__ClientSecret' must be set.");
-
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Certificate__Password")))
-            throw new InvalidOperationException(
-                                                "The environment variable 'Certificate__Password' must be set.");
     }
 }
 

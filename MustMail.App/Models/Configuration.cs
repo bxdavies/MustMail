@@ -45,7 +45,10 @@ public class MustMailConfiguration
 public class CertificateConfiguration
 {
     public bool Managed { get; set; } = true;
-    public string? Path { get; set; }
+    public string? Format { get; set; }
+    public string? PFXPath { get; set; }
+    public string? PEMCertPath { get; set; }
+    public string? PEMKeyPath { get; set; }
     public string CommonName { get; set; } = "localhost";
 
 }

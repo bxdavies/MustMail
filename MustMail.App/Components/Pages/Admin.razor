@@ -508,23 +508,106 @@
 									</div>
 								</MudItem>
 
-								<MudItem xs="12" md="6">
-									<MudTextField Label="Path"
-									              @bind-Value="Config.Certificate.Path"
-									              Placeholder="MustMail.pfx"
-									              HelperText="Must be a password protected Personal Information Exchange (.pfx) certificate"/>
 
+								<MudItem xs="12" md="6">
+									<MudTextField Label="Format"
+												  T="string"
+												  Disabled="true"
+												  HelperText="Only configurable by the environment variable. Must be 'PFX' or 'PEM'" />
 
 									<div>
-										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-												Certificate__Path </code></MudText>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>
+											Certificate__Format
+										</code>
+									</MudText>
+
+									<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+												   Size="Size.Small"
+												   Class="env-copy-btn"
+												   OnClick="@(() => CopyToClipboard("Certificate__Format"))" />
+								</div>
+								</MudItem>
+
+								@if (Config.Certificate.Format == "PFX")
+								{
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Path"
+										@bind-Value="Config.Certificate.PFXPath"
+										Placeholder="MustMail.pfx"
+										HelperText="Must be a password protected Personal Information Exchange (.pfx) certificate"/>
+
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
+													Certificate__Path </code></MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+											Size="Size.Small"
+											Class="env-copy-btn"
+											OnClick="@(() => CopyToClipboard("Certificate__PFXPath"))"/>
+										</div>
+									</MudItem>
+
+									<MudItem xs="12">
+										<MudTextField Label="Password"
+													  T="string"
+													  Disabled="true"
+													  HelperText="Only configurable by the environment variable." />
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>
+												Certificate__Password
+											</code>
+										</MudText>
 
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-										               Size="Size.Small"
-										               Class="env-copy-btn"
-										               OnClick="@(() => CopyToClipboard("Certificate__Path"))"/>
+													   Size="Size.Small"
+													   Class="env-copy-btn"
+													   OnClick="@(() => CopyToClipboard("Certificate__Password"))" />
 									</div>
-								</MudItem>
+									</MudItem>
+								}
+								else if(Config.Certificate.Format == "PEM")
+								{
+									
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Certificate Path"
+													  @bind-Value="Config.Certificate.PEMCertPath"
+													  Placeholder="cert.pem"
+													  HelperText="Path to the PEM certificate file (.pem)" />
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>Certificate__PEMCertPath</code>
+											</MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+														   Size="Size.Small"
+														   Class="env-copy-btn"
+														   OnClick='@(() => CopyToClipboard("Certificate__PEMCertPath"))' />
+										</div>
+									</MudItem>
+
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Private Key Path"
+													  @bind-Value="Config.Certificate.PEMKeyPath"
+													  Placeholder="privkey.pem"
+													  HelperText="Path to the PEM private key file (.pem)" />
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>Certificate__PEMKeyPath</code>
+											</MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+														   Size="Size.Small"
+														   Class="env-copy-btn"
+														   OnClick='@(() => CopyToClipboard("Certificate__PEMKeyPath"))' />
+										</div>
+									</MudItem>
+								}
 
 								@if (Config.Certificate.Managed)
 								{
@@ -545,22 +628,7 @@
 									</MudItem>
 								}
 
-								<MudItem xs="12">
-									<MudTextField Label="Password"
-									              T="string"
-									              Disabled="true"
-									              HelperText="Only configurable by the environment variable."/>
-
-									<div>
-										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-												Certificate__Password </code></MudText>
-
-										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-										               Size="Size.Small"
-										               Class="env-copy-btn"
-										               OnClick="@(() => CopyToClipboard("Certificate__Password"))"/>
-									</div>
-								</MudItem>
+							
 							</MudGrid>
 						</MudExpansionPanel>
 

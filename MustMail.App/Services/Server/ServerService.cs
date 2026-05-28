@@ -1,5 +1,6 @@
 ﻿using Microsoft.Graph;
 using MustMail.App.Services.MailProcessing;
+using Org.BouncyCastle.Asn1.X509;
 using SmtpServer;
 using System.Security.Cryptography.X509Certificates;
 
@@ -19,11 +20,28 @@ public partial class ServerService(
 
         Configuration mustMailConfig = config.Get<Configuration>()!;// Already checked for null earlier
 
-        LogLoadingCertificate(mustMailConfig.Certificate.Path!);
-        X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
-                                                                                mustMailConfig.Certificate.Path!,// Already checked for null earlier
-                                                                                Environment.GetEnvironmentVariable("Certificate__Password"));
-
+        X509Certificate2 certificate;
+        if (mustMailConfig.Certificate.Format == "PFX")
+        {
+            LogLoadingCertificate(mustMailConfig.Certificate.PFXPath!);
+            certificate = X509CertificateLoader.LoadPkcs12FromFile(
+                                                                                    mustMailConfig.Certificate.PFXPath!,// Already checked for null earlier
+                                                                                    Environment.GetEnvironmentVariable("Certificate__Password"));
+        }
+        else if (mustMailConfig.Certificate.Format == "PEM")
+        {
+            LogLoadingCertificate(mustMailConfig.Certificate.PEMCertPath!);
+            // Load certificate and private key
+            certificate =
+                X509Certificate2.CreateFromPemFile(mustMailConfig.Certificate.PEMCertPath!, mustMailConfig.Certificate.PEMKeyPath!);
+           
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                "Invalid certificate format specified in configuration. Valid values are 'PFX' and 'PEM'.");
+        }
+       
         // SMTP Server options
         SmtpServerOptionsBuilder smtpBuilder = new SmtpServerOptionsBuilder()
             .ServerName(mustMailConfig.Smtp.Host)

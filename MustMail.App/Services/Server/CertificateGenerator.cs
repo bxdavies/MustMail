@@ -45,9 +45,24 @@ public static partial class CertificateGenerator
 
         LogCertificateGenerated(logger, cert.NotAfter);
 
-        File.WriteAllBytes(mustMailConfig.Certificate.Path!, cert.Export(X509ContentType.Pfx, Environment.GetEnvironmentVariable("Certificate__Password")));
+        if (mustMailConfig.Certificate.Format == "PFX")
+        {
+            // PFX export
+            File.WriteAllBytes(mustMailConfig.Certificate.PFXPath!, cert.Export(X509ContentType.Pfx, Environment.GetEnvironmentVariable("Certificate__Password")));
 
-        LogCertificateSaved(logger, mustMailConfig.Certificate.Path!);
+            LogCertificateSaved(logger, mustMailConfig.Certificate.PFXPath!);
+        }
+        else if (mustMailConfig.Certificate.Format == "PEM")
+        {
+            // PEM certificate
+            File.WriteAllText(mustMailConfig.Certificate.PEMCertPath!, cert.ExportCertificatePem());
+
+            // PEM private key
+            File.WriteAllText(mustMailConfig.Certificate.PEMKeyPath!, rsa.ExportPkcs8PrivateKeyPem());
+
+            LogCertificateSaved(logger, mustMailConfig.Certificate.PEMCertPath!);
+        }
+      
     }
 
     [LoggerMessage(
