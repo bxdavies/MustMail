@@ -82,7 +82,7 @@ jobs:
           release_name="MustMail-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish MustMail.App/MustMail.App.csproj --framework net10.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:PublishSingleFile=true --self-contained false 
+          dotnet publish MustMail.App/MustMail.App.csproj --framework net10.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:PublishSingleFile=true -p:DebugType=None  -p:DebugSymbols=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained true
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
