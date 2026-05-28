@@ -94,7 +94,8 @@ Features:
 2. Configure an IDP provider, see the [IDP Configuration](#idp-configuration) section.
 3. Run the application, see the [Running MustMail](#running-mustmail) section.
 4. First login and SMTP account creation, see the [First Run](#first-run) section.
-5. Use MustMail to send an email, see the [Usage](#usage) section.
+5. Test MustMail to confirm it is working, see the [Testing](#testing) section. 
+6. Use MustMail to send an email, see the [Usage](#usage) section.
 
 ## Azure App Creation
 1. Go to the ['App registrations' section in Azure](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade).
@@ -161,7 +162,7 @@ MustMail will use the claim `name` by default to fetch the users name, however t
 
 ## Running MustMail
 
-### Docker image
+### Docker image (recommend)
 
 Run MustMail in a container with these simple steps.
 
@@ -169,13 +170,12 @@ Run MustMail in a container with these simple steps.
 Start MustMail listening on localhost port 9025. Override any environment variable below to match your setup.
 ```bash
 docker run --name MustMail
--e Graph__TenantId="" \
--e Graph__ClientId="" \
--e Graph__ClientSecret="" \
+-e Graph__TenantId=your-tenant-id \
+-e Graph__ClientId=your-client-id \
+-e Graph__ClientSecret=your-client-secret \
 -e OpenIdConnect__Authority=https://keycloak.example.com/realms/master/ \
 -e OpenIdConnect__ClientId=mustmail \
--e OpenIdConnect__ClientSecret= \
--e Certificate__Password=Password \
+-e OpenIdConnect__ClientSecret=your-oidc-client-secret \
 -d ghcr.io/bxdavies/mustmail
 ```
 
@@ -187,17 +187,80 @@ services:
     image: ghcr.io/bxdavies/mustmail
     container_name: mustmail
     environment:
-      - Graph__TenantId=
-      - Graph__ClientId=
-      - Graph__ClientSecret=
+      - Graph__TenantId=your-tenant-id
+      - Graph__ClientId=your-client-id
+      - Graph__ClientSecret=your-client-secret
       - OpenIdConnect__Authority=https://keycloak.example.com/realms/master/
       - OpenIdConnect__ClientId=mustmail
-      - OpenIdConnect__ClientSecret=
-      - Certificate__Password=Password
+      - OpenIdConnect__ClientSecret=your-oidc-client-secret
     restart: unless-stopped
 ```
 
-Application will start the web interface on port 5000 by default and SMTP sever on 465 and 587 using TLS and autneaction. 
+Application will start the web interface on port 8080 by default and SMTP sever on 465 and 587 using TLS and authentication
+
+### Windows (untested)
+1. Download the binary release `MustMail-v0.0.0-win-x64.zip` (where 0.0.0 is the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
+2. Extract the zip file to `C:\MustMail`.
+3. Open a Command Prompt window and use the following commands to set the environment variables 
+```
+setx Graph__TenantId "your-tenant-id"
+setx Graph__ClientId "your-client-id"
+setx Graph__ClientSecret "your-client-secret"
+setx OpenIdConnect__Authority "https://keycloak.example.com/realms/master/"
+setx OpenIdConnect__ClientId "mustmail"
+setx OpenIdConnect__ClientSecret "your-oidc-client-secret"
+setx Certificate__Password "password"
+
+```
+4. Launch the executable, approve the firewall prompt, and test with [SmtpTest ](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml).
+5. Open 'Task Scheduler'.
+6. Click 'Import Task' and select the `MustMail.xml` file located at `C:\MustMail`.
+7. Click 'Change User or Group'.
+8. Enter your username (your folder name in C:\Users) in the textbox and click 'Check Names'. It should find your username, then click 'Ok'.
+9.  Click 'OK'.
+10.  Right-click on the task and press 'Run'.
+11.  Test again with [SmtpTest](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml).
+
+#### Linux (untested)
+1. Download the binary release `MustMail-v0.0.0-linux-x64.tar.gz` (replace `0.0.0` with the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
+2. Extract the archive to `/opt/MustMail` (you may need sudo):
+```bash
+sudo mkdir -p /opt/MustMail
+sudo tar -xzf MustMail-v0.0.0-linux-x64.tar.gz -C /opt/MustMail
+```
+3. Change to the installation directory: `cd /opt/MustMail`.
+4. Make the executable runnable: `sudo chmod +x MustMail`.
+2. Create a systemd service to run MustMail once at startup after the network is online:
+   1. Create the service file: `sudo nano /etc/systemd/system/mustmail.service`
+   2. Add this:
+```
+[Unit]
+Description=Run MustMail once after network is online
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/MustMail
+ExecStart=/opt/MustMail/MustMail
+
+Environment="Graph__TenantId=your-tenant-id"
+Environment="Graph__ClientId=your-client-id"
+Environment="Graph__ClientSecret=your-client-secret"
+
+Environment="OpenIdConnect__Authority=https://keycloak.example.com/realms/master/"
+Environment="OpenIdConnect__ClientId=mustmail"
+Environment="OpenIdConnect__ClientSecret=your-oidc-client-secret"
+
+[Install]
+WantedBy=multi-user.target
+```
+8. Reload systemd to apply changes: `sudo systemctl daemon-reload`.
+9. Enable the service so it runs once at boot: `sudo systemctl enable mustmail.service`.
+10. Reboot your system or start the service manually to test: `sudo systemctl start mustmail.service`.
+11. Verify it ran successfully: `sudo systemctl status mustmail.service`
+12. Test with telnet following [these instructions from StackOverflow](https://stackoverflow.com/a/11988455)
+13. View logs with `journalctl -u mustmail -f`
 
 ## First run
 > [!TIP]
@@ -209,27 +272,8 @@ From the homepage (Root or /) click the 'Admin' link below your name, on the adm
 
 Now you can use the SMTP account to send an email to MustMail.
 
-## Usage
-
-Set up your application to send emails through MustMail by configuring the SMTP settings like this:
-
-```
-SMTP_HOST=localhost
-SMTP_PORT=587
-SMTP_FROM_EMAIL=servers@example.com
-SMTP_SECURE=true
-SMTP_USERNAME=test
-SMTP_PASSWORD=Password
-```
-
-Names for these settings might vary depending on your app—check its documentation if you’re not sure.
-
-If you’re running MustMail in Docker and your app is in another container on the same network, use the container name (e.g. `mustmail`) instead of `localhost` for `SMTP_HOST`.
-
-> [!TIP]
-> Test your setup with a simple SMTP test tool to make sure everything’s working before going live.
-
-### Quick SMTP testing with Docker
+## Testing
+### Docker
 
 If you want to quickly test MustMail, you can spin up a test SMTP client container. For example, try [morawskim/swaks](https://hub.docker.com/r/morawskim/swaks):
 
@@ -257,6 +301,35 @@ docker run --network docker_default --rm -ti morawskim/swaks  \
 - `--header "Subject:first contact"` sets the subject line for the test email.
 
 If you’re using Docker Compose or a custom network, update `--network docker_default` to match your setup.
+
+### Windows
+Use [SmtpTest](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml) tool to test.
+
+## Usage
+
+Set up your application to send emails through MustMail by configuring the SMTP settings like this:
+
+```
+SMTP_HOST=localhost
+SMTP_PORT=587
+SMTP_FROM_EMAIL=servers@example.com
+SMTP_SECURE=true
+SMTP_USERNAME=test
+SMTP_PASSWORD=Password
+```
+
+Names for these settings might vary depending on your app, check its documentation if you’re not sure.
+
+If you’re running MustMail in Docker and your app is in another container on the same network, use the container name (e.g. `mustmail`) instead of `localhost` for `SMTP_HOST`.
+
+If you are letting MustMail manage the certificate (default), it will create a self-signed certificate. Most applications will validate the certificate, so the recommended approach is to add the certificate to your system's trusted certificate store, or configure the application you are using to trust the self-signed certificate. Check your application's documentation, but something like the below may be suggested:
+```
+NODE_TLS_REJECT_UNAUTHORIZED=0 # Not recommended, as this disables certificate validation globally
+FORCE_TRUST_SERVER_CERT=true
+```
+
+> [!TIP]
+> Test your setup with a simple SMTP test tool to make sure everything’s working before going live.
 
 ## Configuration
 
@@ -311,6 +384,34 @@ ConnectionStrings__AzureSql=Server=tcp:myserver.database.windows.net,1433;Databa
  ```
 
 More configuration options are available for each connection string. For detailed examples and provider-specific settings, see [ConnectionStrings.com](https://www.connectionstrings.com) or click the relevant database link above.
+
+### Certificate  
+By default, MustMail will manage and create a self-signed certificate and store it in the data folder. Setting `Certificate__Managed=False` allows you to provide your own certificate files.
+
+The certificate format is automatically detected based on the operating system:
+
+* On Windows, the default format is `PFX`
+* On Linux/macOS, the default format is `PEM`
+
+You can override this with `Certificate__Format=PEM` or `Certificate__Format=PFX`.
+
+PEM example:
+
+```
+Certificate__Managed=False
+Certificate__Format=PEM
+Certificate__PEMCertPath=
+Certificate__PEMKeyPath=
+```
+
+PFX example:
+
+```
+Certificate__Managed=False
+Certificate__Format=PFX
+Certificate__PFXPath=
+```
+
 ### appsettings.json reference  
 ```json
 {
@@ -335,9 +436,12 @@ More configuration options are available for each connection string. For detaile
     "FooterBranding": true
   },
   "Certificate": {
-    "Managed": true,
-    "Path": "/home/test/certs/MustMail.pfx",
-    "CommonName": "localhost"
+    "Managed": true, // Or False
+    "Format": "PFX", // Or PEM  
+    "PFXPath": "/home/test/certs/MustMail.pfx", // Set this for PFX
+    "PEMCertPath": "/home/test/certs/cert.pem", // Set this for PEM
+    "PEMKeyPath": "/home/test/certs/key.pem", // And this for PEM as well
+    "CommonName": "localhost" // Only required when Managed is true 
   },
   "Serilog": {
     "Using": [
@@ -412,6 +516,7 @@ Don't forget to give the project a star! Thanks again!
 
 [morawskim/swaks](https://hub.docker.com/r/morawskim/swaks) & [packer-images](https://github.com/morawskim/packer-images) by [Marcin Morawski](https://morawskim.pl/) - Swaks in a docker container.
 
+[SmptTest](https://www.kabsoftware.com/smtptest/) by [Kab Software](https://www.kabsoftware.com/) - SmtpTest is a small, 64bit Windows program that lets you easily test SMTP servers and relays
 ## License
 
 Distributed under the AGPL-3.0 License. See `LICENSE.txt` for more information.
