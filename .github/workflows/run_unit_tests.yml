@@ -6,6 +6,14 @@ on:
   push:
     branches:
     - main
+    paths:
+      - 'MustMail.App/**'
+      - 'MustMail.Migrations.AzureSql/**'
+      - 'MustMail.Migrations.MySql/**'
+      - 'MustMail.Migrations.PostgreSql/**'
+      - 'MustMail.Migrations.SQLite/**'
+      - 'MustMail.Migrations.SqlServer/**'
+      - 'MustMail.Tests/**'
 
 jobs:
   test:
