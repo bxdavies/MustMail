@@ -3,7 +3,7 @@ using Quartz;
 
 namespace MustMail.App.Services.Maintenance;
 
-public partial class CleanupService(IOptions<Configuration> options,
+public partial class CleanupService(IOptionsMonitor<Configuration> config,
     ILogger<CleanupService> logger, IDbContextFactory<DatabaseContext> dbFactory, UpdateService updates) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
@@ -13,8 +13,8 @@ public partial class CleanupService(IOptions<Configuration> options,
 
         await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync();
 
-        DateTime expiryDate = DateTime.UtcNow - TimeSpan.FromDays(options.Value.MustMail.RetentionDays);
-        LogExpiryCutoff(options.Value.MustMail.RetentionDays, expiryDate);
+        DateTime expiryDate = DateTime.UtcNow - TimeSpan.FromDays(config.CurrentValue.MustMail.RetentionDays);
+        LogExpiryCutoff(config.CurrentValue.MustMail.RetentionDays, expiryDate);
 
         while (true)
         {

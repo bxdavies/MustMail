@@ -1,4 +1,5 @@
-﻿using Microsoft.Graph;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.Graph;
 using MustMail.App.Services.MailProcessing;
 using Org.BouncyCastle.Asn1.X509;
 using SmtpServer;
@@ -8,7 +9,7 @@ namespace MustMail.App.Services.Server;
 
 public partial class ServerService(
     GraphServiceClient graphClient,
-    IConfiguration config,
+    IOptionsMonitor<Configuration> config,
     ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, RecipientResolver recipientResolver, SenderResolver senderResolver, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
 {
     private SmtpServer.SmtpServer? _smtpServer;
@@ -18,22 +19,20 @@ public partial class ServerService(
 
         LogSmtpInitializing();
 
-        Configuration mustMailConfig = config.Get<Configuration>()!;// Already checked for null earlier
-
         X509Certificate2 certificate;
-        if (mustMailConfig.Certificate.Format == "PFX")
+        if (config.CurrentValue.Certificate.Format == "PFX")
         {
-            LogLoadingCertificate(mustMailConfig.Certificate.PFXPath!);
+            LogLoadingCertificate(config.CurrentValue.Certificate.PFXPath!);
             certificate = X509CertificateLoader.LoadPkcs12FromFile(
-                                                                                    mustMailConfig.Certificate.PFXPath!,// Already checked for null earlier
+                                                                                    config.CurrentValue.Certificate.PFXPath!,// Already checked for null earlier
                                                                                     Environment.GetEnvironmentVariable("Certificate__Password"));
         }
-        else if (mustMailConfig.Certificate.Format == "PEM")
+        else if (config.CurrentValue.Certificate.Format == "PEM")
         {
-            LogLoadingCertificate(mustMailConfig.Certificate.PEMCertPath!);
+            LogLoadingCertificate(config.CurrentValue.Certificate.PEMCertPath!);
             // Load certificate and private key
             certificate =
-                X509Certificate2.CreateFromPemFile(mustMailConfig.Certificate.PEMCertPath!, mustMailConfig.Certificate.PEMKeyPath!);
+                X509Certificate2.CreateFromPemFile(config.CurrentValue.Certificate.PEMCertPath!, config.CurrentValue.Certificate.PEMKeyPath!);
            
         }
         else
@@ -44,23 +43,23 @@ public partial class ServerService(
        
         // SMTP Server options
         SmtpServerOptionsBuilder smtpBuilder = new SmtpServerOptionsBuilder()
-            .ServerName(mustMailConfig.Smtp.Host)
+            .ServerName(config.CurrentValue.Smtp.Host)
             .Endpoint(builder => builder
-                          .Port(mustMailConfig.Smtp.ImplicitTLSPort)
+                          .Port(config.CurrentValue.Smtp.ImplicitTLSPort)
                           .IsSecure(true)
                           .AllowUnsecureAuthentication(false)
                           .AuthenticationRequired()
                           .Certificate(certificate))
             .Endpoint(builder => builder
-                          .Port(mustMailConfig.Smtp.StartTLSPort)
+                          .Port(config.CurrentValue.Smtp.StartTLSPort)
                           .AllowUnsecureAuthentication(false)
                           .AuthenticationRequired()
                           .Certificate(certificate));
 
-        if (mustMailConfig.Smtp.AllowInsecure)
+        if (config.CurrentValue.Smtp.AllowInsecure)
         {
             _ = smtpBuilder.Endpoint(builder => builder
-                                         .Port(mustMailConfig.Smtp.InsecurePort)
+                                         .Port(config.CurrentValue.Smtp.InsecurePort)
                                          .IsSecure(false));
         }
 
@@ -75,7 +74,7 @@ public partial class ServerService(
         emailServiceProvider.Add(new MessageHandler(
                                                     loggerFactory.CreateLogger<MessageHandler>(),
                                                     graphClient,
-                                                    mustMailConfig.MustMail,
+                                                    config,
                                                     recipientResolver,
                                                     senderResolver,
                                                     attachmentHandler,
@@ -89,18 +88,20 @@ public partial class ServerService(
 
         List<int> ports =
         [
-            mustMailConfig.Smtp.ImplicitTLSPort,
-            mustMailConfig.Smtp.StartTLSPort
+            config.CurrentValue.Smtp.ImplicitTLSPort,
+            config.CurrentValue.Smtp.StartTLSPort
         ];
 
-        if (mustMailConfig.Smtp.AllowInsecure)
+        if (config.CurrentValue.Smtp.AllowInsecure)
         {
-            ports.Add(mustMailConfig.Smtp.InsecurePort);
+            ports.Add(config.CurrentValue.Smtp.InsecurePort);
         }
 
-        LogSmtpStarted(mustMailConfig.Smtp.Host, ports);
+        LogSmtpStarted(config.CurrentValue.Smtp.Host, ports);
 
         await _smtpServer.StartAsync(stoppingToken);
+
+
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

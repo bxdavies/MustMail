@@ -1,23 +1,22 @@
-﻿using Microsoft.Graph.Models;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.Graph.Models;
 using MimeKit;
 
 namespace MustMail.App.Services.MailProcessing;
 
-public partial class RecipientResolver(ILogger<RecipientResolver> logger, IConfiguration config)
+public partial class RecipientResolver(ILogger<RecipientResolver> logger, IOptionsMonitor<Configuration> config)
 {
-    private readonly MustMailConfiguration _mustMailConfig = config.Get<Configuration>()!.MustMail;
-
     public ResolvedRecipients? ResolveRecipients(SmtpServer.IMessageTransaction transaction, MimeMessage message)
     {
         
         // Extract envelope recipients from the SMTP transaction
-        List<Recipient> envelopeRecipients = transaction.To.Select(mailbox => new Recipient
+        List<Recipient> envelopeRecipients = [.. transaction.To.Select(mailbox => new Recipient
         {
             EmailAddress = new EmailAddress
             {
                 Address = $"{mailbox.User.Trim()}@{mailbox.Host.Trim()}"
             }
-        }).ToList();
+        })];
         
         // Create a list to store all recipients (To, CC, BCC)
         List<Recipient>
@@ -129,7 +128,7 @@ public partial class RecipientResolver(ILogger<RecipientResolver> logger, IConfi
         List<Recipient> rejectedRecipients = [];
 
         // If allowedTo is not wildcard and there are allowed recipients in the list then loop through each one
-        if (!_mustMailConfig.AllowedRecipients.Contains("*") && _mustMailConfig.AllowedRecipients.Count > 0)
+        if (!config.CurrentValue.MustMail.AllowedRecipients.Contains("*") && config.CurrentValue.MustMail.AllowedRecipients.Count > 0)
         {
             foreach (Recipient recipient in allRecipients)
             {
@@ -137,7 +136,7 @@ public partial class RecipientResolver(ILogger<RecipientResolver> logger, IConfi
                 string recipientAddress = recipient.EmailAddress!.Address!;
                 
                 // Check if address is allowed
-                bool isAllowed = _mustMailConfig.AllowedRecipients.Any(allowed => {
+                bool isAllowed = config.CurrentValue.MustMail.AllowedRecipients.Any(allowed => {
 
                     // Direct comparison of address eg. user@example.com compared to user@example.com
                     if (string.Equals(

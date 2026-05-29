@@ -1,11 +1,11 @@
-﻿using MimeKit;
+﻿using Microsoft.Extensions.Options;
+using MimeKit;
 using SmtpServer.Protocol;
 
 namespace MustMail.App.Services.MailProcessing;
 
-public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLookupService graphUserHelper, IConfiguration config)
+public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLookupService graphUserHelper, IOptionsMonitor<Configuration> config)
 {
-    private readonly MustMailConfiguration _mustMailConfig = config.Get<Configuration>()!.MustMail;
 
     public async Task<ResolvedSender> ResolveSender(SmtpServer.IMessageTransaction transaction, MimeMessage message)
     {
@@ -26,7 +26,7 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
         if (string.IsNullOrWhiteSpace(senderAddress))
         {
             // Check if we trust the FROM address
-            if (!_mustMailConfig.TrustFrom)
+            if (!config.CurrentValue.MustMail.TrustFrom)
             {
                 LogMailFromMissingTrustFromDisabled();
                 return new ResolvedSender
@@ -60,11 +60,11 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
         }
 
         // If allowedFrom is not wildcard and there are allowed recipients in the list then loop through each one
-        if (!_mustMailConfig.AllowedSenders.Contains("*") && _mustMailConfig.AllowedSenders.Count > 0)
+        if (!config.CurrentValue.MustMail.AllowedSenders.Contains("*") && config.CurrentValue.MustMail.AllowedSenders.Count > 0)
         {
 
             // Check if address is allowed
-            bool isAllowed = _mustMailConfig.AllowedSenders.Any(allowed => {
+            bool isAllowed = config.CurrentValue.MustMail.AllowedSenders.Any(allowed => {
 
                 // Direct comparison of address eg. user@example.com compared to user@example.com
                 if (string.Equals(
