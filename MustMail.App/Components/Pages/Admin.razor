@@ -54,27 +54,65 @@
 									</div>
 								</MudItem>
 
-								<MudItem xs="12" md="6">
+								<MudItem xs="12">
 									<MudTextField Label="Database Connection String"
 									              T="string"
 									              Disabled="true"
-									              HelperText="Databases supported: SQLite"/>
-
-									<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
-										Changing the path will recreate the database in the new location. <br/>
-										<b> Any users, SMTP accounts or messages in the database will be lost! </b>
-									</MudAlert>
+									              HelperText="Only configurable by the environment variable."/>
 
 									<div>
-										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-												ConnectionStrings__DatabaseContext </code></MudText>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>ConnectionStrings__Sqlite</code>
+										</MudText>
 
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 										               Size="Size.Small"
 										               Class="env-copy-btn"
-										               OnClick="@(() => CopyToClipboard("ConnectionStrings__DatabaseContext"))"/>
+										               OnClick="@(() => CopyToClipboard("ConnectionStrings__Sqlite"))"/>
+									</div>
 
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>ConnectionStrings__Postgres</code>
+										</MudText>
 
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("ConnectionStrings__Postgres"))"/>
+									</div>
+
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>ConnectionStrings__MySQL</code>
+										</MudText>
+
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("ConnectionStrings__MySQL"))"/>
+									</div>
+
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>ConnectionStrings__SqlServer</code>
+										</MudText>
+
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("ConnectionStrings__SqlServer"))"/>
+									</div>
+
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">
+											ENV: <code>ConnectionStrings__AzureSql</code>
+										</MudText>
+
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("ConnectionStrings__AzureSql"))"/>
 									</div>
 								</MudItem>
 							</MudGrid>
@@ -153,23 +191,23 @@
 						<MudExpansionPanel Text="Microsoft Graph">
 							<MudGrid Spacing="2">
 								<MudItem xs="12" md="6">
-									<MudItem xs="12" md="6">
-										<MudTextField Label="Tenant ID"
-										              T="string"
-										              Disabled="true"
-										              HelperText="Only configurable by the environment variable."/>
+									<MudTextField Label="Tenant ID"
+									              T="string"
+									              Disabled="true"
+									              HelperText="Only configurable by the environment variable."/>
 
-										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-													Graph__TenantId </code></MudText>
+									<div>
+										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
+												Graph__TenantId </code></MudText>
 
-											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-											               Size="Size.Small"
-											               Class="env-copy-btn"
-											               OnClick="@(() => CopyToClipboard("Graph__TenantId"))"/>
-										</div>
-									</MudItem>
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("Graph__TenantId"))"/>
+									</div>
+								</MudItem>
 
+								<MudItem xs="12" md="6">
 									<MudTextField Label="Client ID"
 									              T="string"
 									              Disabled="true"
@@ -185,7 +223,6 @@
 										               OnClick="@(() => CopyToClipboard("Graph__ClientId"))"/>
 									</div>
 								</MudItem>
-
 
 								<MudItem xs="12">
 									<MudTextField Label="Client Secret"
@@ -207,9 +244,9 @@
 
 						<MudExpansionPanel Text="Logging">
 							<MudGrid Spacing="2">
-								<MudItem xs="12" md="6">
+								<MudItem xs="12">
 									<MudSelect T="string" Label="Log Level"
-									           @bind-Value="Config.Serilog.MinimumLevel.Default">
+									           @bind-Value="Config.Serilog.MinimumLevel?.Default">
 										<MudSelectItem Value="@("Verbose")">Verbose</MudSelectItem>
 										<MudSelectItem Value="@("Debug")">Debug</MudSelectItem>
 										<MudSelectItem Value="@("Information")">Information</MudSelectItem>
@@ -263,7 +300,7 @@
 								</MudItem>
 
 
-								<MudItem xs="12">
+								<MudItem xs="12" md="6">
 									<MudSwitch T="bool" @bind-Value="Config.MustMail.TrustFrom"
 									           Color="Color.Warning"
 									           Label="Trust From"/>
@@ -283,7 +320,7 @@
 									</div>
 								</MudItem>
 
-								<MudItem xs="12">
+								<MudItem xs="12" md="6">
 									<MudSwitch T="bool" @bind-Value="Config.MustMail.StoreEmails"
 									           Color="Color.Warning"
 									           Label="Store Emails"/>
@@ -293,7 +330,8 @@
 									</MudText>
 
 									<div>
-										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code> StoreEmails </code>
+										<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
+												MustMail__StoreEmails </code>
 										</MudText>
 
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
@@ -304,7 +342,7 @@
 								</MudItem>
 
 
-								<MudItem xs="12">
+								<MudItem xs="12" md="6">
 									<MudInput T="int" @bind-Value="Config.MustMail.RetentionDays"
 									          Label="Retention"/>
 
@@ -415,27 +453,41 @@
 							</MudGrid>
 						</MudExpansionPanel>
 
-						<MudExpansionPanel Text="Allowed From">
+						<MudExpansionPanel Text="Allowed Senders">
 							<MudStack Spacing="2">
 								<MudText Class="mud-input-helper-text">
-									Any emails not sent from the specified address to must MustMail will be rejected.
-									The asterisk (*) means allow all or if empty all addresses will be allowed.
+									Any emails sent to MustMail that do not match one of the specified <b>sender</b>
+									addresses or patterns will be rejected.
 								</MudText>
 
-								<MudStack Row Spacing="2" AlignItems="AlignItems.Center">
-									<MudTextField Label="Add address or *"
+								<MudList Dense="true" T="string" Class="mud-input-helper-text">
+									<MudListItem>
+										<code class="env-hint">user@example.com</code> – allow a specific email address.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*@@example.com</code> – allow any address at a specific
+										domain.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*</code> – allow all addresses.
+									</MudListItem>
+								</MudList>
+								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
+									<MudTextField Label="Address"
 									              @bind-Value="NewAllowedFrom"
 									              Immediate="true"
-									              Placeholder="user@example.com or *"/>
-									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddAllowedFrom">
+									              Variant="Variant.Outlined"
+									              Placeholder='@("Examples: user@example.com, *@example.com, *")'/>
+									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedFrom">
 										Add
 									</MudButton>
 								</MudStack>
 
-								<MudTable Items="Config.MustMail.AllowedSenders" Dense="true" Hover="true">
+								<MudTable Items="Config.MustMail.AllowedSenders" Bordered="true" Class="mt-4"
+								          Outlined="true">
 									<HeaderContent>
-										<MudTh>Value</MudTh>
-										<MudTh></MudTh>
+										<MudTh>Address</MudTh>
+										<MudTh>Actions</MudTh>
 									</HeaderContent>
 									<RowTemplate>
 										<MudTd>
@@ -450,30 +502,44 @@
 							</MudStack>
 						</MudExpansionPanel>
 
-						<MudExpansionPanel Text="Allowed To">
+						<MudExpansionPanel Text="Allowed Recipients">
 							<MudStack Spacing="2">
 								<MudText Class="mud-input-helper-text">
-									If an email contains any recipients (To, Cc and Bcc) addresses not specified the
-									entire email will be rejected and sent to none of the recipients. The asterisk (*)
-									means allow all or if empty all addresses will be allowed.
+									Any emails sent to MustMail that do not match one of the specified <b>recipient</b>
+									addresses or patterns will be rejected.
 								</MudText>
 
-								<MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+								<MudList Dense="true" T="string" Class="mud-input-helper-text">
+									<MudListItem>
+										<code class="env-hint">user@example.com</code> – allow a specific email address.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*@@example.com</code> – allow any address at a specific
+										domain.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*</code> – allow all addresses.
+									</MudListItem>
+								</MudList>
+
+								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
 
 
-									<MudTextField Label="Add address or *"
+									<MudTextField Label="Address"
 									              @bind-Value="NewAllowedRecipients"
 									              Immediate="true"
-									              Placeholder="user@example.com or *"/>
-									<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddAllowedTo">
+									              Variant="Variant.Outlined"
+									              Placeholder='@("Examples: user@example.com, *@example.com, *")'/>
+									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedTo">
 										Add
 									</MudButton>
 								</MudStack>
 
-								<MudTable Items="Config.MustMail.AllowedRecipients" Dense="true" Hover="true">
+								<MudTable Items="Config.MustMail.AllowedRecipients" Bordered="true" Class="mt-4"
+								          Outlined="true">
 									<HeaderContent>
-										<MudTh>Value</MudTh>
-										<MudTh></MudTh>
+										<MudTh>Address</MudTh>
+										<MudTh>Actions</MudTh>
 									</HeaderContent>
 									<RowTemplate>
 										<MudTd>
@@ -511,113 +577,36 @@
 
 								<MudItem xs="12" md="6">
 									<MudTextField Label="Format"
-												  T="string"
-												  Disabled="true"
-												  HelperText="Only configurable by the environment variable. Must be 'PFX' or 'PEM'" />
+									              T="string"
+									              Disabled="true"
+									              HelperText="Only configurable by the environment variable. Must be 'PFX' or 'PEM'"/>
 
 									<div>
 										<MudText Typo="Typo.caption" Class="env-hint">
 											ENV: <code>
-											Certificate__Format
-										</code>
-									</MudText>
-
-									<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-												   Size="Size.Small"
-												   Class="env-copy-btn"
-												   OnClick="@(() => CopyToClipboard("Certificate__Format"))" />
-								</div>
-								</MudItem>
-
-								@if (Config.Certificate.Format == "PFX")
-								{
-									<MudItem xs="12" md="6">
-										<MudTextField Label="Path"
-										@bind-Value="Config.Certificate.PFXPath"
-										Placeholder="MustMail.pfx"
-										HelperText="Must be a password protected Personal Information Exchange (.pfx) certificate"/>
-
-
-										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-													Certificate__Path </code></MudText>
-
-											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-											Size="Size.Small"
-											Class="env-copy-btn"
-											OnClick="@(() => CopyToClipboard("Certificate__PFXPath"))"/>
-										</div>
-									</MudItem>
-
-									<MudItem xs="12">
-										<MudTextField Label="Password"
-													  T="string"
-													  Disabled="true"
-													  HelperText="Only configurable by the environment variable." />
-
-										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">
-												ENV: <code>
-												Certificate__Password
+												Certificate__Format
 											</code>
 										</MudText>
 
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-													   Size="Size.Small"
-													   Class="env-copy-btn"
-													   OnClick="@(() => CopyToClipboard("Certificate__Password"))" />
+										               Size="Size.Small"
+										               Class="env-copy-btn"
+										               OnClick="@(() => CopyToClipboard("Certificate__Format"))"/>
 									</div>
-									</MudItem>
-								}
-								else if(Config.Certificate.Format == "PEM")
-								{
-									
-									<MudItem xs="12" md="6">
-										<MudTextField Label="Certificate Path"
-													  @bind-Value="Config.Certificate.PEMCertPath"
-													  Placeholder="cert.pem"
-													  HelperText="Path to the PEM certificate file (.pem)" />
-
-										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">
-												ENV: <code>Certificate__PEMCertPath</code>
-											</MudText>
-
-											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-														   Size="Size.Small"
-														   Class="env-copy-btn"
-														   OnClick='@(() => CopyToClipboard("Certificate__PEMCertPath"))' />
-										</div>
-									</MudItem>
-
-									<MudItem xs="12" md="6">
-										<MudTextField Label="Private Key Path"
-													  @bind-Value="Config.Certificate.PEMKeyPath"
-													  Placeholder="privkey.pem"
-													  HelperText="Path to the PEM private key file (.pem)" />
-
-										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">
-												ENV: <code>Certificate__PEMKeyPath</code>
-											</MudText>
-
-											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-														   Size="Size.Small"
-														   Class="env-copy-btn"
-														   OnClick='@(() => CopyToClipboard("Certificate__PEMKeyPath"))' />
-										</div>
-									</MudItem>
-								}
+								</MudItem>
 
 								@if (Config.Certificate.Managed)
 								{
-									<MudItem xs="12" md="6">
+									<MudItem xs="12">
 										<MudTextField Label="CommonName"
 										              @bind-Value="Config.Certificate.CommonName"
 										              Placeholder="test.application.com"/>
 										<div>
-											<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
-													Certificate__CommonName </code></MudText>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>
+													Certificate__CommonName
+												</code>
+											</MudText>
 
 											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 											               Size="Size.Small"
@@ -628,7 +617,85 @@
 									</MudItem>
 								}
 
-							
+								@if (Config.Certificate.Format == "PFX")
+								{
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Path"
+										              @bind-Value="Config.Certificate.PFXPath"
+										              Placeholder="MustMail.pfx"
+										              HelperText="Must be a password protected Personal Information Exchange (.pfx) certificate"/>
+
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">ENV: <code>
+													Certificate__Path </code></MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+											               Size="Size.Small"
+											               Class="env-copy-btn"
+											               OnClick="@(() => CopyToClipboard("Certificate__PFXPath"))"/>
+										</div>
+									</MudItem>
+
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Password"
+										              T="string"
+										              Disabled="true"
+										              HelperText="Only configurable by the environment variable."/>
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>
+													Certificate__Password
+												</code>
+											</MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+											               Size="Size.Small"
+											               Class="env-copy-btn"
+											               OnClick="@(() => CopyToClipboard("Certificate__Password"))"/>
+										</div>
+									</MudItem>
+								}
+								else if (Config.Certificate.Format == "PEM")
+								{
+
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Certificate Path"
+										              @bind-Value="Config.Certificate.PEMCertPath"
+										              Placeholder="cert.pem"
+										              HelperText="Path to the PEM certificate file (.pem)"/>
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>Certificate__PEMCertPath</code>
+											</MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+											               Size="Size.Small"
+											               Class="env-copy-btn"
+											               OnClick='@(() => CopyToClipboard("Certificate__PEMCertPath"))'/>
+										</div>
+									</MudItem>
+
+									<MudItem xs="12" md="6">
+										<MudTextField Label="Private Key Path"
+										              @bind-Value="Config.Certificate.PEMKeyPath"
+										              Placeholder="privkey.pem"
+										              HelperText="Path to the PEM private key file (.pem)"/>
+
+										<div>
+											<MudText Typo="Typo.caption" Class="env-hint">
+												ENV: <code>Certificate__PEMKeyPath</code>
+											</MudText>
+
+											<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+											               Size="Size.Small"
+											               Class="env-copy-btn"
+											               OnClick='@(() => CopyToClipboard("Certificate__PEMKeyPath"))'/>
+										</div>
+									</MudItem>
+								}
 							</MudGrid>
 						</MudExpansionPanel>
 

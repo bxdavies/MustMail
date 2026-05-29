@@ -42,7 +42,12 @@ public class AdminBase : ComponentBase
     // New SMTP account - start editing a new SMTP account in form modal
     protected async Task NewSMTPAccount()
     {
-        await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount { Username = "", Password = "", Description = "" });
+        await SMTPAccountGrid.SetEditingItemAsync(new SMTPAccount
+        {
+            Username = "",
+            Password = "",
+            Description = ""
+        });
     }
 
     // Remove SMTP account - remove account
