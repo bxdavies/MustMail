@@ -198,7 +198,7 @@ services:
 
 Application will start the web interface on port 8080 by default and SMTP sever on 465 and 587 using TLS and authentication
 
-### Windows (untested)
+### Windows
 1. Download the binary release `MustMail-v0.0.0-win-x64.zip` (where 0.0.0 is the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
 2. Extract the zip file to `C:\MustMail`.
 3. Open a Command Prompt window and use the following commands to set the environment variables 
@@ -220,6 +220,8 @@ setx Certificate__Password "password"
 9.  Click 'OK'.
 10.  Right-click on the task and press 'Run'.
 11.  Test again with [SmtpTest](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml).
+
+Application will start the web interface on port 5000 by default and SMTP sever on 465 and 587 using TLS and authentication
 
 #### Linux (untested)
 1. Download the binary release `MustMail-v0.0.0-linux-x64.tar.gz` (replace `0.0.0` with the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
@@ -261,6 +263,8 @@ WantedBy=multi-user.target
 11. Verify it ran successfully: `sudo systemctl status mustmail.service`
 12. Test with telnet following [these instructions from StackOverflow](https://stackoverflow.com/a/11988455)
 13. View logs with `journalctl -u mustmail -f`
+
+Application will start the web interface on port 5000 by default and SMTP sever on 465 and 587 using TLS and authentication
 
 ## First run
 > [!TIP]
