@@ -39,6 +39,7 @@ Directory.CreateDirectory(dataFolder);
 
 string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
 
+
 // If appsettings.json does not exist create one with the default config 
 if (!File.Exists(appSettingsPath))
 {
@@ -46,6 +47,9 @@ if (!File.Exists(appSettingsPath))
                       appSettingsPath,
                       JsonSerializer.Serialize(new Configuration(), JsonWriteDefaults.Options));
 }
+
+// Load the configuration from the JSON file
+builder.Configuration.AddJsonFile(appSettingsPath, false, true);
 
 // If no sink is set then use the console
 if (string.IsNullOrEmpty(builder.Configuration.GetValue<string?>("Serilog:Using:0")))
@@ -191,6 +195,7 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["OpenIdConnect:NameClaim"]))
 }
 
 // Parse configuration
+builder.Services.Configure<Configuration>(builder.Configuration);
 Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
                                ?? throw new InvalidOperationException(
                                                                       "Could not load MustMail configuration. Please see the README for configuration guidance.");

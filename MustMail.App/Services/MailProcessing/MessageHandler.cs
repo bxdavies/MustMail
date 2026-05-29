@@ -1,4 +1,5 @@
-﻿using Microsoft.Graph;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Users.Item.SendMail;
 using MimeKit;
@@ -10,7 +11,7 @@ using System.Text.Json;
 
 namespace MustMail.App.Services.MailProcessing;
 
-public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, MustMailConfiguration mustMailConfig, RecipientResolver recipientsResolver, SenderResolver senderResolver, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
+public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IOptionsMonitor<Configuration> config, RecipientResolver recipientsResolver, SenderResolver senderResolver, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
 {
     public override async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
@@ -76,7 +77,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
 
         // If store emails is enabled for each recipient that has an account store a copy of the email on disk
-        if (mustMailConfig.StoreEmails)
+        if (config.CurrentValue.MustMail.StoreEmails)
         {
             await messageStorage.StoreMessage(message, recipients, sender);
         }
@@ -107,14 +108,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             ? new ItemBody
             {
                 ContentType = BodyType.Html,
-                Content = message.HtmlBody + (mustMailConfig.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail.net\">MustMail</a></p>" : "")
+                Content = message.HtmlBody + (config.CurrentValue.MustMail.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail.net\">MustMail</a></p>" : "")
             }
             // Else use the text body instead
             : new ItemBody
             {
                 ContentType = BodyType.Text,
 
-                Content = message.TextBody + (mustMailConfig.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail.net)" : "")
+                Content = message.TextBody + (config.CurrentValue.MustMail.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail.net)" : "")
             };
 
         // Log email details if debug log level is enabled 

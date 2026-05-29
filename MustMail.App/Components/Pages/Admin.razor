@@ -12,13 +12,126 @@
 				<MudText Typo="Typo.h5">MustMail Settings</MudText>
 
 				<MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-					This section edits the application's configuration, some changes may require <b> restarting </b> the
-					application to take affect.<br/>
+					This section edits the application's configuration
 					For secrets (Graph ClientSecret & PFX password), you must use environment variables. <br/>
 					<b>Important:</b> All configuration options can be overridden by their environment variable.
 				</MudAlert>
 
 				<MudForm @ref="SettingsForm" Model="Config" Validation="new DataAnnotationsValidator()">
+
+					<MudText Typo="Typo.h6">Live Configuration</MudText>
+					<MudAlert Severity="Severity.Success" Dense="true">
+						Changes in this section are applied immediately after pressing Save.
+					</MudAlert>
+
+					<MudExpansionPanels MultiExpansion="true" Elevation="0">
+						<MudExpansionPanel Text="Allowed Senders">
+							<MudStack Spacing="2">
+								<MudText Class="mud-input-helper-text">
+									Any emails sent to MustMail that do not match one of the specified <b>sender</b>
+									addresses or patterns will be rejected.
+								</MudText>
+
+								<MudList Dense="true" T="string" Class="mud-input-helper-text">
+									<MudListItem>
+										<code class="env-hint">user@example.com</code> – allow a specific email address.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*@@example.com</code> – allow any address at a specific
+										domain.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*</code> – allow all addresses.
+									</MudListItem>
+								</MudList>
+								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
+									<MudTextField Label="Address"
+												  @bind-Value="NewAllowedFrom"
+												  Immediate="true"
+												  Variant="Variant.Outlined"
+												  Placeholder='@("Examples: user@example.com, *@example.com, *")' />
+									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedFrom">
+										Add
+									</MudButton>
+								</MudStack>
+
+								<MudTable Items="Config.MustMail.AllowedSenders" Bordered="true" Class="mt-4"
+										  Outlined="true">
+									<HeaderContent>
+										<MudTh>Address</MudTh>
+										<MudTh>Actions</MudTh>
+									</HeaderContent>
+									<RowTemplate>
+										<MudTd>
+											<MudTextField @bind-Value="context" Immediate="true" />
+										</MudTd>
+										<MudTd>
+											<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+														   OnClick="@(() => RemoveAllowedFrom(context))" />
+										</MudTd>
+									</RowTemplate>
+								</MudTable>
+							</MudStack>
+						</MudExpansionPanel>
+
+						<MudExpansionPanel Text="Allowed Recipients">
+							<MudStack Spacing="2">
+								<MudText Class="mud-input-helper-text">
+									Any emails sent to MustMail that do not match one of the specified <b>recipient</b>
+									addresses or patterns will be rejected.
+								</MudText>
+
+								<MudList Dense="true" T="string" Class="mud-input-helper-text">
+									<MudListItem>
+										<code class="env-hint">user@example.com</code> – allow a specific email address.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*@@example.com</code> – allow any address at a specific
+										domain.
+									</MudListItem>
+									<MudListItem>
+										<code class="env-hint">*</code> – allow all addresses.
+									</MudListItem>
+								</MudList>
+
+								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
+
+
+									<MudTextField Label="Address"
+												  @bind-Value="NewAllowedRecipients"
+												  Immediate="true"
+												  Variant="Variant.Outlined"
+												  Placeholder='@("Examples: user@example.com, *@example.com, *")' />
+									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedTo">
+										Add
+									</MudButton>
+								</MudStack>
+
+								<MudTable Items="Config.MustMail.AllowedRecipients" Bordered="true" Class="mt-4"
+										  Outlined="true">
+									<HeaderContent>
+										<MudTh>Address</MudTh>
+										<MudTh>Actions</MudTh>
+									</HeaderContent>
+									<RowTemplate>
+										<MudTd>
+											<MudTextField @bind-Value="context" Immediate="true" />
+										</MudTd>
+										<MudTd>
+											<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+														   OnClick="@(() => RemoveAllowedTo(context))" />
+										</MudTd>
+									</RowTemplate>
+								</MudTable>
+							</MudStack>
+						</MudExpansionPanel>
+					</MudExpansionPanels>
+
+					<MudText Typo="Typo.h6">App Configuration</MudText>
+					<MudAlert Severity="Severity.Warning" Dense="true">
+						Changes in this section need a restart to apply.
+					</MudAlert>
+
 					<MudExpansionPanels MultiExpansion="true" Elevation="0">
 
 						<MudExpansionPanel Text="Hosting">
@@ -451,107 +564,6 @@
 									</div>
 								</MudItem>
 							</MudGrid>
-						</MudExpansionPanel>
-
-						<MudExpansionPanel Text="Allowed Senders">
-							<MudStack Spacing="2">
-								<MudText Class="mud-input-helper-text">
-									Any emails sent to MustMail that do not match one of the specified <b>sender</b>
-									addresses or patterns will be rejected.
-								</MudText>
-
-								<MudList Dense="true" T="string" Class="mud-input-helper-text">
-									<MudListItem>
-										<code class="env-hint">user@example.com</code> – allow a specific email address.
-									</MudListItem>
-									<MudListItem>
-										<code class="env-hint">*@@example.com</code> – allow any address at a specific
-										domain.
-									</MudListItem>
-									<MudListItem>
-										<code class="env-hint">*</code> – allow all addresses.
-									</MudListItem>
-								</MudList>
-								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
-									<MudTextField Label="Address"
-									              @bind-Value="NewAllowedFrom"
-									              Immediate="true"
-									              Variant="Variant.Outlined"
-									              Placeholder='@("Examples: user@example.com, *@example.com, *")'/>
-									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedFrom">
-										Add
-									</MudButton>
-								</MudStack>
-
-								<MudTable Items="Config.MustMail.AllowedSenders" Bordered="true" Class="mt-4"
-								          Outlined="true">
-									<HeaderContent>
-										<MudTh>Address</MudTh>
-										<MudTh>Actions</MudTh>
-									</HeaderContent>
-									<RowTemplate>
-										<MudTd>
-											<MudTextField @bind-Value="context" Immediate="true"/>
-										</MudTd>
-										<MudTd>
-											<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-											               OnClick="@(() => RemoveAllowedFrom(context))"/>
-										</MudTd>
-									</RowTemplate>
-								</MudTable>
-							</MudStack>
-						</MudExpansionPanel>
-
-						<MudExpansionPanel Text="Allowed Recipients">
-							<MudStack Spacing="2">
-								<MudText Class="mud-input-helper-text">
-									Any emails sent to MustMail that do not match one of the specified <b>recipient</b>
-									addresses or patterns will be rejected.
-								</MudText>
-
-								<MudList Dense="true" T="string" Class="mud-input-helper-text">
-									<MudListItem>
-										<code class="env-hint">user@example.com</code> – allow a specific email address.
-									</MudListItem>
-									<MudListItem>
-										<code class="env-hint">*@@example.com</code> – allow any address at a specific
-										domain.
-									</MudListItem>
-									<MudListItem>
-										<code class="env-hint">*</code> – allow all addresses.
-									</MudListItem>
-								</MudList>
-
-								<MudStack Row Spacing="4" AlignItems="AlignItems.Center">
-
-
-									<MudTextField Label="Address"
-									              @bind-Value="NewAllowedRecipients"
-									              Immediate="true"
-									              Variant="Variant.Outlined"
-									              Placeholder='@("Examples: user@example.com, *@example.com, *")'/>
-									<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@AddAllowedTo">
-										Add
-									</MudButton>
-								</MudStack>
-
-								<MudTable Items="Config.MustMail.AllowedRecipients" Bordered="true" Class="mt-4"
-								          Outlined="true">
-									<HeaderContent>
-										<MudTh>Address</MudTh>
-										<MudTh>Actions</MudTh>
-									</HeaderContent>
-									<RowTemplate>
-										<MudTd>
-											<MudTextField @bind-Value="context" Immediate="true"/>
-										</MudTd>
-										<MudTd>
-											<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-											               OnClick="@(() => RemoveAllowedTo(context))"/>
-										</MudTd>
-									</RowTemplate>
-								</MudTable>
-							</MudStack>
 						</MudExpansionPanel>
 
 						<MudExpansionPanel Text="Certificate">

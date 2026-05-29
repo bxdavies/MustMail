@@ -33,8 +33,8 @@ public partial class MessageStorage(IDbContextFactory<DatabaseContext> dbFactory
             appUser.Messages.Add(new Models.Message
             {
                 Id = message.MessageId,
-                SenderName = sender.Name,
-                SenderEmail = sender.Address,
+                SenderName = sender.Name!,
+                SenderEmail = sender.Address!,
                 Timestamp = message.Date.DateTime.ToUniversalTime(),
                 Subject = message.Subject ?? "(No subject)",
                 AttachmentCount = message.Attachments.Count()
