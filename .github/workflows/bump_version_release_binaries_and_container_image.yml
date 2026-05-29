@@ -1,6 +1,7 @@
 name: Bump Version, Release Binaries and Container Image
 
-permissions: {}
+permissions:
+  contents: write
   
 on:
   release:
