@@ -16,8 +16,10 @@ if ([string]::IsNullOrWhiteSpace($fromMigration)) {
 } else {
     dotnet ef migrations add $newMigration --project MustMail.Migrations.Postgres --startup-project MustMail.App
     Start-Sleep -Seconds 5
+    dotnet build
+    Start-Sleep -Seconds 5
     dotnet ef migrations script $fromMigration $newMigration `
-        -o "MustMail.Migrations.Postgres\Scripts\$fromMigration.sql" --project MustMail.Migrations.Postgres --startup-project MustMail.App
+        -o "MustMail.Migrations.Postgres\Scripts\$newMigration.sql" --project MustMail.Migrations.Postgres --startup-project MustMail.App
 }
 # Sqlite
 Write-Host "Generating Sqlite migration script..."
@@ -32,8 +34,10 @@ if ([string]::IsNullOrWhiteSpace($fromMigration)) {
 } else {
     dotnet ef migrations add $newMigration --project MustMail.Migrations.Sqlite --startup-project MustMail.App
     Start-Sleep -Seconds 5
+    dotnet build
+    Start-Sleep -Seconds 5
     dotnet ef migrations script $fromMigration $newMigration `
-        -o "MustMail.Migrations.Sqlite\Scripts\$fromMigration.sql" --project MustMail.Migrations.Sqlite --startup-project MustMail.App
+        -o "MustMail.Migrations.Sqlite\Scripts\$newMigration.sql" --project MustMail.Migrations.Sqlite --startup-project MustMail.App
 }
 
 # MySQL
@@ -49,8 +53,10 @@ if ([string]::IsNullOrWhiteSpace($fromMigration)) {
 } else {
     dotnet ef migrations add $newMigration --project MustMail.Migrations.MySQL --startup-project MustMail.App
     Start-Sleep -Seconds 5
+    dotnet build
+    Start-Sleep -Seconds 5
     dotnet ef migrations script $fromMigration $newMigration `
-        -o "MustMail.Migrations.MySQL\Scripts\$fromMigration.sql" --project MustMail.Migrations.MySQL --startup-project MustMail.App
+        -o "MustMail.Migrations.MySQL\Scripts\$newMigration.sql" --project MustMail.Migrations.MySQL --startup-project MustMail.App
 }
 
 # SQL Server
@@ -66,8 +72,10 @@ if ([string]::IsNullOrWhiteSpace($fromMigration)) {
 } else {
     dotnet ef migrations add $newMigration --project MustMail.Migrations.SqlServer --startup-project MustMail.App
     Start-Sleep -Seconds 5
+    dotnet build
+    Start-Sleep -Seconds 5
     dotnet ef migrations script $fromMigration $newMigration `
-        -o "MustMail.Migrations.SqlServer\Scripts\$fromMigration.sql" --project MustMail.Migrations.SqlServer --startup-project MustMail.App
+        -o "MustMail.Migrations.SqlServer\Scripts\$newMigration.sql" --project MustMail.Migrations.SqlServer --startup-project MustMail.App
 }
 # Azure SQL
 Write-Host "Generating Azure SQL migration script..."
@@ -82,8 +90,10 @@ if ([string]::IsNullOrWhiteSpace($fromMigration)) {
 } else {
     dotnet ef migrations add $newMigration --project MustMail.Migrations.AzureSql --startup-project MustMail.App
     Start-Sleep -Seconds 5
+    dotnet build
+    Start-Sleep -Seconds 5
     dotnet ef migrations script $fromMigration $newMigration `
-        -o "MustMail.Migrations.AzureSql\Scripts\$fromMigration.sql" --project MustMail.Migrations.AzureSql --startup-project MustMail.App
+        -o "MustMail.Migrations.AzureSql\Scripts\$newMigration.sql" --project MustMail.Migrations.AzureSql --startup-project MustMail.App
 }
 
 Write-Host "Done!"
