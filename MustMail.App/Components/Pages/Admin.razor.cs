@@ -23,13 +23,10 @@ public class AdminBase : ComponentBase
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
     [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
     [Inject] public IConfiguration Configuration { get; set; } = null!;
-    [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
     // Lifecycle method called after parameters and property values are set
     protected override async Task OnInitializedAsync()
     {
-        // Set page title
-        SetTitle?.Invoke("Admin");
 
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 

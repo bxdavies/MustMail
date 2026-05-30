@@ -16,14 +16,10 @@ public class ProfileBase : ComponentBase
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthenticationState { get; set; } = null!;
     [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
-    [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
     // Lifecycle method called after parameters and property values are set
     protected override async Task OnInitializedAsync()
     {
-        // Set page title
-        SetTitle?.Invoke("Profile");
-
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
