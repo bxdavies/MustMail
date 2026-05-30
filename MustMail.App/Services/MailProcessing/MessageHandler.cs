@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace MustMail.App.Services.MailProcessing;
 
-public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IOptionsMonitor<Configuration> config, RecipientResolver recipientsResolver, SenderResolver senderResolver, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
+public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IOptionsMonitor<Configuration> config, RecipientResolver recipientsResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
 {
     public override async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
@@ -54,6 +54,13 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             return SmtpResponse.NoValidRecipientsGiven;
         }
 
+        bool recipientsAllowed = await smtpAccountAuthorization.CheckRecipientIsAllowed(context.Authentication.User, recipients.All);
+        if (!recipientsAllowed)
+        {
+            LogRecipientsNotAllowed(context.Authentication.User);
+            return SmtpResponse.NoValidRecipientsGiven;
+        }
+
         // Get sender from message and SMTP transaction
         ResolvedSender sender = await senderResolver.ResolveSender(transaction, message);
 
@@ -67,6 +74,13 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         if (sender.Name == null || sender.Address == null || sender.User == null)
         {
             return SmtpResponse.SyntaxError;
+        }
+
+        bool senderAllowed = await smtpAccountAuthorization.CheckSenderIsAllowed(context.Authentication.User, sender.Address);
+        if (!senderAllowed)
+        {
+            LogSenderNotAllowed(context.Authentication.User, sender.Address);
+            return SmtpResponse.MailboxNameNotAllowed;
         }
 
         List<Attachment> attachments = [];
@@ -180,13 +194,19 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
     [LoggerMessage(EventId = 1104, Level = LogLevel.Warning, Message = "Message rejected: no valid recipients were found")]
     private partial void LogNoRecipients();
 
-    [LoggerMessage(EventId = 1105, Level = LogLevel.Debug, Message = "Sending email via Microsoft Graph: \n{Message}")]
+    [LoggerMessage(EventId = 1105, Level = LogLevel.Warning, Message = "Message rejected: The SMTP account: {Account} is not allowed to send mail to one or more of the recipients")]
+    private partial void LogRecipientsNotAllowed(string account);
+
+    [LoggerMessage(EventId = 1106, Level = LogLevel.Warning, Message = "Message rejected: The SMTP account: {Account} is not allowed to send mail from {Sender}")]
+    private partial void LogSenderNotAllowed(string account, string sender);
+
+    [LoggerMessage(EventId = 1107, Level = LogLevel.Debug, Message = "Sending email via Microsoft Graph: \n{Message}")]
     private partial void LogGraphSendAttempt(string message);
 
-    [LoggerMessage(EventId = 1106, Level = LogLevel.Error, Message = "Failed to send email via Microsoft Graph for sender {Sender}")]
+    [LoggerMessage(EventId = 1108, Level = LogLevel.Error, Message = "Failed to send email via Microsoft Graph for sender {Sender}")]
     private partial void LogGraphSendFailed(Exception exception, string sender);
 
-    [LoggerMessage(EventId = 1107, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender} as the User(UPN): {User},  Recipients; To: {To}, Cc: {Cc}, Bcc: {Bcc}")]
+    [LoggerMessage(EventId = 1109, Level = LogLevel.Information, Message = "Email forwarded successfully. Subject: {Subject}, Sender: {Sender} as the User(UPN): {User},  Recipients; To: {To}, Cc: {Cc}, Bcc: {Bcc}")]
     private partial void LogEmailForwarded(string? subject, string sender, string user, IEnumerable<string> to, IEnumerable<string> cc, IEnumerable<string> bcc);
 
 

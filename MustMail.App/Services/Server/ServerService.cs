@@ -10,7 +10,7 @@ namespace MustMail.App.Services.Server;
 public partial class ServerService(
     GraphServiceClient graphClient,
     IOptionsMonitor<Configuration> config,
-    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, RecipientResolver recipientResolver, SenderResolver senderResolver, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
+    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, RecipientResolver recipientResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
 {
     private SmtpServer.SmtpServer? _smtpServer;
 
@@ -77,6 +77,7 @@ public partial class ServerService(
                                                     config,
                                                     recipientResolver,
                                                     senderResolver,
+                                                    smtpAccountAuthorization,
                                                     attachmentHandler,
                                                     messageStorage
                                                    ));

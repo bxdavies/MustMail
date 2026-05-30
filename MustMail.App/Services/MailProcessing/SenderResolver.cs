@@ -60,7 +60,7 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
         }
 
         // If allowedFrom is not wildcard and there are allowed recipients in the list then loop through each one
-        if (!config.CurrentValue.MustMail.AllowedSenders.Contains("*") && config.CurrentValue.MustMail.AllowedSenders.Count > 0)
+        if (config.CurrentValue.MustMail.AllowedSenders.Count > 0)
         {
 
             // Check if address is allowed

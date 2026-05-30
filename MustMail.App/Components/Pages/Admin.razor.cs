@@ -36,7 +36,7 @@ public class AdminBase : ComponentBase
         Config = Configuration.Get<Configuration>()!;
 
         Users = await dbContext.User.ToListAsync();
-        SMTPAccounts = await dbContext.SMTPAccount.ToListAsync();
+        SMTPAccounts = await dbContext.SMTPAccount.Include(a => a.AllowedSenders).Include(a => a.AllowedRecipients).ToListAsync();
     }
 
     // New SMTP account - start editing a new SMTP account in form modal
@@ -85,7 +85,7 @@ public class AdminBase : ComponentBase
         }
 
         // Get item from database
-        SMTPAccount? smtpAccount = await dbContext.SMTPAccount.FindAsync(item.Id);
+        SMTPAccount? smtpAccount = await dbContext.SMTPAccount.Include(a => a.AllowedSenders).Include(a => a.AllowedRecipients).SingleAsync(a => a.Id == item.Id);
 
         if (smtpAccount == null)
             return DataGridEditFormAction.Close;
@@ -96,6 +96,26 @@ public class AdminBase : ComponentBase
 
         // Update values in DB
         dbContext.Entry(smtpAccount).CurrentValues.SetValues(item);
+
+        smtpAccount.AllowedSenders.Clear();
+
+        foreach (var sender in item.AllowedSenders)
+        {
+            smtpAccount.AllowedSenders.Add(new SMTPAccountAllowedSender
+            {
+                EmailAddress = sender.EmailAddress
+            });
+        }
+
+        smtpAccount.AllowedRecipients.Clear();
+
+        foreach (var recipient in item.AllowedRecipients)
+        {
+            smtpAccount.AllowedRecipients.Add(new SMTPAccountAllowedRecipient
+            {
+                EmailAddress = recipient.EmailAddress
+            });
+        }
 
         _ = await dbContext.SaveChangesAsync();
 

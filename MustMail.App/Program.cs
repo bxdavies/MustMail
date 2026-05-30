@@ -11,6 +11,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Extensions;
+using MudExtensions.Services;
 using MudBlazor.Services;
 using MustMail.App;
 using MustMail.App.Auth;
@@ -482,6 +483,8 @@ builder.Services.AddSingleton<GraphUserLookupService>();
 builder.Services.AddSingleton<RecipientResolver>();
 builder.Services.AddSingleton<SenderResolver>();
 
+builder.Services.AddSingleton<SmtpAccountAuthorization>();
+
 // Add attachment handler for extracting attachments from the message and then reattaching them using graph
 builder.Services.AddSingleton<AttachmentHandler>();
 
@@ -515,6 +518,9 @@ if (mustMailConfig.MustMail.StoreEmails)
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+
+// Add MudBlazor Extensions services
+builder.Services.AddMudExtensions();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

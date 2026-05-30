@@ -14,5 +14,7 @@ public class SMTPAccount
     public required string Password { get; set; }
     [MaxLength(255)]
     public required string Description { get; set; }
+    public ICollection<SMTPAccountAllowedSender> AllowedSenders { get; set; } = [];
+    public ICollection<SMTPAccountAllowedRecipient> AllowedRecipients { get; set; } = [];
 
 }

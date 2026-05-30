@@ -817,7 +817,59 @@
 								              Margin="Margin.Dense" Label="Password" Required="true"></MudTextField>
 							</EditTemplate>
 						</PropertyColumn>
-						<PropertyColumn Property="x => x.Description"/>
+						<PropertyColumn Property="x => x.Description" />
+						<PropertyColumn Property="x => x.AllowedSenders" Title="Allowed Senders">
+							<CellTemplate>
+								<MudChipSet T="string" CheckMark>
+									@foreach (var allowedSender in context.Item.AllowedSenders)
+									{
+										<MudChip Text="@allowedSender.EmailAddress"> </MudChip>
+									}
+	
+								</MudChipSet>
+							
+							</CellTemplate>
+							<EditTemplate>
+							<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Senders" ChipColor="Color.Secondary"
+										  Values="@(context.Item.AllowedSenders?.Select(x => x.EmailAddress).ToList() ?? [])"
+										  ValuesChanged="@(values =>
+										  			  {
+											  			  context.Item.AllowedSenders = values
+												  			  .Select(x => new SMTPAccountAllowedSender
+												  			  {
+													  			  EmailAddress = x,
+													  			  SMTPAccountId = context.Item.Id
+												  			  })
+												  			  .ToList();
+										  			  })" />
+							</EditTemplate>
+						</PropertyColumn>
+					<PropertyColumn Property="x => x.AllowedRecipients" Title="Allowed Recipients">
+						<CellTemplate>
+							<MudChipSet T="string" CheckMark>
+								@foreach (var allowedRecipient in context.Item.AllowedRecipients)
+								{
+									<MudChip Text="@allowedRecipient.EmailAddress"> </MudChip>
+								}
+	
+							</MudChipSet>
+							
+						</CellTemplate>
+						<EditTemplate>
+							<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Recipients" ChipColor="Color.Secondary"
+										  Values="@(context.Item.AllowedRecipients?.Select(x => x.EmailAddress).ToList() ?? [])"
+										  ValuesChanged="@(values =>
+																								{
+																									context.Item.AllowedRecipients = values
+																										.Select(x => new SMTPAccountAllowedRecipient
+																										{
+																											EmailAddress = x,
+																											SMTPAccountId = context.Item.Id
+																										})
+																										.ToList();
+																								})" />
+						</EditTemplate>
+					</PropertyColumn>
 						<TemplateColumn Title="Actions">
 							<CellTemplate>
 								<MudStack Row Justify="Justify.SpaceBetween">
