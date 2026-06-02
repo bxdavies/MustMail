@@ -14,21 +14,16 @@
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)"/>
     <!--suppress CssUnusedSymbol -->
     <style>
-        .env-hint {
-            font-size: 0.75rem;
-            color: #4C7EFF;
-            opacity: 0.75;
-            word-break: break-word;
-        }
-
-        code {
-            background-color: #f1f1f1;
-            font-family: monospace;
-        }
 
         .mud-tabs-tabbar-wrapper .d-inline-block {
             width: unset !important;
         }
+
+        .admin-nav-active {
+            border-bottom: 2px solid var(--mud-palette-primary);
+            border-radius: 0;
+        }
+
     </style>
 </head>
 
