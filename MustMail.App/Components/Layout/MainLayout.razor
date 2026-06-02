@@ -29,24 +29,24 @@
 
                 <AuthorizeView>
                     <Authorized Context="_">
-                    
+
                         <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.ManageAccounts"
-                                        Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                                        Color="Color.Primary"
                                         Href="/profile"
                                         Label="Profile" />
 
                     <AuthorizeView Policy="MustMailAdmin" Context="__">
-                        
+
                         <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.AdminPanelSettings"
-                                        Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                                        Color="Color.Primary"
                                         Href="/admin"
                                         Label="Admin" />
 
                     </AuthorizeView>
                         <form method="post" action="/authentication/logout">
 
-                            <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.Logout" 
-                                Color="Color.Tertiary" Style="color: rgb(33, 33, 33);" 
+                            <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.Logout"
+                                Color="Color.Primary"
                                 Label="Sign out" ButtonType="ButtonType.Submit" />
 
                         </form>
@@ -117,17 +117,23 @@
     {
         PaletteDark = new PaletteDark
         {
-            AppbarBackground = "#BFBBAE",
-            AppbarText = "rgba(66, 66, 66, 1)",
-            Primary = "#e1dfd3",
-            Secondary = "#4C7EFF"
+            AppbarBackground = "#3A3220",
+            AppbarText = "rgba(240, 235, 215, 1)",
+            Primary = "#D4AF50",
+            PrimaryContrastText = "rgba(30, 26, 16, 1)",
+            Secondary = "#A0C878",
+            Tertiary = "#A08B6A",
+            TertiaryContrastText = "rgba(30, 26, 16, 1)"
         },
         PaletteLight = new PaletteLight
         {
             AppbarBackground = "#e1dfd3",
             AppbarText = "rgba(66, 66, 66, 1)",
             Primary = "#C9A84A",
-            Secondary = "#4C7EFF"
+            PrimaryContrastText = "rgba(40, 30, 10, 1)",
+            Secondary = "#5E9A42",
+            Tertiary = "#8B7040",
+            TertiaryContrastText = "rgba(255, 255, 255, 1)"
         },
         Typography = new Typography
         {
