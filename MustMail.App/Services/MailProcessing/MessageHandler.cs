@@ -91,7 +91,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 
 
         // If store emails is enabled for each recipient that has an account store a copy of the email on disk
-        if (config.CurrentValue.MustMail.StoreEmails)
+        if (config.CurrentValue.Mail.StoreMail)
         {
             await messageStorage.StoreMessage(message, recipients, sender);
         }
@@ -122,14 +122,14 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
             ? new ItemBody
             {
                 ContentType = BodyType.Html,
-                Content = message.HtmlBody + (config.CurrentValue.MustMail.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail.net\">MustMail</a></p>" : "")
+                Content = message.HtmlBody + (config.CurrentValue.Mail.FooterBranding ? $"<br><br>---<p style=\"font-size:12px;color:#666;\">Sent via self‑hosted <a href=\"https://mustmail.net\">MustMail</a></p>" : "")
             }
             // Else use the text body instead
             : new ItemBody
             {
                 ContentType = BodyType.Text,
 
-                Content = message.TextBody + (config.CurrentValue.MustMail.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail.net)" : "")
+                Content = message.TextBody + (config.CurrentValue.Mail.FooterBranding ? $"\n\n---\nSent via self-hosted MustMail(https://mustmail.net)" : "")
             };
 
         // Log email details if debug log level is enabled 

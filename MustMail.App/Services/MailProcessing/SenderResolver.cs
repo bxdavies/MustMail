@@ -26,7 +26,7 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
         if (string.IsNullOrWhiteSpace(senderAddress))
         {
             // Check if we trust the FROM address
-            if (!config.CurrentValue.MustMail.TrustFrom)
+            if (!config.CurrentValue.Mail.TrustFrom)
             {
                 LogMailFromMissingTrustFromDisabled();
                 return new ResolvedSender
@@ -60,11 +60,11 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
         }
 
         // If allowedFrom is not wildcard and there are allowed recipients in the list then loop through each one
-        if (config.CurrentValue.MustMail.AllowedSenders.Count > 0)
+        if (config.CurrentValue.Mail.AllowedSenders.Count > 0)
         {
 
             // Check if address is allowed
-            bool isAllowed = config.CurrentValue.MustMail.AllowedSenders.Any(allowed => {
+            bool isAllowed = config.CurrentValue.Mail.AllowedSenders.Any(allowed => {
 
                 // Direct comparison of address eg. user@example.com compared to user@example.com
                 if (string.Equals(
