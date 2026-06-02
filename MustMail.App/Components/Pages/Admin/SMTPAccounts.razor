@@ -1,0 +1,104 @@
+﻿@page "/admin/smtp-accounts"
+@inherits SMTPAccountsBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+<PageTitle> MustMail - SMTP Accounts</PageTitle>
+
+<AdminNavigation />
+
+<MudText Typo="Typo.h4"> SMTP Accounts </MudText>
+
+<MudText Typo="Typo.subtitle2">
+	Manage SMTP accounts used by applications to authenticate and send email through MustMail.
+</MudText>
+
+<MudDataGrid @ref="@SMTPAccountGrid" T="SMTPAccount" ServerData="ServerReload" ReadOnly="false"
+			 EditMode="DataGridEditMode.Form" CommittedItemChanges="@SMTPAccountItemChanges"
+			 Bordered="true" Elevation="1" SortMode="SortMode.None" Class="mt-2">
+	<ToolBarContent>
+		<MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+					  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+		<MudSpacer />
+		<MudButton OnClick="@NewSMTPAccount" Color="Color.Primary" Variant="Variant.Filled"
+		           StartIcon="@Icons.Material.Filled.Add" Class="ms-3">
+			Add Account
+		</MudButton>
+	</ToolBarContent>
+	<Columns>
+		<PropertyColumn Property="x => x.Username" />
+		<TemplateColumn Title="Password" Hidden="true">
+			<EditTemplate>
+				<MudTextField T="string" @bind-Value="context.Item.Password" Clearable="true"
+							  InputType="InputType.Password" Variant="Variant.Outlined"
+							  Margin="Margin.Dense" Label="Password" Required="true"></MudTextField>
+			</EditTemplate>
+		</TemplateColumn>
+		<PropertyColumn Property="x => x.Description" />
+		<PropertyColumn Property="x => x.AllowedSenders" Title="Allowed Senders">
+			<CellTemplate>
+				<MudChipSet T="string" CheckMark>
+					@foreach (var allowedSender in context.Item.AllowedSenders)
+					{
+						<MudChip Text="@allowedSender.EmailAddress"> </MudChip>
+					}
+	
+				</MudChipSet>
+							
+			</CellTemplate>
+			<EditTemplate>
+				<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Senders" ChipColor="Color.Secondary"
+							  Values="@(context.Item.AllowedSenders?.Select(x => x.EmailAddress).ToList() ?? [])"
+							  ValuesChanged="@(values =>
+																					{
+																						context.Item.AllowedSenders = values
+																							.Select(x => new SMTPAccountAllowedSender
+																							{
+																								EmailAddress = x,
+																								SMTPAccountId = context.Item.Id
+																							})
+																							.ToList();
+																					})" />
+			</EditTemplate>
+		</PropertyColumn>
+		<PropertyColumn Property="x => x.AllowedRecipients" Title="Allowed Recipients">
+			<CellTemplate>
+				<MudChipSet T="string" CheckMark>
+					@foreach (var allowedRecipient in context.Item.AllowedRecipients)
+					{
+						<MudChip Text="@allowedRecipient.EmailAddress"> </MudChip>
+					}
+	
+				</MudChipSet>
+							
+			</CellTemplate>
+			<EditTemplate>
+				<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Recipients" ChipColor="Color.Secondary"
+							  Values="@(context.Item.AllowedRecipients?.Select(x => x.EmailAddress).ToList() ?? [])"
+							  ValuesChanged="@(values =>
+																															{
+																																context.Item.AllowedRecipients = values
+																																	.Select(x => new SMTPAccountAllowedRecipient
+																																	{
+																																		EmailAddress = x,
+																																		SMTPAccountId = context.Item.Id
+																																	})
+																																	.ToList();
+																															})" />
+			</EditTemplate>
+		</PropertyColumn>
+		<TemplateColumn Title="Actions">
+			<CellTemplate>
+				<MudStack Row Justify="Justify.SpaceBetween">
+					<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit"
+								   Color="Color.Warning"
+								   OnClick="@context.Actions.StartEditingItemAsync" />
+					<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete"
+								   Color="Color.Error"
+								   OnClick="@(() => RemoveSMTPAccount(context.Item))" />
+				</MudStack>
+			</CellTemplate>
+		</TemplateColumn>
+	</Columns>
+	<PagerContent>
+		<MudDataGridPager T="SMTPAccount" />
+	</PagerContent>
+</MudDataGrid>
