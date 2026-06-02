@@ -1,0 +1,130 @@
+@page "/admin"
+@inherits DashboardBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+<PageTitle> MustMail - Admin</PageTitle>
+
+<AdminNavigation />
+
+<MudText Typo="Typo.h4">Admin Home</MudText>
+<MudText Typo="Typo.subtitle2" Class="mb-4">
+    Overview of MustMail configuration and usage.
+</MudText>
+
+@* Users & Accounts *@
+<MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Users &amp; Accounts</MudText>
+<MudGrid Class="mt-1">
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Total Users</MudText>
+                <MudText Typo="Typo.h4">@UserCount</MudText>
+                <MudText Typo="Typo.caption">@AdminCount admin@(AdminCount == 1 ? "" : "s")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">SMTP Accounts</MudText>
+                <MudText Typo="Typo.h4">@SmtpAccountCount</MudText>
+                <MudLink Href="/admin/smtp-accounts" Typo="Typo.caption">Manage</MudLink>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Inbox" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Emails Stored</MudText>
+                @if (!StoreMail)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Warning">Storage disabled</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h4">@EmailCount</MudText>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Last Email</MudText>
+                @if (!StoreMail)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Warning">Storage disabled</MudText>
+                }
+                else if (MostRecentMessage != DateTime.MinValue)
+                {
+                    <MudText Typo="Typo.h6">@FormatRelativeTime(MostRecentMessage)</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">None</MudText>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@* Configuration Summary *@
+<MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4">Configuration</MudText>
+<MudGrid Class="mt-1">
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.BugReport" Color="Color.Secondary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Log Level</MudText>
+                <MudText Typo="Typo.h6">@LogLevel</MudText>
+                <MudLink Href="/admin/config/logging" Typo="Typo.caption">Change</MudLink>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Storage"
+                     Color="@(StoreMail ? Color.Success : Color.Error)"
+                     Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Mail Storage</MudText>
+                <MudText Typo="Typo.h6">@(StoreMail ? "Enabled" : "Disabled")</MudText>
+                @if (StoreMail)
+                {
+                    <MudText Typo="Typo.caption">@RetentionDays day retention</MudText>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Dns" Color="Color.Secondary" Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">SMTP Host</MudText>
+                <MudText Typo="Typo.h6">@SmtpHost</MudText>
+                <MudLink Href="/admin/config/smtp" Typo="Typo.caption">Configure</MudLink>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+            <MudIcon Icon="@(AllowInsecure ? Icons.Material.Filled.LockOpen : Icons.Material.Filled.Lock)"
+                     Color="@(AllowInsecure ? Color.Error : Color.Success)"
+                     Size="Size.Large" Class="me-3" />
+            <div>
+                <MudText Typo="Typo.subtitle2">Insecure SMTP</MudText>
+                <MudText Typo="Typo.h6">@(AllowInsecure ? "Allowed" : "Blocked")</MudText>
+                <MudLink Href="/admin/config/smtp" Typo="Typo.caption">Configure</MudLink>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
