@@ -31,13 +31,10 @@ public class HomeBase : ComponentBase
     [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
     [Inject] private UpdateService Updates { get; set; } = null!;
     [Inject] public IConfiguration Configuration { get; set; } = null!;
-    [CascadingParameter] private Action<string>? SetTitle { get; set; }
 
     // Lifecycle method called after parameters and property values are set
     protected override async Task OnInitializedAsync()
     {
-        // Set page title
-        SetTitle?.Invoke("Home");
 
         StoreEmails = Configuration.Get<Configuration>()!.MustMail.StoreEmails;
 

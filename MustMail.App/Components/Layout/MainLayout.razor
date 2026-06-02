@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthenticationState
 
 <MudThemeProvider @ref="_mudThemeProvider" Theme="_mustMailTheme" IsDarkMode="_isDarkMode"/>
 <MudPopoverProvider/>
@@ -6,46 +8,75 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="4">
+    <MudAppBar Elevation="4" Dense>
 
-        <MudStack Row Justify="Justify.SpaceBetween" Style="width: 100%">
             <a href="/">
-                <MudImage Src="logo-transparent.png" Height="64"/>
+                <MudImage Src="logo-transparent.png" Height="40"/>
             </a>
-            <MudText Typo="Typo.h1">@_title</MudText>
-            <AuthorizeView>
-                <Authorized Context="_">
-                    <form method="post" action="/authentication/logout">
 
-                        <MudButton ButtonType="ButtonType.Submit" Class="my-3"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Warning"
-                                   StartIcon="@Icons.Material.Filled.Logout">
-                            Sign out
-                        </MudButton>
-                    </form>
-                </Authorized>
+            <MudSpacer />
 
-                <NotAuthorized>
-                    <form method="get" action="/authentication/login">
-                        <AntiforgeryToken/>
+            <MudFabMenu Dense
+                Label="@_name"
+                AlignItems="AlignItems.End"
+                Anchor="Origin.BottomLeft"
+                Direction="Direction.Bottom"
+                Ripple
+                StartIcon="@Icons.Material.TwoTone.AccountCircle"
+                DropShadow="false"
+                OpenOnMouseHover="false"
+                Size="Size.Medium">
 
-                        <MudButton ButtonType="ButtonType.Submit" Class="my-3"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Success"
-                                   StartIcon="@Icons.Material.Filled.Login">
-                            Sign in
-                        </MudButton>
-                    </form>
-                </NotAuthorized>
-            </AuthorizeView>
-        </MudStack>
+                <AuthorizeView>
+                    <Authorized Context="_">
+                    
+                        <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.ManageAccounts"
+                                        Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                                        Href="/profile"
+                                        Label="Profile" />
+
+                    <AuthorizeView Policy="MustMailAdmin" Context="__">
+                        
+                        <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.AdminPanelSettings"
+                                        Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                                        Href="/admin"
+                                        Label="Admin" />
+
+                    </AuthorizeView>
+                        <form method="post" action="/authentication/logout">
+
+                            <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.Logout" 
+                                Color="Color.Tertiary" Style="color: rgb(33, 33, 33);" 
+                                Label="Sign out" ButtonType="ButtonType.Submit" />
+
+                        </form>
+
+                        
+                    
+
+                    </Authorized>
+
+                    <NotAuthorized>
+
+                        <form method="get" action="/authentication/login">
+
+                            <AntiforgeryToken />
+
+                            <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.Login" 
+                            Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                            Label="Sign in" ButtonType="ButtonType.Submit" />
+
+                        </form>
+
+                    </NotAuthorized>
+
+                </AuthorizeView>
+
+        </MudFabMenu>
     </MudAppBar>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" class="pt-2 pb-4">
-            <CascadingValue Value="(Action<string>)SetTitle">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
                 @Body
-            </CascadingValue>
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -54,14 +85,15 @@
     private bool _isDarkMode;
     private MudThemeProvider _mudThemeProvider = null!;
 
-    // Default title
-    private string _title = "Must Mail";
+    // Default name
+    private string _name = "Account";
 
-    // Function to update page title from within a page
-    void SetTitle(string title)
+    protected override async Task OnInitializedAsync()
     {
-        _title = title;
-        StateHasChanged();
+        AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
+
+        // Set name
+        _name = authState.User.Identity?.Name ?? "Account";
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -74,14 +106,12 @@
         }
     }
 
-
     private Task OnSystemDarkModeChanged(bool newValue)
     {
         _isDarkMode = newValue;
         StateHasChanged();
         return Task.CompletedTask;
     }
-
 
     private readonly MudTheme _mustMailTheme = new()
     {
