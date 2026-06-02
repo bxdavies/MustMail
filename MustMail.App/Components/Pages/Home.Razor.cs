@@ -13,6 +13,11 @@ public class HomeBase : ComponentBase
     private Models.Profile? _profile;
     private IDisposable? _subscription;
 
+    // Mobile state
+    protected bool IsMobile;
+    protected bool MobileShowDetail;
+    protected Message? MobileSelectedMessage;
+
     // Page variables
     protected string? UserId;
     protected string Name = "";
@@ -31,12 +36,13 @@ public class HomeBase : ComponentBase
     [Inject] private IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
     [Inject] private UpdateService Updates { get; set; } = null!;
     [Inject] public IConfiguration Configuration { get; set; } = null!;
+    [Inject] private IBrowserViewportService BrowserViewportService { get; set; } = null!;
 
     // Lifecycle method called after parameters and property values are set
     protected override async Task OnInitializedAsync()
     {
 
-        StoreEmails = Configuration.Get<Configuration>()!.MustMail.StoreEmails;
+        StoreEmails = Configuration.Get<Configuration>()!.Mail.StoreMail;
 
         AuthenticationState authState = await AuthenticationState.GetAuthenticationStateAsync();
 
@@ -77,7 +83,33 @@ public class HomeBase : ComponentBase
 
     }
 
-    // Get messages - gets the users messages from the database and gathers some details about the most recent message 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        Breakpoint bp = await BrowserViewportService.GetCurrentBreakpointAsync();
+        IsMobile = bp is Breakpoint.Xs or Breakpoint.Sm;
+        StateHasChanged();
+    }
+
+    // Open a message in the mobile detail view
+    protected async Task MobileOpenMessage(Message message)
+    {
+        MobileSelectedMessage = message;
+
+        string path = Helpers.SanitizeFilePath(Path.Combine(_maildropFolder, UserId!, $"{message.Id}.eml"));
+        ActiveMessage = await MimeMessage.LoadAsync(path);
+
+        MobileShowDetail = true;
+    }
+
+    protected void MobileBack()
+    {
+        MobileShowDetail = false;
+        MobileSelectedMessage = null;
+        ActiveMessage = null;
+    }
+
+    // Get messages - gets the users messages from the database and gathers some details about the most recent message
     private async Task GetMessages()
     {
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();

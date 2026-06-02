@@ -1,309 +1,343 @@
-﻿@page "/"
+@page "/"
 @using MimeKit
 @attribute [Authorize]
 @inherits HomeBase
 <PageTitle> MustMail - Home</PageTitle>
 
-<MudGrid>
-	@* Welcome Card *@
-	<MudItem xs="12" md="4">
-		<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
-			<MudIcon Icon="@Icons.Material.Filled.AccountCircle"
-			         Color="Color.Primary"
-			         Size="Size.Large"
-			         Class="me-3"/>
-			<div>
-				<MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-					Welcome
-				</MudText>
-				<MudText Typo="Typo.h6">
-					@Name
-				</MudText>
+<MudGrid Class="mt-1">
 
-				<MudButton Variant="Variant.Text"
-				           Color="Color.Primary"
-				           StartIcon="@Icons.Material.Filled.ManageAccounts"
-				           Href="/profile"
-				           Class="mt-2"
-				           Size="Size.Small">
-					Profile
-				</MudButton>
+	@* Stat cards — only displayed when storemail is on*@
+	@if (StoreEmails)
+	{
+		<MudItem xs="6">
+			<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+				<MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+				<div>
+					<MudText Typo="Typo.subtitle2">Emails Stored</MudText>
+					<MudText Typo="Typo.h4">@MessageCount</MudText>
+				</div>
+			</MudPaper>
+		</MudItem>
 
-				<AuthorizeView Policy="MustMailAdmin">
-					<MudButton Variant="Variant.Text"
-					           Color="Color.Primary"
-					           StartIcon="@Icons.Material.Filled.AdminPanelSettings"
-					           Href="/admin"
-					           Class="mt-2"
-					           Size="Size.Small">
-						Admin
-					</MudButton>
-				</AuthorizeView>
-			</div>
-		</MudPaper>
-	</MudItem>
+		<MudItem xs="6">
+			<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
+				<MudIcon Icon="@Icons.Material.Filled.ForwardToInbox" Color="Color.Primary" Size="Size.Large" Class="me-3" />
+				<div>
+					<MudText Typo="Typo.subtitle2">Most Recent Email</MudText>
+					@if (MessageCount > 0)
+					{
+						<MudText Typo="Typo.h6">@MostRecentEmailSubject</MudText>
+						<MudText Typo="Typo.caption" Color="Color.Secondary">@DateTimeConvertAndFormat(MostRecentEmailTimestamp)</MudText>
+					}
+					else
+					{
+						<MudText Typo="Typo.h6">None</MudText>
+					}
+				</div>
+			</MudPaper>
+		</MudItem>
+	}
 
-	@* Email Count Card *@
-	<MudItem xs="12" md="4">
-		<MudPaper Elevation="3" Class="pa-4 d-flex align-center">
-			<MudIcon Icon="@Icons.Material.Filled.Email"
-			         Color="Color.Info"
-			         Size="Size.Large"
-			         Class="me-3"/>
-			<div>
-				<MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-					Emails Processed
-				</MudText>
-				<MudText Typo="Typo.h4">
-					@MessageCount
-				</MudText>
-			</div>
-		</MudPaper>
-	</MudItem>
-
-	@* Most Recent Email Card *@
-	<MudItem xs="12" md="4">
-		<MudPaper Elevation="3" Class="pa-4">
-			<div class="d-flex align-center mb-2">
-				<MudIcon Icon="@Icons.Material.Filled.ForwardToInbox"
-				         Color="Color.Success"
-				         Size="Size.Medium"
-				         Class="me-2"/>
-				<MudText Typo="Typo.subtitle1">
-					Most Recent Forwarded Email
-				</MudText>
-			</div>
-
-			<MudText Typo="Typo.body1" Class="fw-bold">
-				@MostRecentEmailSubject
-			</MudText>
-
-			<MudText Typo="Typo.caption" Color="Color.Secondary">
-				@DateTimeConvertAndFormat(MostRecentEmailTimestamp)
-			</MudText>
-		</MudPaper>
-	</MudItem>
-
-	@* Messages *@
+	@* Inbox *@
 	<MudItem xs="12">
-
-
-		@* Display messages in an inbox like style *@
 		@if (!StoreEmails)
 		{
-			<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">
-				MustMail has been configured to not store emails. No emails will be displayed!<br/>
-				'Emails Processed' and 'Most Recent Forwarded Email' will not update! <br/>
-				Emails passed through MustMail should reach your inbox.
+			<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center" Class="mt-2">
+				MustMail has been configured to not store emails. No emails will be displayed here.<br />
+				Emails passed through MustMail should reach your inbox directly.
 			</MudAlert>
 		}
 		else if (Messages.Count > 0 && UserId != null)
 		{
-			<MudTabs @ref="MessageTabs" Outlined="true" Position="Position.Left" Rounded="true" Border="true"
-			         Elevation="3"
-			         ApplyEffectsToContainer="true" TabPanelsClass="pa-4" ActivePanelIndexChanged="MessageChanged"
-			         Style="height: 100vh;">
-				@foreach (Message message in Messages)
+			@if (IsMobile)
+			{
+				@* Mobile *@
+				@if (!MobileShowDetail)
 				{
-					<MudTabPanel ID="@message.Id" Style="width: 100%">
-						<ChildContent>
-
-							<MudStack Spacing="2">
-
-								<MudStack Row Justify="Justify.SpaceBetween">
-									<MudText Typo="Typo.h6">@message.Subject</MudText>
-									<MudButton Variant="Variant.Outlined"
-									           Size="Size.Small"
-									           StartIcon="@Icons.Material.Filled.Download"
-									           Href="@Helpers.SanitizeFilePath(Path.Combine("maildrop", UserId, $"{message.Id}.eml"))"
-									           Target="_blank">
-										Download email
-									</MudButton>
-								</MudStack>
-
-
-								<MudStack Spacing="1">
-									<MudGrid Spacing="1">
-										<MudItem xs="12" sm="10">
-											<MudStack Spacing="0">
-												<MudText Typo="Typo.subtitle2">@message.SenderName</MudText>
-												@if (message.SenderEmail != message.SenderName)
-												{
-													<MudText Typo="Typo.body2"
-													         Color="Color.Secondary">@message.SenderEmail</MudText>
-												}
-											</MudStack>
-										</MudItem>
-
-										<MudItem xs="12" sm="2" Class="d-flex justify-end">
-											<MudStack>
-												<MudText Typo="Typo.caption" Color="Color.Secondary">
-													@DateTimeConvertAndFormat(message.Timestamp)
-												</MudText>
-
-											</MudStack>
-
-
-										</MudItem>
-
-									</MudGrid>
-
-									<MudDivider/>
-								</MudStack>
-
-
-
-								@if (ActiveMessage != null)
-								{
-
-									<MudStack Spacing="1" Class="mt-1">
-										@if (ActiveMessage.To.Any())
-										{
-											<MudStack Row>
-												<MudText Typo="Typo.body2" Style="font-weight: bold">To:</MudText>
-												<MudText Typo="Typo.body2">
-													@ActiveMessage.To
-												</MudText>
-											</MudStack>
-										}
-
-										@if (ActiveMessage.Cc.Any())
-										{
-											<MudStack Row>
-												<MudText Typo="Typo.body2" Style="font-weight: bold">Cc:</MudText>
-												<MudText Typo="Typo.body2">
-													@ActiveMessage.Cc
-												</MudText>
-											</MudStack>
-										}
-
-										@if (ActiveMessage.Bcc.Any())
-										{
-											<MudStack Row>
-												<MudText Typo="Typo.body2" Style="font-weight: bold">Bcc:</MudText>
-												<MudText Typo="Typo.body2">
-													@ActiveMessage.Bcc
-												</MudText>
-											</MudStack>
-										}
+					@* Message list *@
+					<MudList T="Message" ReadOnly="false">
+						@foreach (Message message in Messages)
+						{
+							<MudListItem T="Message" OnClick="@(() => MobileOpenMessage(message))" Class="px-0">
+								<MudPaper Elevation="2" Class="px-3 py-2 mx-1">
+									<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+										<MudStack Spacing="0" Style="min-width:0; flex:1;">
+											<MudText Typo="Typo.subtitle2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+												@message.SenderName
+											</MudText>
+											<MudText Typo="Typo.body2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;">
+												@message.Subject
+											</MudText>
+										</MudStack>
+										<MudStack Spacing="0" AlignItems="AlignItems.End" Style="flex-shrink:0; margin-left:8px;">
+											<MudText Typo="Typo.caption" Color="Color.Secondary">@FormatFriendlyDate(message.Timestamp)</MudText>
+											@if (message.AttachmentCount > 0)
+											{
+												<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+											}
+										</MudStack>
 									</MudStack>
-									@if (ActiveMessage.Attachments.Any())
-									{
-										<MudPaper Elevation="0"
-										          Class="pa-2">
-											<MudStack Spacing="1">
-												<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-													<MudIcon Icon="@Icons.Material.Filled.AttachFile"
-													         Size="Size.Small"/>
-													<MudText Typo="Typo.subtitle2">
-														Attachments (@ActiveMessage.Attachments.Count())
-													</MudText>
-												</MudStack>
+								</MudPaper>
+							</MudListItem>
+						}
+					</MudList>
+				}
+				else if (MobileSelectedMessage != null)
+				{
+					@* Message detail *@
+					<MudStack Spacing="2">
+						<MudButton StartIcon="@Icons.Material.Filled.ArrowBack"
+						           Variant="Variant.Text" Color="Color.Primary"
+						           OnClick="MobileBack" Class="px-0 align-self-start">
+							Back
+						</MudButton>
 
-												<MudStack Row="true" Spacing="1" Style="flex-wrap: wrap;">
-													@foreach (MimeEntity mimeEntity in ActiveMessage.Attachments)
-													{
-														switch (mimeEntity)
-														{
-															case MimePart { FileName: not null, Content: not null } mimePart:
-															{
-																// Create path maildrop/userId/messageId/filename
-																string attachmentPath = Path.Combine(
-																                                     "maildrop",
-																                                     UserId,
-																                                     message.Id,
-																                                     mimePart.FileName);
+						<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+							<MudText Typo="Typo.h6">@MobileSelectedMessage.Subject</MudText>
+							<MudTooltip Text="Download .eml">
+								<MudIconButton Icon="@Icons.Material.Filled.Download"
+								               Variant="Variant.Outlined" Size="Size.Small"
+								               Href="@Helpers.SanitizeFilePath(Path.Combine("maildrop", UserId, $"{MobileSelectedMessage.Id}.eml"))"
+								               Target="_blank" />
+							</MudTooltip>
+						</MudStack>
 
-																// Sanitize file path
-																attachmentPath = Helpers.SanitizeFilePath(attachmentPath);
+						<MudStack Spacing="0">
+							<MudText Typo="Typo.subtitle2">@MobileSelectedMessage.SenderName</MudText>
+							@if (MobileSelectedMessage.SenderEmail != MobileSelectedMessage.SenderName)
+							{
+								<MudText Typo="Typo.body2" Color="Color.Secondary">@MobileSelectedMessage.SenderEmail</MudText>
+							}
+							<MudText Typo="Typo.caption" Color="Color.Secondary">@DateTimeConvertAndFormat(MobileSelectedMessage.Timestamp)</MudText>
+						</MudStack>
 
-																<MudChip Class="me-1 mb-1"
-																         T="string"
-																         Variant="Variant.Outlined"
-																         Color="Color.Default"
-																         Href="@attachmentPath"
-																         Target="_blank">
-																	<MudText Typo="Typo.body2"
-																	         Class="me-2">@mimePart.FileName</MudText>
+						<MudDivider />
 
-																	@* Optional: tiny meta *@
-																	<MudText Typo="Typo.caption"
-																	         Color="Color.Secondary">
-																		@FormatAttachmentMeta(mimePart)
-																	</MudText>
-
-																	<MudIcon Icon="@Icons.Material.Filled.Download"
-																	         Size="Size.Small"
-																	         Class="ms-2"
-																	         Style="opacity: .8;"/>
-																</MudChip>
-																break;
-															}
-														}
-													}
-												</MudStack>
-											</MudStack>
-										</MudPaper>
-									}
-
-
-									<MudDivider Class="mb-2"/>
-
-									<MudPaper Elevation="0"
-									          Class="pa-3">
-										<MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
-											@if (ActiveMessage.HtmlBody != null)
-											{
-												@((MarkupString)SanitizedBody(ActiveMessage.HtmlBody))
-											}
-											else
-											{
-												@ActiveMessage.TextBody
-											}
-										</MudText>
-									</MudPaper>
+						@if (ActiveMessage != null)
+						{
+							<MudStack Spacing="1">
+								@if (ActiveMessage.To.Any())
+								{
+									<MudStack Row Spacing="1">
+										<MudText Typo="Typo.body2" Style="font-weight:bold">To:</MudText>
+										<MudText Typo="Typo.body2">@ActiveMessage.To</MudText>
+									</MudStack>
+								}
+								@if (ActiveMessage.Cc.Any())
+								{
+									<MudStack Row Spacing="1">
+										<MudText Typo="Typo.body2" Style="font-weight:bold">Cc:</MudText>
+										<MudText Typo="Typo.body2">@ActiveMessage.Cc</MudText>
+									</MudStack>
+								}
+								@if (ActiveMessage.Bcc.Any())
+								{
+									<MudStack Row Spacing="1">
+										<MudText Typo="Typo.body2" Style="font-weight:bold">Bcc:</MudText>
+										<MudText Typo="Typo.body2">@ActiveMessage.Bcc</MudText>
+									</MudStack>
 								}
 							</MudStack>
 
+							@if (ActiveMessage.Attachments.Any())
+							{
+								<MudPaper Elevation="0" Class="pa-2">
+									<MudStack Spacing="1">
+										<MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+											<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+											<MudText Typo="Typo.subtitle2">Attachments (@ActiveMessage.Attachments.Count())</MudText>
+										</MudStack>
+										<MudStack Row Spacing="1" Style="flex-wrap:wrap;">
+											@foreach (MimeEntity mimeEntity in ActiveMessage.Attachments)
+											{
+												switch (mimeEntity)
+												{
+													case MimePart { FileName: not null, Content: not null } mimePart:
+													{
+														string attachmentPath = Helpers.SanitizeFilePath(
+															Path.Combine("maildrop", UserId, MobileSelectedMessage.Id, mimePart.FileName));
+														<MudChip Class="me-1 mb-1" T="string" Variant="Variant.Outlined"
+														         Color="Color.Default" Href="@attachmentPath" Target="_blank">
+															<MudText Typo="Typo.body2" Class="me-2">@mimePart.FileName</MudText>
+															<MudText Typo="Typo.caption" Color="Color.Secondary">@FormatAttachmentMeta(mimePart)</MudText>
+															<MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="ms-2" Style="opacity:.8;" />
+														</MudChip>
+														break;
+													}
+												}
+											}
+										</MudStack>
+									</MudStack>
+								</MudPaper>
+							}
 
-						</ChildContent>
-						<TabContent>
-							<MudStack Style="width: 100%">
-								<MudStack Row Justify="Justify.SpaceBetween">
-									<MudText Typo="Typo.h6">
-										@message.SenderName
-									</MudText>
+							<MudDivider Class="mb-2" />
 
-									@if (message.AttachmentCount > 0)
+							<MudPaper Elevation="0" Class="pa-2">
+								<MudText Typo="Typo.body1" Style="white-space:pre-wrap;">
+									@if (ActiveMessage.HtmlBody != null)
 									{
-										<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small"/>
+										@((MarkupString)SanitizedBody(ActiveMessage.HtmlBody))
 									}
-
-								</MudStack>
-								<MudStack Row Justify="Justify.SpaceBetween">
-									<MudText Typo="Typo.subtitle1" Class="fw-bold">
-										@message.Subject
-									</MudText>
-									<MudText Typo="Typo.caption">
-										@FormatFriendlyDate(message.Timestamp)
-									</MudText>
-
-								</MudStack>
-							</MudStack>
-						</TabContent>
-					</MudTabPanel>
+									else
+									{
+										@ActiveMessage.TextBody
+									}
+								</MudText>
+							</MudPaper>
+						}
+					</MudStack>
 				}
-			</MudTabs>
+			}
+			else
+			{
+				@*Desktop: *@
+				<MudTabs @ref="MessageTabs" Outlined="true" Position="Position.Left"
+				         Rounded="true" Border="true" Elevation="3"
+				         ApplyEffectsToContainer="true" TabPanelsClass="pa-4"
+				         ActivePanelIndexChanged="MessageChanged"
+				         Style="height: 100vh;">
+					@foreach (Message message in Messages)
+					{
+						<MudTabPanel ID="@message.Id" Style="width: 100%">
+							<ChildContent>
+								<MudStack Spacing="2">
+
+									<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+										<MudText Typo="Typo.h6">@message.Subject</MudText>
+										<MudTooltip Text="Download .eml">
+											<MudIconButton Icon="@Icons.Material.Filled.Download"
+											               Variant="Variant.Outlined" Size="Size.Small"
+											               Href="@Helpers.SanitizeFilePath(Path.Combine("maildrop", UserId, $"{message.Id}.eml"))"
+											               Target="_blank" />
+										</MudTooltip>
+									</MudStack>
+
+									<MudStack Spacing="1">
+										<MudGrid Spacing="1">
+											<MudItem xs="12" sm="10">
+												<MudStack Spacing="1" Row AlignItems="AlignItems.Center">
+													<MudText Typo="Typo.body2" Style="font-weight:bold">From:</MudText>
+													<MudStack Spacing="0">
+														<MudText Typo="Typo.subtitle2">@message.SenderName</MudText>
+														@if (message.SenderEmail != message.SenderName)
+														{
+															<MudText Typo="Typo.body2" Color="Color.Secondary">@message.SenderEmail</MudText>
+														}
+													</MudStack>
+												</MudStack>
+											</MudItem>
+											<MudItem xs="12" sm="2" Class="d-flex justify-end">
+												<MudText Typo="Typo.caption" Color="Color.Secondary">
+													@DateTimeConvertAndFormat(message.Timestamp)
+												</MudText>
+											</MudItem>
+										</MudGrid>
+										<MudDivider />
+									</MudStack>
+
+									@if (ActiveMessage != null)
+									{
+										<MudStack Spacing="1" Class="mt-1">
+											@if (ActiveMessage.To.Any())
+											{
+												<MudStack Row Spacing="1">
+													<MudText Typo="Typo.body2" Style="font-weight:bold">To:</MudText>
+													<MudText Typo="Typo.body2">@ActiveMessage.To</MudText>
+												</MudStack>
+											}
+											@if (ActiveMessage.Cc.Any())
+											{
+												<MudStack Row Spacing="1">
+													<MudText Typo="Typo.body2" Style="font-weight:bold">Cc:</MudText>
+													<MudText Typo="Typo.body2">@ActiveMessage.Cc</MudText>
+												</MudStack>
+											}
+											@if (ActiveMessage.Bcc.Any())
+											{
+												<MudStack Row Spacing="1">
+													<MudText Typo="Typo.body2" Style="font-weight:bold">Bcc:</MudText>
+													<MudText Typo="Typo.body2">@ActiveMessage.Bcc</MudText>
+												</MudStack>
+											}
+										</MudStack>
+
+										@if (ActiveMessage.Attachments.Any())
+										{
+											<MudPaper Elevation="0" Class="pa-2">
+												<MudStack Spacing="1">
+													<MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+														<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+														<MudText Typo="Typo.subtitle2">Attachments (@ActiveMessage.Attachments.Count())</MudText>
+													</MudStack>
+													<MudStack Row Spacing="1" Style="flex-wrap:wrap;">
+														@foreach (MimeEntity mimeEntity in ActiveMessage.Attachments)
+														{
+															switch (mimeEntity)
+															{
+																case MimePart { FileName: not null, Content: not null } mimePart:
+																{
+																	string attachmentPath = Helpers.SanitizeFilePath(
+																		Path.Combine("maildrop", UserId, message.Id, mimePart.FileName));
+																	<MudChip Class="me-1 mb-1" T="string" Variant="Variant.Outlined"
+																	         Color="Color.Default" Href="@attachmentPath" Target="_blank">
+																		<MudText Typo="Typo.body2" Class="me-2">@mimePart.FileName</MudText>
+																		<MudText Typo="Typo.caption" Color="Color.Secondary">@FormatAttachmentMeta(mimePart)</MudText>
+																		<MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="ms-2" Style="opacity:.8;" />
+																	</MudChip>
+																	break;
+																}
+															}
+														}
+													</MudStack>
+												</MudStack>
+											</MudPaper>
+										}
+
+										<MudDivider Class="mb-2" />
+
+										<MudPaper Elevation="0" Class="pa-3">
+											<MudText Typo="Typo.body1" Style="white-space:pre-wrap;">
+												@if (ActiveMessage.HtmlBody != null)
+												{
+													@((MarkupString)SanitizedBody(ActiveMessage.HtmlBody))
+												}
+												else
+												{
+													@ActiveMessage.TextBody
+												}
+											</MudText>
+										</MudPaper>
+									}
+								</MudStack>
+							</ChildContent>
+							<TabContent>
+								<MudStack Style="width:100%">
+									<MudStack Row Justify="Justify.SpaceBetween">
+										<MudText Typo="Typo.h6">@message.SenderName</MudText>
+										@if (message.AttachmentCount > 0)
+										{
+											<MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+										}
+									</MudStack>
+									<MudStack Row Justify="Justify.SpaceBetween">
+										<MudText Typo="Typo.subtitle1" Class="fw-bold">@message.Subject</MudText>
+										<MudText Typo="Typo.caption">@FormatFriendlyDate(message.Timestamp)</MudText>
+									</MudStack>
+								</MudStack>
+							</TabContent>
+						</MudTabPanel>
+					}
+				</MudTabs>
+			}
 		}
-		@* Display a message explaining their are no emails *@
 		else
 		{
-			<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined"
-			          ContentAlignment="HorizontalAlignment.Center">
-				No emails have been forwarded to your address via MustMail yet.<br/>
+			<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">
+				No emails have been forwarded to your address via MustMail yet.<br />
 				Once an email is received, it will appear here.
 			</MudAlert>
 		}
-
 	</MudItem>
+
 </MudGrid>
