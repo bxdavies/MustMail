@@ -35,6 +35,14 @@
                                         Href="/profile"
                                         Label="Profile" />
 
+                    <AuthorizeView Policy="MustMailAdmin" Context="__">
+                        
+                        <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.AdminPanelSettings"
+                                        Color="Color.Tertiary" Style="color: rgb(33, 33, 33);"
+                                        Href="/admin"
+                                        Label="Admin" />
+
+                    </AuthorizeView>
                         <form method="post" action="/authentication/logout">
 
                             <MudFabMenuItem EndIcon="@Icons.Material.TwoTone.Logout" 
@@ -42,6 +50,9 @@
                                 Label="Sign out" ButtonType="ButtonType.Submit" />
 
                         </form>
+
+                        
+                    
 
                     </Authorized>
 
@@ -64,7 +75,7 @@
         </MudFabMenu>
     </MudAppBar>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" class="pt-2 pb-4">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
                 @Body
         </MudContainer>
     </MudMainContent>
