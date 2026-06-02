@@ -25,7 +25,7 @@ public partial class ServerService(
             LogLoadingCertificate(config.CurrentValue.Certificate.PFXPath!);
             certificate = X509CertificateLoader.LoadPkcs12FromFile(
                                                                                     config.CurrentValue.Certificate.PFXPath!,// Already checked for null earlier
-                                                                                    Environment.GetEnvironmentVariable("Certificate__Password"));
+                                                                                    config.CurrentValue.Certificate.Password);
         }
         else if (config.CurrentValue.Certificate.Format == "PEM")
         {

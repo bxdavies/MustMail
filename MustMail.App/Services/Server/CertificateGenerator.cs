@@ -48,7 +48,7 @@ public static partial class CertificateGenerator
         if (mustMailConfig.Certificate.Format == "PFX")
         {
             // PFX export
-            File.WriteAllBytes(mustMailConfig.Certificate.PFXPath!, cert.Export(X509ContentType.Pfx, Environment.GetEnvironmentVariable("Certificate__Password")));
+            File.WriteAllBytes(mustMailConfig.Certificate.PFXPath!, cert.Export(X509ContentType.Pfx, mustMailConfig.Certificate.Password));
 
             LogCertificateSaved(logger, mustMailConfig.Certificate.PFXPath!);
         }

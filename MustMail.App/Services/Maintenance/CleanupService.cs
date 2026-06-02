@@ -13,8 +13,8 @@ public partial class CleanupService(IOptionsMonitor<Configuration> config,
 
         await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync();
 
-        DateTime expiryDate = DateTime.UtcNow - TimeSpan.FromDays(config.CurrentValue.MustMail.RetentionDays);
-        LogExpiryCutoff(config.CurrentValue.MustMail.RetentionDays, expiryDate);
+        DateTime expiryDate = DateTime.UtcNow - TimeSpan.FromDays(config.CurrentValue.Mail.RetentionDays);
+        LogExpiryCutoff(config.CurrentValue.Mail.RetentionDays, expiryDate);
 
         while (true)
         {

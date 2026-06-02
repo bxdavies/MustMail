@@ -6,12 +6,28 @@ public class Configuration
 {
     public string AllowedHosts { get; set; } = "*";
     public string Urls { get; set; } = "http://0.0.0.0:5000";
+    public MicrosoftGraphConfiguration Graph { get; private init; } = new();
+    public OpenIdConnectConfiguration OpenIdConnect { get; private init; } = new();
     public SmtpConfiguration Smtp { get; init; } = new();
-    public OpenIdConnectConfiguration OpenIdConnect { get; init; } = new();
-    public MustMailConfiguration MustMail { get; init; } = new();
+    public MailConfiguration Mail { get; init; } = new();
     public CertificateConfiguration Certificate { get; init; } = new();
     public SerilogConfiguration Serilog { get; set; } = new();
 
+}
+
+public class MicrosoftGraphConfiguration
+{
+    public string? TenantId { get; set; }
+    public string? ClientId { get; set; }
+    public string? ClientSecret { get; set; }
+}
+
+public class OpenIdConnectConfiguration
+{
+    public string NameClaim { get; set; } = "name";
+    public string? Authority { get; set; }
+    public string? ClientId { get; set; }
+    public string? ClientSecret { get; set; }
 }
 
 public class SmtpConfiguration
@@ -27,15 +43,10 @@ public class SmtpConfiguration
     public int StartTLSPort { get; set; } = 587;
 }
 
-public class OpenIdConnectConfiguration
-{
-    public string? NameClaim { get; set; }
-}
-
-public class MustMailConfiguration
+public class MailConfiguration
 {
     public bool TrustFrom { get; set; }
-    public bool StoreEmails { get; set; } = true;
+    public bool StoreMail { get; set; } = true;
     public int RetentionDays { get; set; } = 7;
     public List<string> AllowedSenders { get; set; } = [];
     public List<string> AllowedRecipients { get; set; } = [];
@@ -47,6 +58,7 @@ public class CertificateConfiguration
     public bool Managed { get; set; } = true;
     public string? Format { get; set; }
     public string? PFXPath { get; set; }
+    public string? Password { get; set; }
     public string? PEMCertPath { get; set; }
     public string? PEMKeyPath { get; set; }
     public string CommonName { get; set; } = "localhost";
@@ -55,18 +67,22 @@ public class CertificateConfiguration
 
 public class SerilogConfiguration
 {
-    public List<string>? Using { get; set; } = null;
-    public MinimumLevelConfiguration? MinimumLevel { get; init; } = null;
-    public List<WriteToConfiguration>? WriteTo { get; set; } = null;
+    public List<string> Using { get; set; } = ["Serilog.Sinks.Console"];
+    public MinimumLevelConfiguration MinimumLevel { get; init; } = new MinimumLevelConfiguration();
+    public List<WriteToConfiguration> WriteTo { get; init; } = [ new WriteToConfiguration() ];
 }
 
 public class MinimumLevelConfiguration
 {
-    public string? Default { get; set; }
+    public string Default { get; set; } = "Information";
 }
 
 public class WriteToConfiguration
 {
-    public string? Name { get; set; }
-    public Dictionary<string, object>? Args { get; set; }
+    public string Name { get; set; } = "Console";
+    public Dictionary<string, object> Args { get; set; } = new()
+    {
+        ["outputTemplate"] =
+           "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+    };
 }

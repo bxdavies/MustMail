@@ -128,7 +128,7 @@ public partial class RecipientResolver(ILogger<RecipientResolver> logger, IOptio
         List<Recipient> rejectedRecipients = [];
 
         // If allowedTo is not wildcard and there are allowed recipients in the list then loop through each one
-        if (config.CurrentValue.MustMail.AllowedRecipients.Count > 0)
+        if (config.CurrentValue.Mail.AllowedRecipients.Count > 0)
         {
             foreach (Recipient recipient in allRecipients)
             {
@@ -136,7 +136,7 @@ public partial class RecipientResolver(ILogger<RecipientResolver> logger, IOptio
                 string recipientAddress = recipient.EmailAddress!.Address!;
                 
                 // Check if address is allowed
-                bool isAllowed = config.CurrentValue.MustMail.AllowedRecipients.Any(allowed => {
+                bool isAllowed = config.CurrentValue.Mail.AllowedRecipients.Any(allowed => {
 
                     // Direct comparison of address eg. user@example.com compared to user@example.com
                     if (string.Equals(
