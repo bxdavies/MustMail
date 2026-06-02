@@ -17,29 +17,29 @@ public static class Helpers
 
     public static void ValidateEnvironmentVariables()
     {
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__TenantId")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__Graph__TenantId")))
             throw new InvalidOperationException(
-                                                "The environment variable 'Graph__TenantId' must be set.");
+                                                "The environment variable 'MustMail__Graph__TenantId' must be set.");
 
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__ClientId")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__Graph__ClientId")))
             throw new InvalidOperationException(
-                                                "The environment variable 'Graph__ClientId' must be set.");
+                                                "The environment variable 'MustMail__Graph__ClientId' must be set.");
 
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Graph__ClientSecret")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__Graph__ClientSecret")))
             throw new InvalidOperationException(
-                                                "The environment variable 'Graph__ClientSecret' must be set.");
+                                                "The environment variable 'MustMail__Graph__ClientSecret' must be set.");
 
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__Authority")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__OpenIdConnect__Authority")))
             throw new InvalidOperationException(
-                                                "The environment variable 'OpenIdConnect__Authority' must be set.");
+                                                "The environment variable 'MustMail__OpenIdConnect__Authority' must be set.");
 
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__ClientId")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__OpenIdConnect__ClientId")))
             throw new InvalidOperationException(
-                                                "The environment variable 'OpenIdConnect__ClientId' must be set.");
+                                                "The environment variable 'MustMail__OpenIdConnect__ClientId' must be set.");
 
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OpenIdConnect__ClientSecret")))
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__OpenIdConnect__ClientSecret")))
             throw new InvalidOperationException(
-                                                "The environment variable 'OpenIdConnect__ClientSecret' must be set.");
+                                                "The environment variable 'MustMail__OpenIdConnect__ClientSecret' must be set.");
     }
 }
 
