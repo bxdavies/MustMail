@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using MudBlazor.Extensions;
 using MudExtensions.Services;
 using MudBlazor.Services;
 using MustMail.App;
@@ -19,7 +18,6 @@ using MustMail.App.Components;
 using MustMail.App.Services.MailProcessing;
 using MustMail.App.Services.Maintenance;
 using MustMail.App.Services.Server;
-using Org.BouncyCastle.Asn1.IsisMtt.Ocsp;
 using Quartz;
 using Serilog;
 using Serilog.Events;
@@ -49,22 +47,8 @@ if (!File.Exists(appSettingsPath))
                       JsonSerializer.Serialize(new Configuration(), JsonWriteDefaults.Options));
 }
 
-// Load the configuration from the JSON file
-builder.Configuration.AddJsonFile(appSettingsPath, false, true);
-
-// If no sink is set then use the console
-if (string.IsNullOrEmpty(builder.Configuration.GetValue<string?>("Serilog:Using:0")))
-{
-    builder.Configuration["Serilog:Using:0"] = "Serilog.Sinks.Console";
-
-    builder.Configuration["Serilog:MinimumLevel:Default"] = "Information";
-
-    builder.Configuration["Serilog:WriteTo:0:Name"] = "Console";
-
-    builder.Configuration["Serilog:WriteTo:0:Args:outputTemplate"] =
-        "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}";
-
-}
+// Load the configuration from the JSON file first then override with any environment variables
+builder.Configuration.AddJsonFile(appSettingsPath).AddEnvironmentVariables("MustMail__");
 
 // Create logger using default settings, appsettings.json and environment files will override this
 LoggerConfiguration loggerConfig = new LoggerConfiguration()
@@ -101,7 +85,7 @@ Helpers.ValidateEnvironmentVariables();
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
-// If no certificate type is provide default to PFX on windows and PEM on anything else
+// If no certificate type is provide default to PFX on Windows and PEM on anything else
 if (string.IsNullOrEmpty(builder.Configuration["Certificate:Format"]))
 {
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -124,7 +108,7 @@ if (builder.Configuration["Certificate:Format"] is not("PFX" or "PEM"))
 
 
 // PFX certificate requires a password 
-if(builder.Configuration["Certificate:Format"] == "PFX" && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Certificate__Password")))
+if(builder.Configuration["Certificate:Format"] == "PFX" && string.IsNullOrWhiteSpace(builder.Configuration["Certificate:Password"]))
 {
         throw new InvalidOperationException(
                                             "The environment variable 'Certificate__Password' must be set.");
@@ -166,12 +150,15 @@ if (builder.Configuration.GetValue<bool?>("Certificate:Managed") != false)
 }
 
 // If database connection string is not set store MustMail.db in the data folder. 
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")))
+if (string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:Sqlite"]) &&
+    string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:Postgres"]) &&
+    string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:MySQL"]) &&
+    string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:SqlServer"]) &&
+    string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:AzureSql"]))
 {
     string databasePath = Path.Combine(dataFolder, "MustMail.db");
-    bool exists = File.Exists(databasePath);
 
-    if (exists)
+    if (File.Exists(databasePath))
     {
         Log.Logger.Information(
                                "Database connection string not set. Defaulting to existing SQLite database at {DatabasePath}",
@@ -185,30 +172,24 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__
                                databasePath);
     }
 
-    Environment.SetEnvironmentVariable("ConnectionStrings__Sqlite", $"Data Source={databasePath}");
+    builder.Configuration["ConnectionStrings:Sqlite"] = $"Data Source={databasePath}";
 }
 
-// If name claim is not set use the default name
-if (string.IsNullOrWhiteSpace(builder.Configuration["OpenIdConnect:NameClaim"]))
-{
-    builder.Configuration["OpenIdConnect:NameClaim"] = "name";
-
-}
-
-// Parse configuration
+// Bind configuration to object
 builder.Services.Configure<Configuration>(builder.Configuration);
-Configuration mustMailConfig = builder.Configuration.Get<Configuration>()
+
+// Create object from configuration
+Configuration mustMailConfiguration = builder.Configuration.Get<Configuration>()
                                ?? throw new InvalidOperationException(
                                                                       "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
-
-if (mustMailConfig.Smtp.InsecurePort is < 1 or > 65535)
+if (mustMailConfiguration.Smtp.InsecurePort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:InsecurePort must be between 1 and 65535.");
 
-if (mustMailConfig.Smtp.ImplicitTLSPort is < 1 or > 65535)
+if (mustMailConfiguration.Smtp.ImplicitTLSPort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:ImplicitTLSPort must be between 1 and 65535.");
 
-if (mustMailConfig.Smtp.StartTLSPort is < 1 or > 65535)
+if (mustMailConfiguration.Smtp.StartTLSPort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:StartTLSPort must be between 1 and 65535.");
 
 Log.Logger.Information(
@@ -216,69 +197,69 @@ Log.Logger.Information(
                        dataFolder);
 
 // Log configuration
-Log.Information("Configuration: \n {Serialize}", JsonSerializer.Serialize(mustMailConfig, JsonDefaults.Options));
+Log.Information("Configuration: \n {Serialize}", JsonSerializer.Serialize(mustMailConfiguration, JsonDefaults.Options));
 
 // Create DbUp upgrader for database migrations 
 UpgradeEngine upgrader;
 
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")))
+if (!string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:Sqlite"]))
 {
     // Database connection
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlite(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite")));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlite(builder.Configuration["ConnectionStrings:Sqlite"]));
 
     // Initialize DbUp upgrader to use Sqlite
     upgrader =
         DeployChanges.To
-            .SqliteDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Sqlite"))
+            .SqliteDatabase(builder.Configuration["ConnectionStrings:Sqlite"])
             .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Sqlite"))
             .LogTo(loggerFactory)
             .Build();
 
 }
-else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")))
+else if (!string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:Postgres"]))
 {
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseNpgsql(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseNpgsql(builder.Configuration["ConnectionStrings:Postgres"]));
 
     // Initialize DbUp upgrader to use Postgres
     upgrader =
         DeployChanges.To
-            .PostgresqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres"))
+            .PostgresqlDatabase(builder.Configuration["ConnectionStrings:Postgres"])
             .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "Postgres"))
             .LogTo(loggerFactory)
             .Build();
 }
-else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")))
+else if (!string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:MySQL"]))
 {
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL")!));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseMySQL(builder.Configuration["ConnectionStrings:MySQL"]!));
 
     // Initialize DbUp upgrader to use MySql
     upgrader =
         DeployChanges.To
-            .MySqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__MySQL"))
+            .MySqlDatabase(builder.Configuration["ConnectionStrings:MySQL"])
             .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "MySQL"))
             .LogTo(loggerFactory)
             .Build();
 }
-else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")))
+else if (!string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:SqlServer"]))
 {
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlServer(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseSqlServer(builder.Configuration["ConnectionStrings:SqlServer"]));
 
     // Initialize DbUp upgrader to use SqlServer
     upgrader =
         DeployChanges.To
-            .SqlDatabase(Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer"))
+            .SqlDatabase(builder.Configuration["ConnectionStrings:SqlServer"])
             .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "SqlServer"))
             .LogTo(loggerFactory)
             .Build();
 }
-else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")))
+else if (!string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:AzureSql"]))
 {
-    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseAzureSql(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql")));
+    builder.Services.AddDbContextFactory<DatabaseContext>(options => options.UseAzureSql(builder.Configuration["ConnectionStrings:AzureSql"]));
 
     // Initialize DbUp upgrader to use AzureSql
     upgrader =
         DeployChanges.To
-            .AzureSqlDatabaseWithIntegratedSecurity(Environment.GetEnvironmentVariable("ConnectionStrings__AzureSql"))
+            .AzureSqlDatabaseWithIntegratedSecurity(builder.Configuration["ConnectionStrings:AzureSql"])
             .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Db", "Scripts", "AzureSql"))
             .LogTo(loggerFactory)
             .Build();
@@ -304,9 +285,9 @@ if (!result.Successful)
 
 // Create client secret credential to authenticate against Microsoft graph
 builder.Services.AddSingleton<TokenCredential>(_ => new ClientSecretCredential(
-                                                                               Environment.GetEnvironmentVariable("Graph__TenantId"),
-                                                                               Environment.GetEnvironmentVariable("Graph__ClientId"),
-                                                                               Environment.GetEnvironmentVariable("Graph__ClientSecret"),
+                                                                              mustMailConfiguration.Graph.TenantId,
+                                                                                mustMailConfiguration.Graph.ClientId,
+                                                                                mustMailConfiguration.Graph.ClientSecret,
                                                                                new ClientSecretCredentialOptions
                                                                                {
                                                                                    AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
@@ -336,12 +317,12 @@ builder.Services.AddAuthentication(options => {
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
     .AddOpenIdConnect(options => {
-        options.Authority = Environment.GetEnvironmentVariable("OpenIdConnect__Authority");
-        options.ClientId = Environment.GetEnvironmentVariable("OpenIdConnect__ClientId");
-        options.ClientSecret = Environment.GetEnvironmentVariable("OpenIdConnect__ClientSecret");
+        options.Authority = mustMailConfiguration.OpenIdConnect.Authority;
+        options.ClientId = mustMailConfiguration.OpenIdConnect.ClientId;
+        options.ClientSecret = mustMailConfiguration.OpenIdConnect.ClientSecret;
         options.Scope.Add("openid");
         options.Scope.Add("profile");
-        options.TokenValidationParameters.NameClaimType = mustMailConfig.OpenIdConnect.NameClaim;
+        options.TokenValidationParameters.NameClaimType = mustMailConfiguration.OpenIdConnect.NameClaim;
         options.ResponseType = OpenIdConnectResponseType.Code;
         options.Events = new OpenIdConnectEvents
         {
@@ -364,9 +345,9 @@ builder.Services.AddCascadingAuthenticationState();
 // Add update service
 builder.Services.AddSingleton<UpdateService>();
 
-if (mustMailConfig.Certificate.Format == "PFX")
+if (mustMailConfiguration.Certificate.Format == "PFX")
 {
-    string? certificatePath = mustMailConfig.Certificate.PFXPath;
+    string? certificatePath = mustMailConfiguration.Certificate.PFXPath;
 
     if (string.IsNullOrWhiteSpace(certificatePath))
     {
@@ -374,16 +355,16 @@ if (mustMailConfig.Certificate.Format == "PFX")
                                             "Certificate path is not configured and MustMail is not managing the certificate.");
     }
 
-    if (!File.Exists(certificatePath) && mustMailConfig.Certificate.Managed)
+    if (!File.Exists(certificatePath) && mustMailConfiguration.Certificate.Managed)
     {
         Log.Information(
                         "Managed certificate not found at {CertificatePath}. Creating a new self-signed certificate.",
                         certificatePath);
 
-        CertificateGenerator.Create(mustMailConfig, loggerFactory);
+        CertificateGenerator.Create(mustMailConfiguration, loggerFactory);
     }
 
-    if (!File.Exists(certificatePath) && !mustMailConfig.Certificate.Managed)
+    if (!File.Exists(certificatePath) && !mustMailConfiguration.Certificate.Managed)
     {
         throw new InvalidOperationException(
                                             $"Could not find or access certificate at '{certificatePath}'.");
@@ -391,26 +372,26 @@ if (mustMailConfig.Certificate.Format == "PFX")
 
     // Attempt to load certificate and check it's valid
     X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
-                                                                            mustMailConfig.Certificate.PFXPath!,
-                                                                            Environment.GetEnvironmentVariable("Certificate__Password"));
+                                                                            mustMailConfiguration.Certificate.PFXPath!,
+                                                                            builder.Configuration["Certificate:Password"]);
 
     // If certificate has expired create a new one if managed else throw an exception
     if (certificate.NotAfter <= DateTime.UtcNow)
     {
-        if (mustMailConfig.Certificate.Managed)
+        if (mustMailConfiguration.Certificate.Managed)
         {
-            CertificateGenerator.Create(mustMailConfig, loggerFactory);
+            CertificateGenerator.Create(mustMailConfiguration, loggerFactory);
         }
         else
         {
-            throw new InvalidOperationException($"The certificate at '{mustMailConfig.Certificate.PFXPath}' expired on '{certificate.NotAfter:O}'. Please renew and replace the certificate.");
+            throw new InvalidOperationException($"The certificate at '{mustMailConfiguration.Certificate.PFXPath}' expired on '{certificate.NotAfter:O}'. Please renew and replace the certificate.");
         }
     }
 }
-else if (mustMailConfig.Certificate.Format == "PEM")
+else if (mustMailConfiguration.Certificate.Format == "PEM")
 {
-    string? certificatePath = mustMailConfig.Certificate.PEMCertPath;
-    string? keyPath = mustMailConfig.Certificate.PEMKeyPath;
+    string? certificatePath = mustMailConfiguration.Certificate.PEMCertPath;
+    string? keyPath = mustMailConfiguration.Certificate.PEMKeyPath;
 
     if (string.IsNullOrWhiteSpace(certificatePath) ||
         string.IsNullOrWhiteSpace(keyPath))
@@ -422,13 +403,13 @@ else if (mustMailConfig.Certificate.Format == "PEM")
     bool certExists = File.Exists(certificatePath);
     bool keyExists = File.Exists(keyPath);
 
-    if ((!certExists || !keyExists) && mustMailConfig.Certificate.Managed)
+    if ((!certExists || !keyExists) && mustMailConfiguration.Certificate.Managed)
     {
         Log.Information(
             "Managed PEM certificate not found. Creating a new self-signed certificate at {CertificatePath}.",
             certificatePath);
 
-        CertificateGenerator.Create(mustMailConfig, loggerFactory);
+        CertificateGenerator.Create(mustMailConfiguration, loggerFactory);
 
         certExists = File.Exists(certificatePath);
         keyExists = File.Exists(keyPath);
@@ -453,17 +434,13 @@ else if (mustMailConfig.Certificate.Format == "PEM")
     // Check expiry
     if (certificate.NotAfter <= DateTime.UtcNow)
     {
-        if (mustMailConfig.Certificate.Managed)
+        if (mustMailConfiguration.Certificate.Managed)
         {
             Log.Information(
                 "Managed PEM certificate expired on {ExpiryDate}. Creating a new certificate.",
                 certificate.NotAfter);
 
-            CertificateGenerator.Create(mustMailConfig, loggerFactory);
-
-            certificate = X509Certificate2.CreateFromPemFile(
-                certificatePath,
-                keyPath);
+            CertificateGenerator.Create(mustMailConfiguration, loggerFactory);
         }
         else
         {
@@ -492,7 +469,7 @@ builder.Services.AddSingleton<AttachmentHandler>();
 builder.Services.AddSingleton<MessageStorage>();
 
 // If we are storing emails create the cleanup job
-if (mustMailConfig.MustMail.StoreEmails)
+if (mustMailConfiguration.Mail.StoreMail)
 {
     _ = builder.Services.AddQuartz(q => {
         // Run job now
@@ -526,7 +503,7 @@ builder.Services.AddMudExtensions();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Healthcheck for database
+// Health check for database
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<DatabaseContext>();
 
@@ -541,11 +518,11 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
-    string? env = Environment.GetEnvironmentVariable("Bootstrap__SMTPAccounts");
+    string? smtpAccounts = builder.Configuration["Bootstrap:SMTPAccounts"];
 
-    if (!string.IsNullOrWhiteSpace(env))
+    if (!string.IsNullOrWhiteSpace(smtpAccounts))
     {
-        foreach (string account in env.Split('|', StringSplitOptions.RemoveEmptyEntries))// Split multiple accounts
+        foreach (string account in smtpAccounts.Split('|', StringSplitOptions.RemoveEmptyEntries))// Split multiple accounts
         {
             // Split username:password
             string[] parts = account.Split(':', 2);
@@ -593,7 +570,7 @@ app.UseAntiforgery();
 app.MapGroup("/authentication").MapLoginAndLogout();
 
 // Map static folder maildrop if we are storing emails
-if (mustMailConfig.MustMail.StoreEmails)
+if (mustMailConfiguration.Mail.StoreMail)
 {
     // Create maildrop folder
     string maildropFolder = Path.Combine(dataFolder, "maildrop");
