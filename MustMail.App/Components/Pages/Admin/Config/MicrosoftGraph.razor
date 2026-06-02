@@ -1,0 +1,230 @@
+@page "/admin/config/microsoft-graph"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Microsoft Graph</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Microsoft Graph</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="8">
+		@* Tenant ID *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Tenant Id
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Graph:TenantId"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              Disabled="true"
+			              Value="@Configuration.Graph.TenantId"/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Graph__TenantId
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Graph__TenantId"))"/>
+			</MudStack>
+		</MudItem>
+
+		@* Client ID *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Client ID
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Graph:ClientId"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              Disabled="true"
+			              Value="@Configuration.Graph.ClientId"/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Graph__ClientId
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Graph__ClientId"))"/>
+			</MudStack>
+		</MudItem>
+
+		@* Client Secret *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Client Secret
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Graph:ClientSecret"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              Disabled="true"
+			              Value="@(Helpers.ToPlaceholder(Configuration.Graph.ClientSecret))"/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Graph__ClientSecret
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Graph__ClientSecret"))"/>
+			</MudStack>
+		</MudItem>
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>

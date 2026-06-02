@@ -1,0 +1,300 @@
+@page "/admin/config/mail"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Mail</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Mail</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="0">
+
+		<MudGrid Spacing="8">
+
+			@* Footer Branding *@
+			<MudItem xs="12" md="4">
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Footer Branding
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:FooterBranding"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudSwitch T="bool" @bind-Value="Configuration.Mail.FooterBranding"
+				           Color="Color.Primary"
+				           Label="@(Configuration.Mail.FooterBranding ? "Enabled" : "Disabled")"/>
+
+				<MudText Class="mud-input-helper-text">
+					Show MustMail branding/footer content in outgoing emails.
+				</MudText>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						MustMail__FooterBranding
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("MustMail__FooterBranding"))"/>
+				</MudStack>
+			</MudItem>
+
+			@* Trust From *@
+			<MudItem xs="12" md="4">
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Trust From
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:TrustFrom"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudSwitch T="bool" @bind-Value="Configuration.Mail.TrustFrom"
+				           Color="Color.Primary"
+				           Label="@(Configuration.Mail.TrustFrom ? "Enabled" : "Disabled")"/>
+
+				<MudText Class="mud-input-helper-text">
+					If enabled, allow the sender (From) to be trusted.
+				</MudText>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						MustMail__TrustFrom
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("MustMail__TrustFrom"))"/>
+				</MudStack>
+			</MudItem>
+		</MudGrid>
+
+		<MudGrid Spacing="8" Class="mt-4">
+			@* Store Emails *@
+			<MudItem xs="12" md="4">
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Store Emails
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:StoreEmails"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudSwitch T="bool" @bind-Value="Configuration.Mail.StoreMail"
+				           Color="Color.Primary"
+				           Label="@(Configuration.Mail.StoreMail ? "Enabled" : "Disabled")"/>
+
+				<MudText Class="mud-input-helper-text">
+					If enabled, MustMail will store a copy of the forwarded emails.
+				</MudText>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						MustMail__StoreEmails
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("MustMail__StoreEmails"))"/>
+				</MudStack>
+			</MudItem>
+
+			@* Retention Period *@
+			<MudItem xs="12" md="4">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Retention Period
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:RetentionDays"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudNumericField T="int" Variant="Variant.Outlined" Min="1" Required
+				                 HelperText="How long in days to retain the stored emails for."
+				                 @bind-Value="Configuration.Mail.RetentionDays"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						MustMail__RetentionDays
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("MustMail__RetentionDays"))"/>
+				</MudStack>
+			</MudItem>
+		</MudGrid>
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>

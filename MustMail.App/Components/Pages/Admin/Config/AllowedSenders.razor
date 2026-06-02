@@ -1,0 +1,71 @@
+@page "/admin/config/allowed-senders"
+@inherits AllowedSendersBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Allowed Senders</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Allowed Senders</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudStack Spacing="2">
+
+		<MudText Class="mud-input-helper-text">
+			Any emails sent to MustMail that do not match one of the specified <b>sender</b>
+			addresses or patterns will be rejected.
+		</MudText>
+
+		<MudList Dense="true" T="string" Class="mud-input-helper-text">
+			<MudListItem>
+				<code class="env-hint">user@example.com</code> – allow a specific email address.
+			</MudListItem>
+			<MudListItem>
+				<code class="env-hint">*@@example.com</code> – allow any address at a specific domain.
+			</MudListItem>
+		</MudList>
+
+		<MudText Class="mud-input-helper-text">
+			Leave this list empty to allow emails from any sender.
+		</MudText>
+
+		<MudStack Row Spacing="8" AlignItems="AlignItems.Center">
+			<MudTextField Label="Address"
+			              @bind-Value="NewAllowedSender"
+			              Immediate="true"
+			              Variant="Variant.Outlined"
+			              Clearable="true"
+			              Placeholder='@("Examples: user@example.com or *@example.com")'/>
+			<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddAllowedSender">
+				Add
+			</MudButton>
+		</MudStack>
+
+		<MudTable Items="Configuration.Mail.AllowedSenders" Bordered="true" Class="mt-4" Dense>
+			<HeaderContent>
+				<MudTh>Address</MudTh>
+				<MudTh>Actions</MudTh>
+			</HeaderContent>
+			<RowTemplate>
+				<MudTd>
+					<MudTextField @bind-Value="context" Immediate="true"/>
+				</MudTd>
+				<MudTd>
+					<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+					               OnClick="@(() => RemoveAllowedSender(context))"/>
+				</MudTd>
+			</RowTemplate>
+		</MudTable>
+	</MudStack>
+</MudForm>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" />
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>

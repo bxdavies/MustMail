@@ -1,0 +1,175 @@
+﻿@inherits AdminNavigationBase
+<MudBreakpointProvider OnBreakpointChanged="OnBreakpointChanged" />
+
+
+
+    @if (Breakpoint <= Breakpoint.Md)
+    {
+        <MudStack Row Spacing="1" Class="mb-2">
+            <MudButton Href="/admin"
+                       StartIcon="@Icons.Material.Filled.House"
+                       Variant="@(IsCurrentPage("admin") ? Variant.Filled : Variant.Text)"
+                       Color="@(IsCurrentPage("admin") ? Color.Primary : Color.Default)">
+                Admin
+            </MudButton>
+            <MudButton Href="/admin/users"
+                       StartIcon="@Icons.Material.Filled.ManageAccounts"
+                       Variant="@(IsCurrentPage("users") ? Variant.Filled : Variant.Text)"
+                       Color="@(IsCurrentPage("users") ? Color.Primary : Color.Default)">
+                Users
+            </MudButton>
+            <MudButton Href="/admin/smtp-accounts"
+                       StartIcon="@Icons.Material.Filled.Send"
+                       Variant="@(IsCurrentPage("smtp-accounts") ? Variant.Filled : Variant.Text)"
+                       Color="@(IsCurrentPage("smtp-accounts") ? Color.Primary : Color.Default)">
+                Accounts
+            </MudButton>
+        </MudStack>
+
+      
+
+    <MudStack Row Spacing="0" Class="mb-6">
+        <MudSelect T="string"
+        Label="Configuration Section"
+                   Value="@CurrentConfigRoute()"
+        ValueChanged="@(route => Navigation.NavigateTo(route))">
+
+            <MudSelectItem T="string" Value="@("/admin/config/hosting")">
+                Hosting
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/openid-connect")">
+                OIDC
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/microsoft-graph")">
+                MS Graph
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/logging")">
+                Logging
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/mail")">
+                Mail
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/allowed-senders")">
+                Senders
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/allowed-recipients")">
+                Recipients
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/smtp")">
+                SMTP
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("/admin/config/certificate")">
+                Certificate
+            </MudSelectItem>
+
+        </MudSelect>
+        </MudStack>
+    }
+    else
+    {
+    <MudStack Row="true"
+              Wrap="Wrap.Wrap"
+              Justify="Justify.Center"
+              AlignItems="AlignItems.Center"
+              Spacing="1"
+              Class="mb-6">
+
+        <MudButton Href="/admin"
+        StartIcon="@Icons.Material.Filled.House"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("admin") ? "admin-nav-active" : null)">
+            Admin
+        </MudButton>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+        <MudButton Href="/admin/users"
+        StartIcon="@Icons.Material.Filled.ManageAccounts"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("users") ? "admin-nav-active" : null)">
+            Users
+        </MudButton>
+
+        <MudButton Href="/admin/smtp-accounts"
+        StartIcon="@Icons.Material.Filled.Send"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("smtp-accounts") ? "admin-nav-active" : null)">
+            SMTP Accounts
+        </MudButton>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+        <MudButton Href="/admin/config/hosting"
+        StartIcon="@Icons.Material.Filled.Computer"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("hosting") ? "admin-nav-active" : null)">
+            Hosting
+        </MudButton>
+
+        <MudButton Href="/admin/config/openid-connect"
+        StartIcon="@Icons.Material.Filled.Login"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("openid-connect") ? "admin-nav-active" : null)">
+            OIDC
+        </MudButton>
+
+        <MudButton Href="/admin/config/microsoft-graph"
+        StartIcon="@Icons.Material.Filled.AccountTree"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("microsoft-graph") ? "admin-nav-active" : null)">
+            MS Graph
+        </MudButton>
+
+        <MudButton Href="/admin/config/logging"
+        StartIcon="@Icons.Material.Filled.Article"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("logging") ? "admin-nav-active" : null)">
+            Logging
+        </MudButton>
+
+        <MudButton Href="/admin/config/mail"
+        StartIcon="@Icons.Material.Filled.Mail"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("mail") ? "admin-nav-active" : null)">
+            Mail
+        </MudButton>
+
+        <MudButton Href="/admin/config/allowed-senders"
+        StartIcon="@Icons.Material.Filled.AlternateEmail"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("allowed-senders") ? "admin-nav-active" : null)">
+            Senders
+        </MudButton>
+
+        <MudButton Href="/admin/config/allowed-recipients"
+        StartIcon="@Icons.Material.Filled.MarkEmailRead"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("allowed-recipients") ? "admin-nav-active" : null)">
+            Recipients
+        </MudButton>
+
+        <MudButton Href="/admin/config/smtp"
+        StartIcon="@Icons.Material.Filled.Send"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("smtp") ? "admin-nav-active" : null)">
+            SMTP
+        </MudButton>
+
+        <MudButton Href="/admin/config/certificate"
+        StartIcon="@Icons.Material.Filled.VerifiedUser"
+        Variant="Variant.Text"
+        Class="@(IsCurrentPage("certificate") ? "admin-nav-active" : null)">
+            Certificate
+        </MudButton>
+
+        
+    </MudStack>
+    }

@@ -1,0 +1,267 @@
+@page "/admin/config/hosting"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Hosting</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Hosting</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="8">
+		@* Allowed Hosts *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Allowed Hosts
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "AllowedHosts"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              @bind-Value="Configuration.AllowedHosts"
+			              Required
+			              HelperText="Usually '*' unless you want to restrict host headers."/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						appsettings.json / Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					AllowedHosts
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("AllowedHosts"))"/>
+			</MudStack>
+		</MudItem>
+
+		@* URLs *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					URLs
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Urls"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              @bind-Value="Configuration.Urls"
+			              Required
+			              HelperText="Semicolon separated: http://0.0.0.0:5000;https://0.0.0.0:5001"/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						appsettings.json / Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Key" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Urls
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Urls"))"/>
+			</MudStack>
+		</MudItem>
+
+		@* Database Connection String *@
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Database Connection String
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:Sqlite"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField T="string" Variant="Variant.Outlined"
+			              Disabled="true"
+			              HelperText="Defaults to SQLite database, stored in 'data' folder"/>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings"
+				         T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					ConnectionStrings__Sqlite
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("ConnectionStrings__Sqlite"))"/>
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings"
+				         T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					ConnectionStrings__Postgres
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("ConnectionStrings__Postgres"))"/>
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings"
+				         T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					ConnectionStrings__MySQL
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("ConnectionStrings__MySQL"))"/>
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings"
+				         T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					ConnectionStrings__SqlServer
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("ConnectionStrings__SqlServer"))"/>
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Settings"
+				         T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					ConnectionStrings__AzureSql
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("ConnectionStrings__AzureSql"))"/>
+			</MudStack>
+		</MudItem>
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>
