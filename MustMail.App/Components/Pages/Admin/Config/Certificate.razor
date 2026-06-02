@@ -1,0 +1,500 @@
+@page "/admin/config/certificate"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Certificate</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Certificate</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="8">
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Managed Certificate
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:Managed"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudSwitch T="bool"
+			           @bind-Value="Configuration.Certificate.Managed"
+			           Color="Color.Primary"
+			           Label="@(Configuration.Certificate.Managed ? "Enabled" : "Disabled")"/>
+
+			<MudText Class="mud-input-helper-text">
+				If enabled MustMail will create a self signed certificate and recreate it when
+				it expires at application start. Disable to provide your own certificate.
+			</MudText>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						appsettings.json / Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Key" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Certificate__Managed
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Certificate__Managed"))"/>
+			</MudStack>
+
+		</MudItem>
+
+		<MudItem xs="12" md="6">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Format
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:Format"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudTextField Label="Format"
+			              T="string"
+			              Disabled="true"
+			              Value="@Configuration.Certificate.Format"
+			              HelperText="Only configurable by the environment variable. Must be 'PFX' or 'PEM'"/>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						appsettings.json / Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Key" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Certificate__Format
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Certificate__Format"))"/>
+			</MudStack>
+
+		</MudItem>
+
+		@if (Configuration.Certificate.Managed)
+		{
+			<MudItem xs="12">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Common Name
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:CommonName"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudTextField Label="Common Name"
+				              @bind-Value="Configuration.Certificate.CommonName"
+				              Placeholder="test.application.com"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Certificate__CommonName
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Certificate__CommonName"))"/>
+				</MudStack>
+
+			</MudItem>
+		}
+
+		@if (Configuration.Certificate.Format == "PFX")
+		{
+			<MudItem xs="12" md="6">
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Path
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:PFXPath"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudTextField Label="Path"
+				              @bind-Value="Configuration.Certificate.PFXPath"
+				              Placeholder="MustMail.pfx"
+				              HelperText="Must be a password protected Personal Information Exchange (.pfx) certificate"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Certificate__PFXPath
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Certificate__PFXPath"))"/>
+				</MudStack>
+
+			</MudItem>
+
+			<MudItem xs="12" md="6">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Password
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:Password"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudTextField T="string"
+				              Disabled="true"
+				              Value="@(Helpers.ToPlaceholder(Configuration.Certificate.Password))"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Certificate__Password
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Certificate__Password"))"/>
+				</MudStack>
+
+			</MudItem>
+		}
+		else if (Configuration.Certificate.Format == "PEM")
+		{
+			<MudItem xs="12" md="6">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Certificate Path
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:PEMCertPath"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudTextField Label="Certificate Path"
+				              @bind-Value="Configuration.Certificate.PEMCertPath"
+				              Placeholder="cert.pem"
+				              HelperText="Path to the PEM certificate file (.pem)"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Certificate__PEMCertPath
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick='@(() => CopyToClipboard("Certificate__PEMCertPath"))'/>
+				</MudStack>
+
+			</MudItem>
+
+			<MudItem xs="12" md="6">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Private Key Path
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Certificate:PEMKeyPath"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudTextField Label="Private Key Path"
+				              @bind-Value="Configuration.Certificate.PEMKeyPath"
+				              Placeholder="privkey.pem"
+				              HelperText="Path to the PEM private key file (.pem)"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Certificate__PEMKeyPath
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick='@(() => CopyToClipboard("Certificate__PEMKeyPath"))'/>
+				</MudStack>
+
+			</MudItem>
+		}
+
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>

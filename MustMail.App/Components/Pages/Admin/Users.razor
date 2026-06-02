@@ -1,0 +1,69 @@
+﻿@page "/admin/users"
+@inherits UsersBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+<PageTitle> MustMail - Users </PageTitle>
+
+<AdminNavigation />
+
+<MudText Typo="Typo.h4">Users</MudText>
+
+<MudText Typo="Typo.subtitle2">
+	Manage MustMail users and administrator access.
+</MudText>
+
+<MudDataGrid @ref="@UserGrid" T="User" ServerData="ServerReload" ReadOnly="false" EditMode="DataGridEditMode.Form"
+			 CommittedItemChanges="@UserItemChanges" Bordered="true" Elevation="3" Class="mt-2" SortMode="SortMode.None">
+	<ToolBarContent>
+		<MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+					  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+	</ToolBarContent>
+	<Columns>
+		<PropertyColumn Property="x => x.Id" Hidden="true" Editable="false" />
+		<PropertyColumn Property="x => x.Name" Editable="false" />
+		<PropertyColumn Property="x => x.Email" Editable="false" />
+		<PropertyColumn Property="x => x.Admin">
+			<EditTemplate>
+				<MudSwitch T="bool" @bind-Value="context.Item.Admin" Color="Color.Secondary"
+						   Label="Admin"></MudSwitch>
+			</EditTemplate>
+			<CellTemplate>
+				@if (context.Item.Admin)
+				{
+					<MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Secondary" />
+				}
+				else
+				{
+					<MudIcon Icon="@Icons.Material.Filled.NotInterested" />
+				}
+			</CellTemplate>
+		</PropertyColumn>
+		<TemplateColumn Title="Actions">
+			<CellTemplate>
+				<MudStack Row>
+					<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit"
+								   Color="Color.Warning"
+								   OnClick="@context.Actions.StartEditingItemAsync" />
+					<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete"
+								   Color="Color.Error" OnClick="@(() => RemoveUser(context.Item))" />
+				</MudStack>
+			</CellTemplate>
+		</TemplateColumn>
+	</Columns>
+	<PagerContent>
+		<MudDataGridPager T="User" />
+	</PagerContent>
+</MudDataGrid>
+
+<MudStack Row AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" />
+	<MudText Typo="Typo.body2">
+		Removing a user from MustMail does not revoke access at the identity provider.
+	</MudText>
+</MudStack>
+
+<MudStack Row AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" />
+	<MudText Typo="Typo.body2">
+		Users are automatically created when they first sign in using the configured identity provider. Changes to a user's name or email address are synchronised on their next sign-in.
+	</MudText>
+</MudStack>

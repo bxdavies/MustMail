@@ -1,0 +1,366 @@
+@page "/admin/config/smtp"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - SMTP</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">SMTP</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="0">
+
+		<MudGrid Spacing="8">
+
+			@* Host *@
+			<MudItem xs="12" md="4">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Host
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Smtp:Host"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+				</MudStack>
+
+				<MudTextField Label="Host"
+				              @bind-Value="Configuration.Smtp.Host"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Smtp__Host
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Smtp__Host"))"/>
+				</MudStack>
+
+			</MudItem>
+
+			@* Insecure Mode *@
+			<MudItem xs="12" md="4">
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Insecure Mode
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Smtp:AllowInsecure"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+
+				</MudStack>
+
+				<MudSwitch T="bool" @bind-Value="Configuration.Smtp.AllowInsecure"
+				           Color="Color.Primary"
+				           Label="@(Configuration.Smtp.AllowInsecure ? "Enabled" : "Disabled")"/>
+
+				<MudText Class="mud-input-helper-text">
+					If enabled, MustMail will also start on port without encryption.
+				</MudText>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Smtp__AllowInsecure
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Smtp__AllowInsecure"))"/>
+				</MudStack>
+			</MudItem>
+		</MudGrid>
+
+		<MudGrid Spacing="8" Class="mt-2">
+
+			@* Insecure Port *@
+			@if (Configuration.Smtp.AllowInsecure)
+			{
+				<MudItem xs="12" md="3">
+
+					<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+						<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+							Insecure Port
+						</MudText>
+
+						<MudSpacer/>
+
+						@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Smtp:InsecurePort"))
+						{
+							<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+							         Icon="@Icons.Material.Filled.Storage">
+								Environment Variable
+							</MudChip>
+						}
+						else
+						{
+							<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+							         Icon="@Icons.Material.Filled.Description">
+								appsettings.json
+							</MudChip>
+						}
+					</MudStack>
+
+					<MudNumericField T="int"
+					                 @bind-Value="Configuration.Smtp.InsecurePort"
+					                 Min="1"
+					                 Max="65535"/>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+						<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+							<MudIcon Icon="@Icons.Material.Filled.Settings"
+							         Size="Size.Small"/>
+							<MudText Typo="Typo.caption">
+								appsettings.json / Environment Variable
+							</MudText>
+						</MudStack>
+
+						<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+							<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+							         Size="Size.Small"
+							         Color="Color.Warning"/>
+							<MudText Typo="Typo.caption">
+								Restart Required
+							</MudText>
+						</MudStack>
+
+					</MudStack>
+					<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+						<MudChip Size="Size.Small"
+						         Variant="Variant.Text"
+						         Icon="@Icons.Material.Filled.Key" T="string"
+						         Style="font-family: monospace; margin-right: 0;">
+							Smtp__InsecurePort
+						</MudChip>
+
+						<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+						               Size="Size.Small"
+						               OnClick="@(() => CopyToClipboard("Smtp__InsecurePort"))"/>
+					</MudStack>
+
+				</MudItem>
+			}
+
+			@* Implicit TLS Port *@
+			<MudItem xs="12" md="3">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Implicit TLS Port
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Smtp:ImplicitTLSPort"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+				</MudStack>
+
+				<MudNumericField T="int"
+				                 @bind-Value="Configuration.Smtp.ImplicitTLSPort"
+				                 Min="1"
+				                 Max="65535"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Smtp__ImplicitTLSPort
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Smtp__ImplicitTLSPort"))"/>
+				</MudStack>
+
+			</MudItem>
+
+			@* Start TLS Port *@
+			<MudItem xs="12" md="3">
+
+				<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+					<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+						Start TLS Port
+					</MudText>
+
+					<MudSpacer/>
+
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Smtp:StartTLSPort"))
+					{
+						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Storage">
+							Environment Variable
+						</MudChip>
+					}
+					else
+					{
+						<MudChip Color="Color.Info" T="string" Variant="Variant.Text" Size="Size.Small"
+						         Icon="@Icons.Material.Filled.Description">
+							appsettings.json
+						</MudChip>
+					}
+				</MudStack>
+
+				<MudNumericField T="int"
+				                 @bind-Value="Configuration.Smtp.StartTLSPort"
+				                 Min="1"
+				                 Max="65535"/>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.Settings"
+						         Size="Size.Small"/>
+						<MudText Typo="Typo.caption">
+							appsettings.json / Environment Variable
+						</MudText>
+					</MudStack>
+
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+						<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+						         Size="Size.Small"
+						         Color="Color.Warning"/>
+						<MudText Typo="Typo.caption">
+							Restart Required
+						</MudText>
+					</MudStack>
+
+				</MudStack>
+				<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+					<MudChip Size="Size.Small"
+					         Variant="Variant.Text"
+					         Icon="@Icons.Material.Filled.Key" T="string"
+					         Style="font-family: monospace; margin-right: 0;">
+						Smtp__StartTLSPort
+					</MudChip>
+
+					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+					               Size="Size.Small"
+					               OnClick="@(() => CopyToClipboard("Smtp__StartTLSPort"))"/>
+				</MudStack>
+
+			</MudItem>
+
+		</MudGrid>
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>

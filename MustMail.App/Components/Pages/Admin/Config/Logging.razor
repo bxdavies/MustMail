@@ -1,0 +1,107 @@
+@page "/admin/config/logging"
+@inherits ConfigPageBase
+@attribute [Authorize(Policy = "MustMailAdmin")]
+
+<PageTitle>MustMail - Configuration - Logging</PageTitle>
+
+<AdminNavigation />
+
+<MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
+	<MudText Typo="Typo.h4">Logging</MudText>
+	<MudSpacer/>
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
+</MudStack>
+
+<MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
+	<MudGrid Spacing="8">
+		<MudItem xs="12">
+
+			<MudStack Row AlignItems="AlignItems.Center" Spacing="0" Class="mb-1" Wrap="Wrap.Wrap">
+				<MudText Typo="Typo.subtitle1" Style="font-weight: bold;">
+					Log Level
+				</MudText>
+
+				<MudSpacer/>
+
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Serilog:MinimumLevel:Default"))
+				{
+					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Storage">
+						Environment Variable
+					</MudChip>
+				}
+				else
+				{
+					<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					         Size="Size.Small"
+					         Icon="@Icons.Material.Filled.Description">
+						appsettings.json
+					</MudChip>
+				}
+
+			</MudStack>
+
+			<MudSelect T="string" Variant="Variant.Outlined"
+			           @bind-Value="Configuration.Serilog.MinimumLevel.Default">
+				<MudSelectItem Value="@("Verbose")">Verbose</MudSelectItem>
+				<MudSelectItem Value="@("Debug")">Debug</MudSelectItem>
+				<MudSelectItem Value="@("Information")">Information</MudSelectItem>
+				<MudSelectItem Value="@("Warning")">Warning</MudSelectItem>
+				<MudSelectItem Value="@("Error")">Error</MudSelectItem>
+				<MudSelectItem Value="@("Fatal")">Fatal</MudSelectItem>
+			</MudSelect>
+
+			<MudText Class="mud-input-helper-text">
+				Serilog Log level, more details about the available levels
+				<MudLink Href="https://github.com/serilog/serilog/wiki/Configuration-Basics#minimum-level"
+				         Color="Color.Secondary">
+					here
+				</MudLink>
+			</MudText>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4">
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.Settings"
+					         Size="Size.Small"/>
+					<MudText Typo="Typo.caption">
+						appsettings.json / Environment Variable
+					</MudText>
+				</MudStack>
+
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+					<MudIcon Icon="@Icons.Material.Filled.RestartAlt"
+					         Size="Size.Small"
+					         Color="Color.Warning"/>
+					<MudText Typo="Typo.caption">
+						Restart Required
+					</MudText>
+				</MudStack>
+
+			</MudStack>
+
+			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+				<MudChip Size="Size.Small"
+				         Variant="Variant.Text"
+				         Icon="@Icons.Material.Filled.Key" T="string"
+				         Style="font-family: monospace; margin-right: 0;">
+					Serilog__MinimumLevel__Default
+				</MudChip>
+
+				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+				               Size="Size.Small"
+				               OnClick="@(() => CopyToClipboard("Serilog__MinimumLevel__Default"))"/>
+			</MudStack>
+		</MudItem>
+	</MudGrid>
+</MudForm>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-4">
+	<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small"/>
+	<MudText Typo="Typo.body2">
+		<b>Configuration Overrides:</b> All settings can be overridden using environment variables. For security
+		reasons, some settings can only be configured via environment variables.
+	</MudText>
+</MudStack>
