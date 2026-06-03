@@ -10,6 +10,7 @@
 
     // Component parameters and dependency injection
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
+    [Inject] public IDialogService DialogService { get; set; } = null!;
     [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
 
     // Load users - Used by mud data grid to load the data server side using pagnation and supporting search
@@ -43,6 +44,14 @@
     // Remove user - remove user but check there is at least one admin
     protected async Task RemoveUser(User item)
     {
+        bool confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete User",
+            $"Are you sure you want to delete '{item.Name}'? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel") ?? false;
+
+        if (!confirmed) return;
+
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         // At least one admin check
