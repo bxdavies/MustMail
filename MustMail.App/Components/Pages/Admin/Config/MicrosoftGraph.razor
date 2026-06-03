@@ -8,8 +8,6 @@
 
 <MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
 	<MudText Typo="Typo.h4">Microsoft Graph</MudText>
-	<MudSpacer/>
-	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
 </MudStack>
 
 <MudForm @ref="SettingsForm" Model="Configuration" Validation="new DataAnnotationsValidator()">
