@@ -1,11 +1,13 @@
 ﻿using Isopoh.Cryptography.Argon2;
 using Microsoft.JSInterop;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MustMail.App.Components.Pages.Admin;
-public class SMTPAccountsBase : ComponentBase
+public partial class SMTPAccountsBase : ComponentBase
 {
     // Page variables
+    protected MudForm SMTPAccountForm = null!;
     protected List<SMTPAccount> SMTPAccounts = [];
     protected MudDataGrid<SMTPAccount> SMTPAccountGrid = null!;
 
@@ -14,6 +16,7 @@ public class SMTPAccountsBase : ComponentBase
 
     // Component parameters and dependency injection
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
+    [Inject] public IDialogService DialogService { get; set; } = null!;
     [Inject] public IDbContextFactory<DatabaseContext> DbFactory { get; set; } = null!;
     [Inject] public IConfiguration Configuration { get; set; } = null!;
 
@@ -58,17 +61,34 @@ public class SMTPAccountsBase : ComponentBase
     // Remove SMTP account - remove account
     protected async Task RemoveSMTPAccount(SMTPAccount item)
     {
+        bool confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete SMTP Account",
+            $"Are you sure you want to delete the account '{item.Username}'? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel") ?? false;
+
+        if (!confirmed) return;
+
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         _ = SMTPAccounts.Remove(item);
 
         _ = dbContext.SMTPAccount.Remove(item);
         _ = await dbContext.SaveChangesAsync();
+
+        _ = Snackbar.Add($"SMTP Account removed successfully!", Severity.Success);
+
+        await SMTPAccountGrid.ReloadServerData();
     }
 
     // SMTP account item changes - called when creating or editing an SMTP account
     protected async Task<DataGridEditFormAction> SMTPAccountItemChanges(SMTPAccount item)
     {
+        if (!SMTPAccountForm.IsValid)
+        {
+            _ = Snackbar.Add($"Fix errors!", Severity.Error);
+            return DataGridEditFormAction.KeepOpen;
+        }
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
 
         // New item
@@ -86,11 +106,13 @@ public class SMTPAccountsBase : ComponentBase
 
             _ = Snackbar.Add($"SMTP Account added successfully!", Severity.Success);
 
+            await SMTPAccountGrid.ReloadServerData();
+
             return DataGridEditFormAction.Close;
         }
 
         // Get item from database
-        SMTPAccount? smtpAccount = await dbContext.SMTPAccount.Include(a => a.AllowedSenders).Include(a => a.AllowedRecipients).SingleAsync(a => a.Id == item.Id);
+        SMTPAccount? smtpAccount = await dbContext.SMTPAccount.Include(a => a.AllowedSenders).Include(a => a.AllowedRecipients).AsSplitQuery().SingleAsync(a => a.Id == item.Id);
 
         if (smtpAccount == null)
             return DataGridEditFormAction.Close;
@@ -126,10 +148,38 @@ public class SMTPAccountsBase : ComponentBase
 
         _ = Snackbar.Add($"SMTP Account updated successfully!", Severity.Success);
 
+        await SMTPAccountGrid.ReloadServerData();
+
         return DataGridEditFormAction.Close;
     }
 
-   
+    protected void OnAllowedSendersChanged(SMTPAccount item, List<string> values)
+    {
+        foreach (string x in values.Where(x => !AllowedEmailRegex().IsMatch(x)))
+            _ = Snackbar.Add($"'{x}' is not a valid email address or pattern.", Severity.Error);
 
-  
+        item.AllowedSenders = values
+            .Where(x => AllowedEmailRegex().IsMatch(x))
+            .Select(x => new SMTPAccountAllowedSender { EmailAddress = x, SMTPAccountId = item.Id })
+            .ToList();
+    }
+
+    protected void OnAllowedRecipientsChanged(SMTPAccount item, List<string> values)
+    {
+        foreach (string x in values.Where(x => !AllowedEmailRegex().IsMatch(x)))
+            _ = Snackbar.Add($"'{x}' is not a valid email address or pattern.", Severity.Error);
+
+        item.AllowedRecipients = values
+            .Where(x => AllowedEmailRegex().IsMatch(x))
+            .Select(x => new SMTPAccountAllowedRecipient { EmailAddress = x, SMTPAccountId = item.Id })
+            .ToList();
+    }
+
+    protected static string? ValidateEmail(string email) =>
+        string.IsNullOrWhiteSpace(email) || AllowedEmailRegex().IsMatch(email)
+            ? null
+            : "Invalid email address or pattern (e.g. user@example.com or *@example.com).";
+
+    [GeneratedRegex(@"^(\*|[A-Za-z0-9._%+-]+)@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")]
+    protected static partial Regex AllowedEmailRegex();
 }

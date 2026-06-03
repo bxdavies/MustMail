@@ -1,4 +1,4 @@
-﻿@page "/admin/smtp-accounts"
+@page "/admin/smtp-accounts"
 @inherits SMTPAccountsBase
 @attribute [Authorize(Policy = "MustMailAdmin")]
 <PageTitle> MustMail - SMTP Accounts</PageTitle>
@@ -10,9 +10,10 @@
 <MudText Typo="Typo.subtitle2">
 	Manage SMTP accounts used by applications to authenticate and send email through MustMail.
 </MudText>
-
+<MudForm @ref="SMTPAccountForm" ValidationDelay="0">
 <MudDataGrid @ref="@SMTPAccountGrid" T="SMTPAccount" ServerData="ServerReload" ReadOnly="false"
 			 EditMode="DataGridEditMode.Form" CommittedItemChanges="@SMTPAccountItemChanges"
+				 Validator="@SMTPAccountForm"
 			 Bordered="true" Elevation="1" SortMode="SortMode.None" Class="mt-2">
 	<ToolBarContent>
 		<MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
@@ -47,16 +48,7 @@
 			<EditTemplate>
 				<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Senders" ChipColor="Color.Secondary"
 							  Values="@(context.Item.AllowedSenders?.Select(x => x.EmailAddress).ToList() ?? [])"
-							  ValuesChanged="@(values =>
-																					{
-																						context.Item.AllowedSenders = values
-																							.Select(x => new SMTPAccountAllowedSender
-																							{
-																								EmailAddress = x,
-																								SMTPAccountId = context.Item.Id
-																							})
-																							.ToList();
-																					})" />
+								  ValuesChanged="@(values => OnAllowedSendersChanged(context.Item, values))" />
 			</EditTemplate>
 		</PropertyColumn>
 		<PropertyColumn Property="x => x.AllowedRecipients" Title="Allowed Recipients">
@@ -73,16 +65,7 @@
 			<EditTemplate>
 				<MudChipField T="string" Variant="Variant.Outlined" Label="Allowed Recipients" ChipColor="Color.Secondary"
 							  Values="@(context.Item.AllowedRecipients?.Select(x => x.EmailAddress).ToList() ?? [])"
-							  ValuesChanged="@(values =>
-																															{
-																																context.Item.AllowedRecipients = values
-																																	.Select(x => new SMTPAccountAllowedRecipient
-																																	{
-																																		EmailAddress = x,
-																																		SMTPAccountId = context.Item.Id
-																																	})
-																																	.ToList();
-																															})" />
+							ValuesChanged="@(values => OnAllowedRecipientsChanged(context.Item, values))" />
 			</EditTemplate>
 		</PropertyColumn>
 		<TemplateColumn Title="Actions">
@@ -102,3 +85,4 @@
 		<MudDataGridPager T="SMTPAccount" />
 	</PagerContent>
 </MudDataGrid>
+</MudForm>
