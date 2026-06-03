@@ -7,8 +7,31 @@
 <AdminNavigation />
 
 <MudStack Row AlignItems="AlignItems.Center" Class="mb-4">
-	<MudText Typo="Typo.h4">Allowed Senders</MudText>
+	<MudStack Row Style="width: 100%" Spacing="0">
+		<MudText Typo="Typo.h4">Allowed Senders</MudText>
+
+		<MudSpacer />
+		@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "AllowedSenders"))
+		{
+			<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
+					 Size="Size.Small"
+					 Icon="@Icons.Material.Filled.Storage">
+				Environment Variable
+			</MudChip>
+		}
+		else
+		{
+			<MudChip Color="Color.Info" T="string" Variant="Variant.Text"
+					 Size="Size.Small"
+					 Icon="@Icons.Material.Filled.Description">
+				appsettings.json
+			</MudChip>
+		}
+
+	</MudStack>
+	
 	<MudSpacer/>
+
 	<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ValidateAndSave">Save</MudButton>
 </MudStack>
 
@@ -32,6 +55,67 @@
 		<MudText Class="mud-input-helper-text">
 			Leave this list empty to allow emails from any sender.
 		</MudText>
+
+		<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-4">
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+				<MudIcon Icon="@Icons.Material.Filled.Settings"
+						 Size="Size.Small" />
+				<MudText Typo="Typo.caption">
+					appsettings.json / Environment Variable
+				</MudText>
+			</MudStack>
+
+			<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+				<MudIcon Icon="@Icons.Material.Filled.Check"
+						 Size="Size.Small"
+						 Color="Color.Success" />
+				<MudText Typo="Typo.caption">
+					Applied Instantly
+				</MudText>
+			</MudStack>
+
+		</MudStack>
+
+		<MudText Typo="Typo.subtitle2" Align="Align.Center">
+			Create one environment variable per recipient and increment the index for each entry.
+		</MudText>
+
+		<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
+
+			<MudChip Size="Size.Small"
+					 Variant="Variant.Text"
+					 Icon="@Icons.Material.Filled.Settings" T="string"
+					 Style="font-family: monospace; margin-right: 0;">
+				MustMail__AllowedSenders__0
+			</MudChip>
+
+			<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+						   Size="Size.Small"
+						   OnClick="@(() => CopyToClipboard("MustMail__AllowedSenders__0"))" />
+
+			<MudChip Size="Size.Small"
+					 Variant="Variant.Text"
+					 Icon="@Icons.Material.Filled.Settings" T="string"
+					 Style="font-family: monospace; margin-right: 0;">
+				MustMail__AllowedSenders__1
+			</MudChip>
+
+			<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+						   Size="Size.Small"
+						   OnClick="@(() => CopyToClipboard("MustMail__AllowedSenders__1"))" />
+
+			<MudChip Size="Size.Small"
+					 Variant="Variant.Text"
+					 Icon="@Icons.Material.Filled.Settings" T="string"
+					 Style="font-family: monospace; margin-right: 0;">
+				MustMail__AllowedSenders__X
+			</MudChip>
+
+			<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+						   Size="Size.Small"
+						   OnClick="@(() => CopyToClipboard("MustMail__AllowedSenders__X"))" />
+		</MudStack>
 
 		<MudStack Row Spacing="8" AlignItems="AlignItems.Center">
 			<MudTextField Label="Address"
