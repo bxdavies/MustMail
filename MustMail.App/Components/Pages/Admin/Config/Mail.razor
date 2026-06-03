@@ -26,7 +26,7 @@
 
 					<MudSpacer/>
 
-					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:FooterBranding"))
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Mail:FooterBranding"))
 					{
 						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
 						         Icon="@Icons.Material.Filled.Storage">
@@ -76,12 +76,12 @@
 					         Variant="Variant.Text"
 					         Icon="@Icons.Material.Filled.Key" T="string"
 					         Style="font-family: monospace; margin-right: 0;">
-						MustMail__FooterBranding
+						MustMail__Mail__FooterBranding
 					</MudChip>
 
 					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 					               Size="Size.Small"
-					               OnClick="@(() => CopyToClipboard("MustMail__FooterBranding"))"/>
+								   OnClick="@(() => CopyToClipboard("MustMail__Mail__FooterBranding"))" />
 				</MudStack>
 			</MudItem>
 
@@ -94,7 +94,7 @@
 
 					<MudSpacer/>
 
-					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:TrustFrom"))
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Mail:TrustFrom"))
 					{
 						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
 						         Icon="@Icons.Material.Filled.Storage">
@@ -144,12 +144,12 @@
 					         Variant="Variant.Text"
 					         Icon="@Icons.Material.Filled.Key" T="string"
 					         Style="font-family: monospace; margin-right: 0;">
-						MustMail__TrustFrom
+						MustMail__Mail__TrustFrom
 					</MudChip>
 
 					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 					               Size="Size.Small"
-					               OnClick="@(() => CopyToClipboard("MustMail__TrustFrom"))"/>
+								   OnClick="@(() => CopyToClipboard("MustMail__Mail__TrustFrom"))" />
 				</MudStack>
 			</MudItem>
 		</MudGrid>
@@ -164,7 +164,7 @@
 
 					<MudSpacer/>
 
-					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:StoreEmails"))
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Mail:StoreEmails"))
 					{
 						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
 						         Icon="@Icons.Material.Filled.Storage">
@@ -214,12 +214,12 @@
 					         Variant="Variant.Text"
 					         Icon="@Icons.Material.Filled.Key" T="string"
 					         Style="font-family: monospace; margin-right: 0;">
-						MustMail__StoreEmails
+						MustMail__Mail__StoreEmails
 					</MudChip>
 
 					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 					               Size="Size.Small"
-					               OnClick="@(() => CopyToClipboard("MustMail__StoreEmails"))"/>
+								   OnClick="@(() => CopyToClipboard("MustMail__Mail__StoreEmails"))" />
 				</MudStack>
 			</MudItem>
 
@@ -233,7 +233,7 @@
 
 					<MudSpacer/>
 
-					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "MustMail:RetentionDays"))
+					@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "Mail:RetentionDays"))
 					{
 						<MudChip Color="Color.Primary" T="string" Variant="Variant.Text" Size="Size.Small"
 						         Icon="@Icons.Material.Filled.Storage">
@@ -279,12 +279,12 @@
 					         Variant="Variant.Text"
 					         Icon="@Icons.Material.Filled.Key" T="string"
 					         Style="font-family: monospace; margin-right: 0;">
-						MustMail__RetentionDays
+						MustMail__Mail__RetentionDays
 					</MudChip>
 
 					<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 					               Size="Size.Small"
-					               OnClick="@(() => CopyToClipboard("MustMail__RetentionDays"))"/>
+					               OnClick="@(() => CopyToClipboard("MustMail__Mail__RetentionDays"))"/>
 				</MudStack>
 			</MudItem>
 		</MudGrid>

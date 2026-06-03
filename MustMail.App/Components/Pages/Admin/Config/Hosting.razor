@@ -75,12 +75,12 @@
 				         Variant="Variant.Text"
 				         Icon="@Icons.Material.Filled.Settings" T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					AllowedHosts
+					MustMail__AllowedHosts
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("AllowedHosts"))"/>
+							   OnClick="@(() => CopyToClipboard("MustMail__AllowedHosts"))" />
 			</MudStack>
 		</MudItem>
 
@@ -143,12 +143,12 @@
 				         Variant="Variant.Text"
 				         Icon="@Icons.Material.Filled.Key" T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					Urls
+					MustMail__Urls
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("Urls"))"/>
+							   OnClick="@(() => CopyToClipboard("MustMail__Urls"))" />
 			</MudStack>
 		</MudItem>
 
@@ -162,7 +162,11 @@
 
 				<MudSpacer/>
 
-				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:Sqlite"))
+				@if (Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:Sqlite") ||
+				     Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:Postgres") ||
+				     Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:MySQL") ||
+				     Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:SqlServer") ||
+				     Helpers.IsOverriddenByEnvironmentVariable(RawConfiguration, "ConnectionStrings:AzureSql"))
 				{
 					<MudChip Color="Color.Primary" T="string" Variant="Variant.Text"
 					         Size="Size.Small"
@@ -191,12 +195,12 @@
 				         Icon="@Icons.Material.Filled.Settings"
 				         T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					ConnectionStrings__Sqlite
+					MustMail__ConnectionStrings__Sqlite
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("ConnectionStrings__Sqlite"))"/>
+				               OnClick="@(() => CopyToClipboard("MustMail__ConnectionStrings__Sqlite"))"/>
 			</MudStack>
 
 			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
@@ -205,12 +209,12 @@
 				         Icon="@Icons.Material.Filled.Settings"
 				         T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					ConnectionStrings__Postgres
+					MustMail__ConnectionStrings__Postgres
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("ConnectionStrings__Postgres"))"/>
+				               OnClick="@(() => CopyToClipboard("MustMail__ConnectionStrings__Postgres"))"/>
 			</MudStack>
 
 			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
@@ -219,12 +223,12 @@
 				         Icon="@Icons.Material.Filled.Settings"
 				         T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					ConnectionStrings__MySQL
+					MustMail__ConnectionStrings__MySQL
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("ConnectionStrings__MySQL"))"/>
+				               OnClick="@(() => CopyToClipboard("MustMail__ConnectionStrings__MySQL"))"/>
 			</MudStack>
 
 			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
@@ -233,12 +237,12 @@
 				         Icon="@Icons.Material.Filled.Settings"
 				         T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					ConnectionStrings__SqlServer
+					MustMail__ConnectionStrings__SqlServer
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("ConnectionStrings__SqlServer"))"/>
+				               OnClick="@(() => CopyToClipboard("MustMail__ConnectionStrings__SqlServer"))"/>
 			</MudStack>
 
 			<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="0" Class="mt-2">
@@ -247,12 +251,12 @@
 				         Icon="@Icons.Material.Filled.Settings"
 				         T="string"
 				         Style="font-family: monospace; margin-right: 0;">
-					ConnectionStrings__AzureSql
+					MustMail__ConnectionStrings__AzureSql
 				</MudChip>
 
 				<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
 				               Size="Size.Small"
-				               OnClick="@(() => CopyToClipboard("ConnectionStrings__AzureSql"))"/>
+				               OnClick="@(() => CopyToClipboard("MustMail__ConnectionStrings__AzureSql"))"/>
 			</MudStack>
 		</MudItem>
 	</MudGrid>
