@@ -56,7 +56,7 @@ if (!File.Exists(appSettingsPath))
 {
     File.WriteAllText(
                       appSettingsPath,
-                      JsonSerializer.Serialize(new Configuration(), JsonWriteDefaults.Options));
+                      JsonSerializer.Serialize(new Configuration(), JsonDefaults.Options));
 }
 
 // Load the configuration from the JSON file first then override with any environment variables

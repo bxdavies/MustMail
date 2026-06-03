@@ -58,7 +58,7 @@ public class CertificateConfiguration
     public bool Managed { get; set; } = true;
     public string? Format { get; set; }
     public string? PFXPath { get; set; }
-    public string? Password { get; set; }
+    public string? Password { get; private set; }
     public string? PEMCertPath { get; set; }
     public string? PEMKeyPath { get; set; }
     public string CommonName { get; set; } = "localhost";

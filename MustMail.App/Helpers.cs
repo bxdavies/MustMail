@@ -74,13 +74,6 @@ public static class JsonDefaults
 {
     public static readonly JsonSerializerOptions Options = new()
     {
-        WriteIndented = true
-    };
-}
-public static class JsonWriteDefaults
-{
-    public static readonly JsonSerializerOptions Options = new()
-    {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         IgnoreReadOnlyProperties = true

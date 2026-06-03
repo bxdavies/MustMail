@@ -77,7 +77,7 @@ public partial class ConfigPageBase : ComponentBase
 
         await File.WriteAllTextAsync(
             Path.Combine(AppContext.BaseDirectory, "Data", "appsettings.json"),
-            JsonSerializer.Serialize(Configuration, JsonWriteDefaults.Options));
+            JsonSerializer.Serialize(Configuration, JsonDefaults.Options));
 
         _ = Snackbar.Add("Settings saved successfully.", Severity.Success);
     }
