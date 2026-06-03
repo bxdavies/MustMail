@@ -48,8 +48,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_NotAllowedSender_IsRejected(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "sender@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", "sender@example2.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", "sender@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", "sender@example2.com");
 
         try
         {
@@ -73,8 +73,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", null);
         }
     }
 
@@ -86,8 +86,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_AllowedSender_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "sender@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", Test.Config.DefaultSender);
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", "sender@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", Test.Config.DefaultSender);
 
         try
         {
@@ -110,8 +110,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", null);
         }
     }
 
@@ -123,8 +123,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_WildcardAllowedSender_IsRejected(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "*@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", "*@example2.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", "*@example2.com");
 
         try
         {
@@ -151,8 +151,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", null);
         }
     }
 
@@ -164,8 +164,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_WildcardAllowedSender_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", "*@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", Test.Config.AllowedDomain);
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", Test.Config.AllowedDomain);
 
         try
         {
@@ -187,8 +187,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedSenders__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedSenders__1", null);
         }
     }
 
@@ -200,8 +200,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_NotAllowedRecipients_IsRejected(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "user@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", "user@example2.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", "user@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", "user@example2.com");
 
         try
         {
@@ -225,8 +225,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", null);
         }
     }
 
@@ -238,8 +238,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_AllowedRecipients_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "user@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", Test.Config.DefaultRecipient);
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", "user@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", Test.Config.DefaultRecipient);
 
         try
         {
@@ -263,8 +263,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", null);
         }
     }
 
@@ -276,8 +276,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_WildcardAllowedRecipients_IsRejected(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "*@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", "*@example2.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", "*@example2.com");
 
         try
         {
@@ -304,8 +304,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", null);
         }
     }
 
@@ -317,8 +317,8 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_WildcardAllowedRecipients_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", "*@example.com");
-        Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", Test.Config.AllowedDomain);
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", "*@example.com");
+        Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", Test.Config.AllowedDomain);
 
         try
         {
@@ -343,8 +343,8 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__0", null);
-            Environment.SetEnvironmentVariable("MustMail__AllowedRecipients__1", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__0", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__AllowedRecipients__1", null);
         }
     }
 
@@ -357,7 +357,7 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_TrustFromDisabled_IsRejected(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__TrustFrom", "false");
+        Environment.SetEnvironmentVariable("MustMail__Mail__TrustFrom", "false");
 
         try
         {
@@ -384,7 +384,7 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__TrustFrom", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__TrustFrom", null);
         }
     }
 
@@ -397,7 +397,7 @@ public class MustMail
     [DataRow(587)]
     public async Task MustMail_TrustFromEnabled_IsAccepted(int port)
     {
-        Environment.SetEnvironmentVariable("MustMail__TrustFrom", "true");
+        Environment.SetEnvironmentVariable("MustMail__Mail__TrustFrom", "true");
 
         try
         {
@@ -425,7 +425,7 @@ public class MustMail
         }
         finally
         {
-            Environment.SetEnvironmentVariable("MustMail__TrustFrom", null);
+            Environment.SetEnvironmentVariable("MustMail__Mail__TrustFrom", null);
         }
     }
 }
