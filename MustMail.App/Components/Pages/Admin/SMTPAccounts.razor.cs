@@ -76,7 +76,7 @@ public partial class SMTPAccountsBase : ComponentBase
         _ = dbContext.SMTPAccount.Remove(item);
         _ = await dbContext.SaveChangesAsync();
 
-        _ = Snackbar.Add($"SMTP Account removed successfully!", Severity.Success);
+        _ = Snackbar.Add($"SMTP account '{item.Username}' deleted.", Severity.Success);
 
         await SMTPAccountGrid.ReloadServerData();
     }
@@ -86,7 +86,7 @@ public partial class SMTPAccountsBase : ComponentBase
     {
         if (!SMTPAccountForm.IsValid)
         {
-            _ = Snackbar.Add($"Fix errors!", Severity.Error);
+            _ = Snackbar.Add("Fix the form errors before saving.", Severity.Error);
             return DataGridEditFormAction.KeepOpen;
         }
         await using DatabaseContext dbContext = await DbFactory.CreateDbContextAsync();
@@ -104,7 +104,7 @@ public partial class SMTPAccountsBase : ComponentBase
             // Add the account to the grid
             SMTPAccounts.Add(item);
 
-            _ = Snackbar.Add($"SMTP Account added successfully!", Severity.Success);
+            _ = Snackbar.Add($"SMTP account '{item.Username}' added.", Severity.Success);
 
             await SMTPAccountGrid.ReloadServerData();
 
@@ -146,7 +146,7 @@ public partial class SMTPAccountsBase : ComponentBase
 
         _ = await dbContext.SaveChangesAsync();
 
-        _ = Snackbar.Add($"SMTP Account updated successfully!", Severity.Success);
+        _ = Snackbar.Add($"SMTP account '{item.Username}' updated.", Severity.Success);
 
         await SMTPAccountGrid.ReloadServerData();
 

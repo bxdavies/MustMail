@@ -58,7 +58,7 @@
         int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
         if (numberOfAdminUsers == 1 && item.Admin)
         {
-            _ = Snackbar.Add("There must be at least one admin!", Severity.Error);
+            _ = Snackbar.Add($"Cannot delete {item.Name} - they are the only admin.", Severity.Error);
             return;
         }
 
@@ -90,7 +90,7 @@
         int numberOfAdminUsers = await dbContext.User.Where(u => u.Admin == true).CountAsync();
         if (numberOfAdminUsers == 1 && !item.Admin && user.Admin)
         {
-            _ = Snackbar.Add("There must be at least one admin!", Severity.Error);
+            _ = Snackbar.Add($"Cannot remove admin from {item.Name} - at least one admin is required.", Severity.Error);
             item.Admin = true;
             return DataGridEditFormAction.Close;
         }
@@ -100,7 +100,7 @@
 
         _ = await dbContext.SaveChangesAsync();
 
-        _ = Snackbar.Add($"User updated successfully!", Severity.Success);
+        _ = Snackbar.Add($"{item.Name} updated.", Severity.Success);
 
         return DataGridEditFormAction.Close;
     }

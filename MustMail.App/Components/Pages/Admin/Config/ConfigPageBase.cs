@@ -79,13 +79,13 @@ public partial class ConfigPageBase : ComponentBase
             Path.Combine(AppContext.BaseDirectory, "Data", "appsettings.json"),
             JsonSerializer.Serialize(Configuration, JsonWriteDefaults.Options));
 
-        _ = Snackbar.Add("Settings saved.", Severity.Success);
+        _ = Snackbar.Add("Settings saved successfully.", Severity.Success);
     }
 
     protected async Task CopyToClipboard(string value)
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", value);
-        _ = Snackbar.Add("Environment variable copied", Severity.Success);
+        _ = Snackbar.Add("Environment variable copied to clipboard.", Severity.Success);
     }
 
     public void Dispose() => registration?.Dispose();
