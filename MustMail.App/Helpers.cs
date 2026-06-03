@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace MustMail.App;
@@ -41,6 +42,32 @@ public static class Helpers
             throw new InvalidOperationException(
                                                 "The environment variable 'MustMail__OpenIdConnect__ClientSecret' must be set.");
     }
+
+    public static string ToPlaceholder(string? value)
+    {
+        return string.IsNullOrEmpty(value) ? string.Empty : new string('•', value.Length);
+
+    }
+
+    public static bool IsOverriddenByEnvironmentVariable(
+    IConfiguration configuration,
+    string key)
+    {
+        if (configuration is IConfigurationRoot configurationRoot)
+        {
+            foreach (var provider in configurationRoot.Providers.Reverse())
+            {
+                if (provider.TryGet(key, out _))
+                {
+                    return provider is EnvironmentVariablesConfigurationProvider;
+                }
+            }
+        }
+
+
+        return false;
+    }
+
 }
 
 public static class JsonDefaults
