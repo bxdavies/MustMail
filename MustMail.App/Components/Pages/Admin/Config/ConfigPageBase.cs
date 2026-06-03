@@ -23,9 +23,11 @@ public partial class ConfigPageBase : ComponentBase
 
     private async ValueTask OnLocationChanging(LocationChangingContext context)
     {
+        // Compare the new config with the current config
         CompareLogic compareLogic = new(new ComparisonConfig { MaxDifferences = 10 });
         ComparisonResult result = compareLogic.Compare(Configuration, RawConfiguration.Get<Configuration>());
 
+        // If the current config is not equal to the new config ask user if they want to leave without saving
         if (!result.AreEqual)
         {
             bool confirmed = await DialogService.ShowMessageBoxAsync(
@@ -33,10 +35,16 @@ public partial class ConfigPageBase : ComponentBase
                 "You have unsaved changes that will be lost. Are you sure you want to leave this page?",
                 yesText: "Leave",
                 cancelText: "Stay") ?? false;
-
+            
+            // User wants to save
             if (!confirmed)
             {
                 context.PreventNavigation();
+            }
+            // User leaving with unsaved changes as such reset config back to current config
+            else
+            {
+                Configuration = RawConfiguration.Get<Configuration>()!;
             }
         }
     }
