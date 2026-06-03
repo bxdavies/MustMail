@@ -67,9 +67,9 @@ public class CertificateConfiguration
 
 public class SerilogConfiguration
 {
-    public List<string> Using { get; set; } = ["Serilog.Sinks.Console"];
+    public List<string> Using { get; set; } = [];
     public MinimumLevelConfiguration MinimumLevel { get; init; } = new MinimumLevelConfiguration();
-    public List<WriteToConfiguration> WriteTo { get; init; } = [ new WriteToConfiguration() ];
+    public List<WriteToConfiguration> WriteTo { get; init; } = [];
 }
 
 public class MinimumLevelConfiguration

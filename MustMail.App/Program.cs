@@ -38,6 +38,18 @@ Directory.CreateDirectory(dataFolder);
 
 string appSettingsPath = Path.Combine(dataFolder, "appsettings.json");
 
+// If no sink is set then use the console
+if (string.IsNullOrEmpty(builder.Configuration.GetValue<string?>("Serilog:Using:0")))
+{
+    builder.Configuration["Serilog:Using:0"] = "Serilog.Sinks.Console";
+
+    builder.Configuration["Serilog:MinimumLevel:Default"] = "Information";
+
+    builder.Configuration["Serilog:WriteTo:0:Name"] = "Console";
+
+    builder.Configuration["Serilog:WriteTo:0:Args:outputTemplate"] =
+        "{Timestamp:O} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}";
+}
 
 // If appsettings.json does not exist create one with the default config 
 if (!File.Exists(appSettingsPath))
@@ -85,7 +97,7 @@ Helpers.ValidateEnvironmentVariables();
 
 Log.Logger.Information("Loaded configuration from {ConfigPath}", Path.Combine(dataFolder, "appsettings.json"));
 
-// If no certificate type is provide default to PFX on Windows and PEM on anything else
+// If no certificate type is provided default to PFX on Windows and PEM on anything else
 if (string.IsNullOrEmpty(builder.Configuration["Certificate:Format"]))
 {
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -183,6 +195,7 @@ Configuration mustMailConfiguration = builder.Configuration.Get<Configuration>()
                                ?? throw new InvalidOperationException(
                                                                       "Could not load MustMail configuration. Please see the README for configuration guidance.");
 
+// Check ports are within a valid range
 if (mustMailConfiguration.Smtp.InsecurePort is < 1 or > 65535)
     throw new InvalidOperationException("Smtp:InsecurePort must be between 1 and 65535.");
 
@@ -345,6 +358,7 @@ builder.Services.AddCascadingAuthenticationState();
 // Add update service
 builder.Services.AddSingleton<UpdateService>();
 
+// If the certificate does not exist and managed certs is enabled then create it otherwise throw an error.
 if (mustMailConfiguration.Certificate.Format == "PFX")
 {
     string? certificatePath = mustMailConfiguration.Certificate.PFXPath;
@@ -373,7 +387,7 @@ if (mustMailConfiguration.Certificate.Format == "PFX")
     // Attempt to load certificate and check it's valid
     X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(
                                                                             mustMailConfiguration.Certificate.PFXPath!,
-                                                                            builder.Configuration["Certificate:Password"]);
+                                                                             mustMailConfiguration.Certificate.Password);
 
     // If certificate has expired create a new one if managed else throw an exception
     if (certificate.NotAfter <= DateTime.UtcNow)
@@ -453,13 +467,14 @@ else if (mustMailConfiguration.Certificate.Format == "PEM")
 // Create the SMTP server
 builder.Services.AddHostedService<ServerService>();
 
-// Add graph user helper for finding users in M365 by UPN, Mail or aliais address 
+// Add graph user helper for finding users in M365 by UPN, Mail or alias address 
 builder.Services.AddSingleton<GraphUserLookupService>();
 
 // Add recipient and sender resolvers which fetch the recipients and sender from the message and checks they are allowed to send
 builder.Services.AddSingleton<RecipientResolver>();
 builder.Services.AddSingleton<SenderResolver>();
 
+// Add SMTP account authorization which controls which addresses an SMTP account can send and receive from
 builder.Services.AddSingleton<SmtpAccountAuthorization>();
 
 // Add attachment handler for extracting attachments from the message and then reattaching them using graph
