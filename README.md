@@ -111,7 +111,7 @@ Features:
 4. Navigate to 'API permissions' pane and click 'Add a permission'.
 5. Choose 'Microsoft Graph', then select 'Application permissions', then find `Mail.Send` and tick it. Do the same for `User.Read.All` and `MailboxSettings.Read`. Finally, press 'Add permissions'.
 6. Grant admin consent by clicking 'Grant admin consent for Tenant Name' (where Tenant Name is the name of your Microsoft 365 tenant). Hit 'Yes' at confirmation.
-7. Navigate to 'Certificates & secrets' pane, choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value. Copy the secret value and set the environment variable `Graph__ClientSecret` to this value.
+7. Navigate to 'Certificates & secrets' pane, choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value. Copy the secret value and set the environment variable `MustMail__Graph__ClientSecret` to this value.
    
 > [!TIP]
 > Set a reminder in your calendar now for 24 months' time to renew and update this secret.
@@ -121,7 +121,7 @@ Features:
 > [!IMPORTANT]
 > The secret value is only displayed once.
 
-9.  Navigate to the 'Overview' pane and copy the 'Application (client) ID' and set the environment variable `Graph__ClientId` to this value. Copy the 'Directory (tenant) ID' and set the environment variable `Graph__TenantId` to this value
+9.  Navigate to the 'Overview' pane and copy the 'Application (client) ID' and set the environment variable `MustMail__Graph__ClientId` to this value. Copy the 'Directory (tenant) ID' and set the environment variable `MustMail__Graph__TenantId` to this value
 
 ## IDP Configuration
 To use MustMail you must provide an Identity provider that supports OpenID Connect (OIDC). Instructions for Keycloak and Microsoft Entra are provided but any identity provider should work. 
@@ -130,7 +130,7 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 [Keycloak](https://www.keycloak.org/) is an Open Source Identity and Access Management.This section details how to use it with MustMail.
 
 1. Navigate to the Administration Console, click 'Clients' from the left hand side and then click 'Create client'.
-2. Set name. Set the environment variable `OpenIdConnect__ClientId` to this value.
+2. Set name. Set the environment variable `MustMail__OpenIdConnect__ClientId` to this value.
 <img src=".images\keycloak-1.png">
 
 3. Enable 'Client authentication'.
@@ -139,10 +139,10 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 4. Set 'Root URL', 'Valid redirect URLs' and 'Web origins'. Redirect URL should be address followed by /signin-oidc
 <img src=".images\keycloak-3.png">
 
-5. Once the client has been created, click 'Clients' from the left hand side, find the client, and switch to the Credentials tab. Copy the client secret. Set the environment variable `OpenIdConnect__ClientSecret` to this value.
+5. Once the client has been created, click 'Clients' from the left hand side, find the client, and switch to the Credentials tab. Copy the client secret. Set the environment variable `MustMail__OpenIdConnect__ClientSecret` to this value.
 <img src=".images\keycloak-4.png">
 
-6. Set the environment variable `OpenIdConnect__Authority` to this value `YOURKEYCLOAKADDRESS/realms/YOURREALMNAME/`. Replacing `YOURKEYCLOAKADDRESS` and `YOURREALMNAME` respectively. 
+6. Set the environment variable `MustMail__OpenIdConnect__Authority` to this value `YOURKEYCLOAKADDRESS/realms/YOURREALMNAME/`. Replacing `YOURKEYCLOAKADDRESS` and `YOURREALMNAME` respectively. 
 
 ### Microsoft Entra ID
 [Microsoft Entra ID](https://www.microsoft.com/en-gb/security/business/identity-access/microsoft-entra-id/) is a cloud-based identity and access management solution. This section details how to use it with MustMail.
@@ -154,7 +154,7 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 3. Set the app name, select web in the 'Select a platform' dropdown and set the Redirect URI. Redirect URI should be address followed by /signin-oidc.
 <img src=".images\entraid-1.png">
 
-4. Navigate to the 'Certificates and secrets' pane. Change to the 'Client secrets' tab and click 'New client secret'. Set a description and expiry date and click 'Add'. Copy the secret value and set the environment variable `OpenIdConnect__ClientSecret` to this value.
+4. Navigate to the 'Certificates and secrets' pane. Change to the 'Client secrets' tab and click 'New client secret'. Set a description and expiry date and click 'Add'. Copy the secret value and set the environment variable `MustMail__OpenIdConnect__ClientSecret` to this value.
 <img src=".images\entraid-2.png">
 
 > [!IMPORTANT]
@@ -166,19 +166,19 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 > [!IMPORTANT]
 > You will get a popup saying "Some of these claims (email) require OpenId Connect scopes to be configured through the API permissions page or by checking the box below. Learn more". **Tick the box 'Turn on the Microsoft Graph email permission (required for claims to appear in token)'.**
 
-6.  Navigate to the 'Overview' pane and copy the 'Application (client) ID'. Set the environment variable `OpenIdConnect__ClientId` to this value.
-7.  Click 'Endpoints' and copy the 'Authority URL (Accounts in this organizational directory only)'. Set the environment variable `OpenIdConnect__Authority` to this value.
+6.  Navigate to the 'Overview' pane and copy the 'Application (client) ID'. Set the environment variable `MustMail__OpenIdConnect__ClientId` to this value.
+7.  Click 'Endpoints' and copy the 'Authority URL (Accounts in this organizational directory only)'. Set the environment variable `MustMail__OpenIdConnect__Authority` to this value.
 
 ### Generic
 This section details for how to use an Identity provider not listed. 
 
-The `OpenIdConnect__Authority` environment variable should be set to base domain, MustMail will automatically perform OpenID discovery on `/.well-known/openid-configuration`
+The `MustMail__OpenIdConnect__Authority` environment variable should be set to base domain, MustMail will automatically perform OpenID discovery on `/.well-known/openid-configuration`
 
 Redirect URL should be set to /signin-oidc
 
-Client ID and Client Secret must be created in the provider and then set with the `OpenIdConnect__ClientId` and `OpenIdConnect__ClientSecret` environment variables.
+Client ID and Client Secret must be created in the provider and then set with the `MustMail__OpenIdConnect__ClientId` and `MustMail__OpenIdConnect__ClientSecret` environment variables.
 
-MustMail will use the claim `name` by default to fetch the user's name, however this can be overridden with  `OpenIdConnect__NameClaim` environment variable.
+MustMail will use the claim `name` by default to fetch the user's name, however this can be overridden with  `MustMail__OpenIdConnect__NameClaim` environment variable.
 
 ## Running MustMail
 
@@ -193,12 +193,12 @@ Run MustMail in a container with these simple steps.
 Override any environment variable below to match your setup.
 ```bash
 docker run --name MustMail \
--e Graph__TenantId=your-tenant-id \
--e Graph__ClientId=your-client-id \
--e Graph__ClientSecret=your-client-secret \
--e OpenIdConnect__Authority=https://keycloak.example.com/realms/master/ \
--e OpenIdConnect__ClientId=mustmail \
--e OpenIdConnect__ClientSecret=your-oidc-client-secret \
+-e MustMail__Graph__TenantId=your-tenant-id \
+-e MustMail__Graph__ClientId=your-client-id \
+-e MustMail__Graph__ClientSecret=your-client-secret \
+-e MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/ \
+-e MustMail__OpenIdConnect__ClientId=mustmail \
+-e MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret \
 -v mustmail-data:/app/Data \
 -p 8080:8080 \
 -p 465:465 \
@@ -214,12 +214,12 @@ services:
     image: ghcr.io/bxdavies/mustmail
     container_name: mustmail
     environment:
-      - Graph__TenantId=your-tenant-id
-      - Graph__ClientId=your-client-id
-      - Graph__ClientSecret=your-client-secret
-      - OpenIdConnect__Authority=https://keycloak.example.com/realms/master/
-      - OpenIdConnect__ClientId=mustmail
-      - OpenIdConnect__ClientSecret=your-oidc-client-secret
+      - MustMail__Graph__TenantId=your-tenant-id
+      - MustMail__Graph__ClientId=your-client-id
+      - MustMail__Graph__ClientSecret=your-client-secret
+      - MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/
+      - MustMail__OpenIdConnect__ClientId=mustmail
+      - MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret
     volumes:
       - ./data/mustmail:/app/Data
     ports:
@@ -236,13 +236,13 @@ Application will start the web interface on port 8080 by default and SMTP server
 2. Extract the zip file to `C:\MustMail`.
 3. Open a Command Prompt window and use the following commands to set the environment variables 
 ```
-setx Graph__TenantId "your-tenant-id"
-setx Graph__ClientId "your-client-id"
-setx Graph__ClientSecret "your-client-secret"
-setx OpenIdConnect__Authority "https://keycloak.example.com/realms/master/"
-setx OpenIdConnect__ClientId "mustmail"
-setx OpenIdConnect__ClientSecret "your-oidc-client-secret"
-setx Certificate__Password "password"
+setx MustMail__Graph__TenantId "your-tenant-id"
+setx MustMail__Graph__ClientId "your-client-id"
+setx MustMail__Graph__ClientSecret "your-client-secret"
+setx MustMail__OpenIdConnect__Authority "https://keycloak.example.com/realms/master/"
+setx MustMail__OpenIdConnect__ClientId "mustmail"
+setx MustMail__OpenIdConnect__ClientSecret "your-oidc-client-secret"
+setx MustMail__Certificate__Password "password"
 
 ```
 4. Launch the executable, approve the firewall prompt, and test with [SmtpTest ](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml).
@@ -281,13 +281,13 @@ ExecStart=/opt/MustMail/MustMail
 Restart=always
 RestartSec=10
 
-Environment="Graph__TenantId=your-tenant-id"
-Environment="Graph__ClientId=your-client-id"
-Environment="Graph__ClientSecret=your-client-secret"
+Environment="MustMail__Graph__TenantId=your-tenant-id"
+Environment="MustMail__Graph__ClientId=your-client-id"
+Environment="MustMail__Graph__ClientSecret=your-client-secret"
 
-Environment="OpenIdConnect__Authority=https://keycloak.example.com/realms/master/"
-Environment="OpenIdConnect__ClientId=mustmail"
-Environment="OpenIdConnect__ClientSecret=your-oidc-client-secret"
+Environment="MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/"
+Environment="MustMail__OpenIdConnect__ClientId=mustmail"
+Environment="MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret"
 
 [Install]
 WantedBy=multi-user.target
@@ -417,21 +417,21 @@ A full configuration reference is provided below for advanced users.
 
 ### Using Environment Variables
 
-Any setting in `appsettings`.json can be converted into an environment variable by replacing : with __ (two underscores).
+Any setting in `appsettings`.json can be converted into an environment variable by replacing : with __ (two underscores) and prefixing it with `MustMail__`.
 
-For example, the following setting in `appsettings.json`, `Smtp:Host` becomes the environment variable: `Smtp__Host`.
+For example, the following setting in `appsettings.json`, `Smtp:Host` becomes the environment variable: `MustMail__Smtp__Host`.
 
 ### Required Environment Variables
 
 For security reasons, the following settings must be provided using environment variables and cannot be loaded from appsettings.json:
 
-- `Graph__TenantId`
-- `Graph__ClientId`
-- `Graph__ClientSecret`
-- `OpenIdConnect__Authority`
-- `OpenIdConnect__ClientId`
-- `OpenIdConnect__ClientSecret`
-- `Certificate__Password` (required only when Certificate__Format is set to PFX, which is the default on Windows)
+- `MustMail__Graph__TenantId`
+- `MustMail__Graph__ClientId`
+- `MustMail__Graph__ClientSecret`
+- `MustMail__OpenIdConnect__Authority`
+- `MustMail__OpenIdConnect__ClientId`
+- `MustMail__OpenIdConnect__ClientSecret`
+- `MustMail__Certificate__Password` (required only when MustMail__Certificate__Format is set to PFX, which is the default on Windows)
 
 MustMail will fail to start if any required environment variables are missing.
 
@@ -457,30 +457,30 @@ ConnectionStrings__AzureSql=Server=tcp:myserver.database.windows.net,1433;Databa
 More configuration options are available for each connection string. For detailed examples and provider-specific settings, see [ConnectionStrings.com](https://www.connectionstrings.com) or click the relevant database link above.
 
 ### Certificate  
-By default, MustMail will manage and create a self-signed certificate and store it in the data folder. Setting `Certificate__Managed=False` allows you to provide your own certificate files.
+By default, MustMail will manage and create a self-signed certificate and store it in the data folder. Setting `MustMail__Certificate__Managed=False` allows you to provide your own certificate files.
 
 The certificate format is automatically detected based on the operating system:
 
 * On Windows, the default format is `PFX`
 * On Linux/macOS, the default format is `PEM`
 
-You can override this with `Certificate__Format=PEM` or `Certificate__Format=PFX`.
+You can override this with `MustMail__Certificate__Format=PEM` or `MustMail__Certificate__Format=PFX`.
 
 PEM example:
 
 ```
-Certificate__Managed=False
-Certificate__Format=PEM
-Certificate__PEMCertPath=
-Certificate__PEMKeyPath=
+MustMail__Certificate__Managed=False
+MustMail__Certificate__Format=PEM
+MustMail__Certificate__PEMCertPath=
+MustMail__Certificate__PEMKeyPath=
 ```
 
 PFX example:
 
 ```
-Certificate__Managed=False
-Certificate__Format=PFX
-Certificate__PFXPath=
+MustMail__Certificate__Managed=False
+MustMail__Certificate__Format=PFX
+MustMail__Certificate__PFXPath=
 ```
 
 ### Logging
