@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Polly;
 
 // Create builder
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -485,6 +486,22 @@ builder.Services.AddSingleton<MessageStorage>();
 
 // Add error notification handler for notify the notication address and users (if enabled) of an error
 builder.Services.AddSingleton<ErrorNotificationHandler>();
+
+// Resilience pipeline for Microsoft Graph send retries
+builder.Services.AddResiliencePipeline("graph-send", static (builder, context) =>
+{
+    builder.InstanceName = context.PipelineKey;
+    builder.AddRetry(new Polly.Retry.RetryStrategyOptions
+    {
+        MaxRetryAttempts = 6,
+        BackoffType = DelayBackoffType.Exponential,
+        UseJitter = true,
+        Delay = TimeSpan.FromSeconds(5),
+        ShouldHandle = new PredicateBuilder().Handle<Exception>(ex =>
+            ex is not Microsoft.Graph.Models.ODataErrors.ODataError { ResponseStatusCode: >= 400 and < 500 }
+        )
+    });
+});
 
 // If we are storing emails create the cleanup job
 if (mustMailConfiguration.Mail.StoreMail)

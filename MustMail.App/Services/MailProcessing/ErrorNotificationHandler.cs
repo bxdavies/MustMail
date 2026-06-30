@@ -3,14 +3,22 @@ using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Users.Item.SendMail;
 using MimeKit;
+using Polly;
+using Polly.Registry;
 
 namespace MustMail.App.Services.MailProcessing
 {
-    public class ErrorNotificationHandler(IOptionsMonitor<Configuration> config, ILogger<ErrorNotificationHandler> logger, GraphUserLookupService graphUserLookupService, GraphServiceClient graphClient)
+    public partial class ErrorNotificationHandler(IOptionsMonitor<Configuration> config, ILogger<ErrorNotificationHandler> logger, GraphUserLookupService graphUserLookupService, GraphServiceClient graphClient, ResiliencePipelineProvider<string> resiliencePipelineProvider)
     {
-        public async Task Notify(string reason, MimeMessage message, ResolvedSender? sender)
+        public async Task Notify(string reason, MimeMessage message, ResolvedSender? sender, CancellationToken cancellationToken = default)
         {
             Microsoft.Graph.Models.User? notificationSenderUser = await graphUserLookupService.FindSenderUserAsync("MustMail__Mail__NotificationSenderAddress", config.CurrentValue.Mail.NotificationSenderAddress!);
+
+            if (notificationSenderUser is null)
+            {
+                LogNotificationSenderNotFound(config.CurrentValue.Mail.NotificationSenderAddress!);
+                return;
+            }
 
             SendMailPostRequestBody requestBody = new()
             {
@@ -30,10 +38,24 @@ namespace MustMail.App.Services.MailProcessing
                 }
             };
 
-            if (config.CurrentValue.Mail.NotifyUsersOnError == true && sender != null && sender.Address != null)
+            if (config.CurrentValue.Mail.NotifyUsersOnError == true && sender?.Address != null)
                 requestBody.Message.CcRecipients = [new() { EmailAddress = new EmailAddress { Address = sender.Address, Name = sender.Name } }];
 
-            await graphClient.Users[notificationSenderUser.UserPrincipalName].SendMail.PostAsync(requestBody);
+            ResilienceContext resilienceContext = ResilienceContextPool.Shared.Get(message.MessageId, cancellationToken);
+            try
+            {
+                await resiliencePipelineProvider.GetPipeline("graph-send").ExecuteAsync(async ctx =>
+                    await graphClient.Users[notificationSenderUser.UserPrincipalName].SendMail.PostAsync(requestBody, cancellationToken: ctx.CancellationToken),
+                    resilienceContext);
+            }
+            catch (Exception ex)
+            {
+                LogGraphSendFailed(ex, sender?.Address ?? "unknown");
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(resilienceContext);
+            }
         }
 
         private static string BuildHtmlBody(string reason, MimeMessage message, ResolvedSender? sender)
@@ -140,5 +162,11 @@ namespace MustMail.App.Services.MailProcessing
                 </html>
                 """;
         }
+
+        [LoggerMessage(EventId = 1200, Level = LogLevel.Error, Message = "Failed to send error notification email via Microsoft Graph for sender {Sender}")]
+        private partial void LogGraphSendFailed(Exception exception, string sender);
+
+        [LoggerMessage(EventId = 1201, Level = LogLevel.Error, Message = "Notification sender address '{Address}' was not found in the tenant — error notification not sent")]
+        private partial void LogNotificationSenderNotFound(string address);
     }
 }

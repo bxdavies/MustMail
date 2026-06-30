@@ -26,9 +26,6 @@ public partial class MessageStorage(IDbContextFactory<DatabaseContext> dbFactory
             if (appUser == null)
                 continue;
 
-            // If there is no message id create one
-            if (string.IsNullOrWhiteSpace(message.MessageId)) message.MessageId = MimeUtils.GenerateMessageId();
-
             // Add message to database
             appUser.Messages.Add(new Models.Message
             {

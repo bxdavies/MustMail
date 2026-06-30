@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Graph;
-using Microsoft.Graph.Models;
 using MustMail.App.Services.MailProcessing;
-using Org.BouncyCastle.Asn1.X509;
+using Polly.Registry;
 using SmtpServer;
 using System.Security.Cryptography.X509Certificates;
 
@@ -11,7 +10,7 @@ namespace MustMail.App.Services.Server;
 public partial class ServerService(
     GraphServiceClient graphClient,
     IOptionsMonitor<Configuration> config,
-    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, GraphUserLookupService graphUserLookupService, ErrorNotificationHandler errorNotificationHandler, RecipientResolver recipientResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
+    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, GraphUserLookupService graphUserLookupService, ErrorNotificationHandler errorNotificationHandler, RecipientResolver recipientResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage, ResiliencePipelineProvider<string> resiliencePipelineProvider) : BackgroundService
 {
     private SmtpServer.SmtpServer? _smtpServer;
 
@@ -85,7 +84,8 @@ public partial class ServerService(
                                                     senderResolver,
                                                     smtpAccountAuthorization,
                                                     attachmentHandler,
-                                                    messageStorage
+                                                    messageStorage,
+                                                    resiliencePipelineProvider.GetPipeline("graph-send")
                                                    ));
 
         // Register user authenticator 
