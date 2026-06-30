@@ -6,7 +6,7 @@ namespace MustMail.App.Services.MailProcessing;
 public partial class GraphUserLookupService(ILogger<GraphUserLookupService> logger, GraphServiceClient graphClient)
 {
     public async Task<Microsoft.Graph.Models.User?> FindSenderUserAsync(
-        string headerType,
+        string source,
         string senderAddress)
     {
         // Query graph for a user with the mail address, UPN, or alias matching the sender address
@@ -23,7 +23,7 @@ public partial class GraphUserLookupService(ILogger<GraphUserLookupService> logg
         // If there are no results then a user was not found
         if (users?.Value == null || users.Value.Count == 0)
         {
-            LogUserNotFound(headerType, senderAddress);
+            LogUserNotFound(source, senderAddress);
             return null;
         }
 
@@ -42,17 +42,17 @@ public partial class GraphUserLookupService(ILogger<GraphUserLookupService> logg
         // Check if the user has a mailbox
         if (user.Mail == null && user.UserPrincipalName == null)
         {
-            LogSenderTenantNoMailbox(headerType, senderAddress);
+            LogSenderTenantNoMailbox(source, senderAddress);
             return null;
         }
 
         // Check if the user has mailbox settings, this is a warning as it's possible for a user to not have any mailbox settings
         if (user.MailboxSettings == null)
         {
-            LogSenderMailboxSettingsMissing(headerType, senderAddress);
+            LogSenderMailboxSettingsMissing(source, senderAddress);
         }
 
-        LogUsingSender(headerType, senderAddress, user.DisplayName);
+        LogUsingSender(source, senderAddress, user.DisplayName);
 
         return user;
 
@@ -62,8 +62,8 @@ public partial class GraphUserLookupService(ILogger<GraphUserLookupService> logg
     [LoggerMessage(
                       EventId = 1130,
                       Level = LogLevel.Warning,
-                      Message = "Could not find a user with mail, userPrincipalName, or alias {Sender} for {HeaderType}.")]
-    private partial void LogUserNotFound(string headerType, string sender);
+                      Message = "Could not find a user with mail, userPrincipalName, or alias {Sender} for {Source}.")]
+    private partial void LogUserNotFound(string source, string sender);
 
     [LoggerMessage(
                       EventId = 1131,
@@ -71,12 +71,12 @@ public partial class GraphUserLookupService(ILogger<GraphUserLookupService> logg
                       Message = "Multiple users found for sender {Sender}: {Users}. Using the first.")]
     private partial void LogMultipleUsersFound(string sender, IEnumerable<string> users);
 
-    [LoggerMessage(EventId = 1132, Level = LogLevel.Information, Message = "Using {HeaderType} sender {Sender} ({DisplayName}) for outgoing email")]
-    private partial void LogUsingSender(string headerType, string sender, string? displayName);
+    [LoggerMessage(EventId = 1132, Level = LogLevel.Information, Message = "Sender {Sender} ({DisplayName}) verified for {Source}")]
+    private partial void LogUsingSender(string source, string sender, string? displayName);
 
-    [LoggerMessage(EventId = 1133, Level = LogLevel.Error, Message = "{HeaderType} address {Sender} has no mailbox configured in the tenant")]
-    private partial void LogSenderTenantNoMailbox(string headerType, string sender);
+    [LoggerMessage(EventId = 1133, Level = LogLevel.Error, Message = "{Source} address {Sender} has no mailbox configured in the tenant")]
+    private partial void LogSenderTenantNoMailbox(string source, string sender);
 
-    [LoggerMessage(EventId = 1134, Level = LogLevel.Warning, Message = "Mailbox settings missing for {HeaderType} address {Sender}")]
-    private partial void LogSenderMailboxSettingsMissing(string headerType, string sender);
+    [LoggerMessage(EventId = 1134, Level = LogLevel.Warning, Message = "Mailbox settings missing for {Source} address {Sender}")]
+    private partial void LogSenderMailboxSettingsMissing(string source, string sender);
 }

@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace MustMail.App.Services.MailProcessing;
 
-public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IOptionsMonitor<Configuration> config, RecipientResolver recipientsResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
+public partial class MessageHandler(ILogger<MessageHandler> logger, GraphServiceClient graphClient, IOptionsMonitor<Configuration> config, RecipientResolver recipientsResolver, ErrorNotificationHandler errorNotificationHandler, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : MessageStore
 {
     public override async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
@@ -44,35 +44,20 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
 #pragma warning restore CA1873// Avoid potentially expensive logging
         }
 
-        // Get recipients from message and SMTP transaction
-        ResolvedRecipients? recipients = recipientsResolver.ResolveRecipients(transaction, message);
-
-        // If recipients are null then we won't send the email
-        if (recipients == null)
-        {
-            LogNoRecipients();
-            return SmtpResponse.NoValidRecipientsGiven;
-        }
-
-        bool recipientsAllowed = await smtpAccountAuthorization.CheckRecipientIsAllowed(context.Authentication.User, recipients.All);
-        if (!recipientsAllowed)
-        {
-            LogRecipientsNotAllowed(context.Authentication.User);
-            return SmtpResponse.NoValidRecipientsGiven;
-        }
-
         // Get sender from message and SMTP transaction
         ResolvedSender sender = await senderResolver.ResolveSender(transaction, message);
 
         // If an SMTP response is provided return it
         if (sender.SmtpResponse != null)
         {
+            await errorNotificationHandler.Notify(sender.FailureReason, message, sender);
             return sender.SmtpResponse;
         }
 
         // These should not be null
         if (sender.Name == null || sender.Address == null || sender.User == null)
         {
+            await errorNotificationHandler.Notify("Sender resolution returned incomplete data", message, sender);
             return SmtpResponse.SyntaxError;
         }
 
@@ -80,8 +65,34 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         if (!senderAllowed)
         {
             LogSenderNotAllowed(context.Authentication.User, sender.Address);
+            await errorNotificationHandler.Notify($"Sender {sender.Address} is not permitted for SMTP account '{context.Authentication.User}'", message, sender);
             return SmtpResponse.MailboxNameNotAllowed;
         }
+
+        // Get recipients from message and SMTP transaction
+        ResolvedRecipients recipients = recipientsResolver.ResolveRecipients(transaction, message);
+
+        // If all recipients were filtered out we won't send the email
+        if (recipients.All.Count == 0)
+        {
+            LogNoRecipients();
+            string rejectedList = recipients.Rejected.Count > 0
+                ? $"Rejected by global allowed recipients list: {string.Join(", ", recipients.Rejected.Select(r => r.EmailAddress?.Address))}"
+                : "No recipients were provided";
+            await errorNotificationHandler.Notify(rejectedList, message, sender);
+            return SmtpResponse.NoValidRecipientsGiven;
+        }
+
+        List<Recipient> accountRejected = await smtpAccountAuthorization.CheckRecipientIsAllowed(context.Authentication.User, recipients.All);
+        if (accountRejected.Count > 0)
+        {
+            LogRecipientsNotAllowed(context.Authentication.User);
+            string rejectedList = string.Join(", ", accountRejected.Select(r => r.EmailAddress?.Address));
+            await errorNotificationHandler.Notify($"Recipients rejected by SMTP account '{context.Authentication.User}' allowed list: {rejectedList}", message, sender);
+            return SmtpResponse.NoValidRecipientsGiven;
+        }
+
+       
 
         List<Attachment> attachments = [];
         
@@ -157,6 +168,8 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         catch (Exception ex)
         {
             LogGraphSendFailed(ex, sender.Address);
+            string allRecipients = string.Join(", ", recipients.All.Select(r => r.EmailAddress?.Address));
+            await errorNotificationHandler.Notify($"Microsoft Graph failed to send from {sender.Address} to [{allRecipients}]: {ex.Message}", message, sender);
             return SmtpResponse.SyntaxError;
         }
 

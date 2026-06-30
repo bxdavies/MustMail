@@ -31,7 +31,8 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
                 LogMailFromMissingTrustFromDisabled();
                 return new ResolvedSender
                 {
-                    SmtpResponse = SmtpResponse.SyntaxError
+                    SmtpResponse = SmtpResponse.SyntaxError,
+                    FailureReason = "MAIL FROM header was missing and TrustFrom is disabled"
                 };
             }
 
@@ -50,7 +51,8 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
                 LogFromHeaderMissing();
                 return new ResolvedSender
                 {
-                    SmtpResponse = SmtpResponse.MailboxUnavailable
+                    SmtpResponse = SmtpResponse.MailboxUnavailable,
+                    FailureReason = "MAIL FROM header was missing and no usable From header address was found"
                 };
             }
 
@@ -92,7 +94,8 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
                 LogSenderRejected(senderAddress);
                 return new ResolvedSender
                 {
-                    SmtpResponse = SmtpResponse.SyntaxError
+                    SmtpResponse = SmtpResponse.SyntaxError,
+                    FailureReason = $"Sender {senderAddress} is not in the global allowed senders list"
                 };
             }
         }
@@ -110,7 +113,8 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
             {
                 return new ResolvedSender
                 {
-                    SmtpResponse = SmtpResponse.MailboxUnavailable
+                    SmtpResponse = SmtpResponse.MailboxUnavailable,
+                    FailureReason = $"Sender {senderAddress} was not found in the Microsoft 365 tenant"
                 };
             }
         }
@@ -119,7 +123,8 @@ public partial class SenderResolver(ILogger<SenderResolver> logger, GraphUserLoo
             LogSenderTenantLookupFailed(error, type, senderAddress);
             return new ResolvedSender
             {
-                SmtpResponse = SmtpResponse.SyntaxError
+                SmtpResponse = SmtpResponse.SyntaxError,
+                FailureReason = $"Microsoft Graph lookup failed for {type} address {senderAddress}: {error.Message}"
             };
         }
 
@@ -161,4 +166,5 @@ public class ResolvedSender
     public string? Address { get; set; }
     public Microsoft.Graph.Models.User? User { get; set; }
     public SmtpResponse? SmtpResponse { get; set; }
+    public string? FailureReason { get; set; }
 }

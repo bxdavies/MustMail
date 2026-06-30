@@ -6,7 +6,7 @@ namespace MustMail.App.Services.MailProcessing;
 
 public partial class RecipientResolver(ILogger<RecipientResolver> logger, IOptionsMonitor<Configuration> config)
 {
-    public ResolvedRecipients? ResolveRecipients(SmtpServer.IMessageTransaction transaction, MimeMessage message)
+    public ResolvedRecipients ResolveRecipients(SmtpServer.IMessageTransaction transaction, MimeMessage message)
     {
         
         // Extract envelope recipients from the SMTP transaction
@@ -180,18 +180,13 @@ public partial class RecipientResolver(ILogger<RecipientResolver> logger, IOptio
             }
         }
 
-        // Check we have recipients
-        if (allRecipients.Count == 0)
-        {
-            return null;
-        }
-
         return new ResolvedRecipients
         {
             All = allRecipients,
             To = toRecipients,
             Cc = ccRecipients,
-            Bcc = bccRecipients
+            Bcc = bccRecipients,
+            Rejected = rejectedRecipients
         };
     }
 
@@ -215,4 +210,5 @@ public class ResolvedRecipients
     public List<Recipient> Cc { get; init; } = [];
     public List<Recipient> Bcc { get; init; } = [];
     public List<Recipient> All { get; init; } = [];
+    public List<Recipient> Rejected { get; init; } = [];
 }

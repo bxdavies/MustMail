@@ -51,6 +51,10 @@ public class MailConfiguration
     public List<string> AllowedSenders { get; set; } = [];
     public List<string> AllowedRecipients { get; set; } = [];
     public bool FooterBranding { get; set; } = true;
+    public string? NotificationSenderAddress { get; set; }
+    public string? NotificationRecipientAddress { get; set; }
+    public bool NotifyUsersOnError { get; set; } = true;
+
 }
 
 public class CertificateConfiguration

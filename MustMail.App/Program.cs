@@ -483,6 +483,9 @@ builder.Services.AddSingleton<AttachmentHandler>();
 // Add message storage for storing messages on disk and in the DB if message storage is enabled
 builder.Services.AddSingleton<MessageStorage>();
 
+// Add error notification handler for notify the notication address and users (if enabled) of an error
+builder.Services.AddSingleton<ErrorNotificationHandler>();
+
 // If we are storing emails create the cleanup job
 if (mustMailConfiguration.Mail.StoreMail)
 {

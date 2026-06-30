@@ -41,6 +41,14 @@ public static class Helpers
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__OpenIdConnect__ClientSecret")))
             throw new InvalidOperationException(
                                                 "The environment variable 'MustMail__OpenIdConnect__ClientSecret' must be set.");
+
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__Mail__NotificationSenderAddress")))
+            throw new InvalidOperationException(
+                                                "The environment variable 'MustMail__Mail__NotificationSenderAddress' must be set.");
+
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MustMail__Mail__NotificationRecipientAddress")))
+            throw new InvalidOperationException(
+                                                "The environment variable 'MustMail__Mail__NotificationRecipientAddress' must be set.");
     }
 
     public static string ToPlaceholder(string? value)

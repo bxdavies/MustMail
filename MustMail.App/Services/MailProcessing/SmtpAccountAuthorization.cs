@@ -36,15 +36,17 @@ namespace MustMail.App.Services.MailProcessing
             return true;
         }
 
-        public async Task<bool> CheckRecipientIsAllowed(string accountName, List<Recipient> recipients)
+        public async Task<List<Recipient>> CheckRecipientIsAllowed(string accountName, List<Recipient> recipients)
         {
             await using DatabaseContext dbContext = await dbFactory.CreateDbContextAsync();
 
             SMTPAccount account = dbContext.SMTPAccount.Include(a => a.AllowedRecipients).Single(a => a.Username == accountName);
 
+            List<Recipient> rejected = [];
+
             foreach (Recipient recipient in recipients)
             {
-                // If recipient restrictions exist and the recipient is not allowed, return false
+                // If recipient restrictions exist and the recipient is not allowed, add to rejected
                 if (account.AllowedRecipients.Count != 0 && !account.AllowedRecipients.Any(allowed =>
                 {
                     // Wildcard domain match (*.example.com)
@@ -62,11 +64,11 @@ namespace MustMail.App.Services.MailProcessing
                         StringComparison.OrdinalIgnoreCase);
                 }))
                 {
-                    return false;
+                    rejected.Add(recipient);
                 }
             }
 
-            return true;
+            return rejected;
         }
     }
 }

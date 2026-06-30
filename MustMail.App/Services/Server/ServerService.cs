@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using MustMail.App.Services.MailProcessing;
 using Org.BouncyCastle.Asn1.X509;
 using SmtpServer;
@@ -10,7 +11,7 @@ namespace MustMail.App.Services.Server;
 public partial class ServerService(
     GraphServiceClient graphClient,
     IOptionsMonitor<Configuration> config,
-    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, RecipientResolver recipientResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
+    ILogger<ServerService> logger, IDbContextFactory<DatabaseContext> dbFactory, ILoggerFactory loggerFactory, GraphUserLookupService graphUserLookupService, ErrorNotificationHandler errorNotificationHandler, RecipientResolver recipientResolver, SenderResolver senderResolver, SmtpAccountAuthorization smtpAccountAuthorization, AttachmentHandler attachmentHandler, MessageStorage messageStorage) : BackgroundService
 {
     private SmtpServer.SmtpServer? _smtpServer;
 
@@ -40,7 +41,11 @@ public partial class ServerService(
             throw new InvalidOperationException(
                 "Invalid certificate format specified in configuration. Valid values are 'PFX' and 'PEM'.");
         }
-       
+
+
+        _ = await graphUserLookupService.FindSenderUserAsync("MustMail__Mail__NotificationSenderAddress", config.CurrentValue.Mail.NotificationSenderAddress!) ?? throw new InvalidOperationException("You must provide a valid Notification Sender Address that exists in your tenant!");
+        LogRelayErrorSenderAndRecipient(config.CurrentValue.Mail.NotificationSenderAddress!, config.CurrentValue.Mail.NotificationRecipientAddress!);
+
         // SMTP Server options
         SmtpServerOptionsBuilder smtpBuilder = new SmtpServerOptionsBuilder()
             .ServerName(config.CurrentValue.Smtp.Host)
@@ -76,6 +81,7 @@ public partial class ServerService(
                                                     graphClient,
                                                     config,
                                                     recipientResolver,
+                                                    errorNotificationHandler,
                                                     senderResolver,
                                                     smtpAccountAuthorization,
                                                     attachmentHandler,
@@ -128,25 +134,31 @@ public partial class ServerService(
     private partial void LogLoadingCertificate(string path);
 
     [LoggerMessage(
-                      EventId = 1004,
+                    EventId = 1004,
+                    Level = LogLevel.Debug,
+                    Message = "Using {Sender} to send MustMail / relay errors to {Recipient} and users (if enabled)")]
+    private partial void LogRelayErrorSenderAndRecipient(string sender, string recipient);
+
+    [LoggerMessage(
+                      EventId = 1005,
                       Level = LogLevel.Debug,
                       Message = "Registering SMTP pipeline handlers")]
     private partial void LogRegisteringHandlers();
 
     [LoggerMessage(
-                      EventId = 1005,
+                      EventId = 1006,
                       Level = LogLevel.Information,
                       Message = "SMTP server started on {Host} (ports: {Ports})")]
     private partial void LogSmtpStarted(string host, IEnumerable<int> ports);
 
     [LoggerMessage(
-                      EventId = 1006,
+                      EventId = 1007,
                       Level = LogLevel.Information,
                       Message = "Stopping SMTP server")]
     private partial void LogSmtpStopping();
 
     [LoggerMessage(
-                      EventId = 1007,
+                      EventId = 1008,
                       Level = LogLevel.Information,
                       Message = "SMTP server stopped")]
     private partial void LogSmtpStopped();
