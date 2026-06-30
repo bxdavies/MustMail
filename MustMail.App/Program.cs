@@ -60,7 +60,7 @@ if (!File.Exists(appSettingsPath))
 }
 
 // Load the configuration from the JSON file first then override with any environment variables
-builder.Configuration.AddJsonFile(appSettingsPath).AddEnvironmentVariables("MustMail__");
+builder.Configuration.AddJsonFile(appSettingsPath, optional: false, reloadOnChange: true).AddEnvironmentVariables("MustMail__");
 
 // Create logger using default settings, appsettings.json and environment files will override this
 LoggerConfiguration loggerConfig = new LoggerConfiguration()
@@ -509,7 +509,12 @@ if (mustMailConfiguration.Mail.StoreMail)
 }
 
 // Add MudBlazor services
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Text;
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+    config.SnackbarConfiguration.BackgroundBlurred = true;
+});
 
 // Add MudBlazor Extensions services
 builder.Services.AddMudExtensions();

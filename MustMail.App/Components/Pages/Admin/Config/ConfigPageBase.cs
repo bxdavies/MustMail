@@ -1,6 +1,7 @@
 using KellermanSoftware.CompareNetObjects;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph.Models;
 using Microsoft.JSInterop;
 using System.Text.Json;
@@ -80,6 +81,27 @@ public partial class ConfigPageBase : ComponentBase
             JsonSerializer.Serialize(Configuration, JsonDefaults.Options));
 
         _ = Snackbar.Add("Settings saved successfully.", Severity.Success);
+
+        CompareLogic compareLogic = new(new ComparisonConfig { MaxDifferences = 10 });
+        ComparisonResult result = compareLogic.Compare(Configuration, RawConfiguration.Get<Configuration>());
+
+        if(!result.AreEqual)
+        {
+            bool onlySenderOrRecipientChanges = result.Differences.All(x =>
+               x.PropertyName == "Mail.AllowedSenders" ||
+               x.PropertyName == "AllowedRecipients");
+
+            if (!onlySenderOrRecipientChanges)
+            {
+                _ = Snackbar.Add(new MarkupString("A restart is required for setting changes to take effect.<br> This message will persist until the application is restarted."), Severity.Warning, config =>
+                {
+                    config.RequireInteraction = true;
+                    config.ShowCloseIcon = false;
+                    config.Icon = @Icons.Material.Filled.RestartAlt;
+                });
+            }
+
+        }
     }
 
     protected async Task CopyToClipboard(string value)
