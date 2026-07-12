@@ -35,8 +35,11 @@ Features:
 - Local mail storage
 - Web interface for browsing messages and configuring the application 
 - OAuth authentication with Microsoft Graph for outbound delivery
-- Restrict allowed sender or recipient addresses
+- Restrict allowed sender or recipient addresses globally or at account level
 - Send from any user or shared mailbox in your Microsoft 365 Tenant including shared mailboxes and aliases
+- User and IP rate limiting
+- Retry failed email deliveries with backoff
+- Send delivery errors to a notification address and users (if enabled) as well as storing in the logs
 
 <img src=".images/architecture.excalidraw.svg">
 
@@ -44,15 +47,23 @@ Features:
 
 ## Screenshots
 <p align="center">
-  <img src=".images/home.png" width="45%" />
-  <img src=".images/admin.png" width="45%" />
-  
+  <img src=".images/MustMail - Home.png" width=100%" />
 </p>
 
 <p align="center">
- <img src=".images/profile.png" width="45%" />
+  <img src=".images/MustMail - Profile.png" width="45%" />
 </p>
 
+
+<p align="center">
+ <img src=".images/MustMail - Admin.png" width="45%" />
+  <img src=".images/MustMail - SMTP Accounts.png" width="45%" />
+   <img src=".images/MustMail - Users.png" width="45%" />
+    <img src=".images/MustMail - Configuration - Allowed Recipients.png" width="45%" />
+</p>
+
+- Light mode is also available 
+- And application is fully responsive on mobile 
 ## Roadmap
 
 ### v0.3.1
@@ -67,9 +78,12 @@ Features:
 ### v0.5.x 
 - ~~Improve To and From restrictions, for example by supporting wildcard patterns such as *@example.com~~ Implemented
 
+### v0.5.5
+- ~~Add the ability to restrict an SMTP account to a specific sender or recipients~~ Implemented
+
 ### v0.6.x 
-- Retry failed email deliveries with backoff
-- Send delivery errors to a notification address instead of only writing them to the logs
+- ~~Retry failed email deliveries with backoff~~
+- ~~Send delivery errors to a notification address instead of only writing them to the logs~~
 
 ### v0.7.x
 - Add support for the Gmail Send API, subject to further research
@@ -111,7 +125,7 @@ Features:
 4. Navigate to 'API permissions' pane and click 'Add a permission'.
 5. Choose 'Microsoft Graph', then select 'Application permissions', then find `Mail.Send` and tick it. Do the same for `User.Read.All` and `MailboxSettings.Read`. Finally, press 'Add permissions'.
 6. Grant admin consent by clicking 'Grant admin consent for Tenant Name' (where Tenant Name is the name of your Microsoft 365 tenant). Hit 'Yes' at confirmation.
-7. Navigate to 'Certificates & secrets' pane, choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value. Copy the secret value and set the environment variable `Graph__ClientSecret` to this value.
+7. Navigate to 'Certificates & secrets' pane, choose the 'Client secrets' tab, then click 'New client secret', enter a description and set expiry to 24 months or a custom value. Copy the secret value and set the environment variable `MustMail__Graph__ClientSecret` to this value.
    
 > [!TIP]
 > Set a reminder in your calendar now for 24 months' time to renew and update this secret.
@@ -121,7 +135,7 @@ Features:
 > [!IMPORTANT]
 > The secret value is only displayed once.
 
-9.  Navigate to the 'Overview' pane and copy the 'Application (client) ID' and set the environment variable `Graph__ClientId` to this value. Copy the 'Directory (tenant) ID' and set the environment variable `Graph__TenantId` to this value
+9.  Navigate to the 'Overview' pane and copy the 'Application (client) ID' and set the environment variable `MustMail__Graph__ClientId` to this value. Copy the 'Directory (tenant) ID' and set the environment variable `MustMail__Graph__TenantId` to this value
 
 ## IDP Configuration
 To use MustMail you must provide an Identity provider that supports OpenID Connect (OIDC). Instructions for Keycloak and Microsoft Entra are provided but any identity provider should work. 
@@ -130,7 +144,7 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 [Keycloak](https://www.keycloak.org/) is an Open Source Identity and Access Management.This section details how to use it with MustMail.
 
 1. Navigate to the Administration Console, click 'Clients' from the left hand side and then click 'Create client'.
-2. Set name. Set the environment variable `OpenIdConnect__ClientId` to this value.
+2. Set name. Set the environment variable `MustMail__OpenIdConnect__ClientId` to this value.
 <img src=".images\keycloak-1.png">
 
 3. Enable 'Client authentication'.
@@ -139,10 +153,10 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 4. Set 'Root URL', 'Valid redirect URLs' and 'Web origins'. Redirect URL should be address followed by /signin-oidc
 <img src=".images\keycloak-3.png">
 
-5. Once the client has been created, click 'Clients' from the left hand side, find the client, and switch to the Credentials tab. Copy the client secret. Set the environment variable `OpenIdConnect__ClientSecret` to this value.
+5. Once the client has been created, click 'Clients' from the left hand side, find the client, and switch to the Credentials tab. Copy the client secret. Set the environment variable `MustMail__OpenIdConnect__ClientSecret` to this value.
 <img src=".images\keycloak-4.png">
 
-6. Set the environment variable `OpenIdConnect__Authority` to this value `YOURKEYCLOAKADDRESS/realms/YOURREALMNAME/`. Replacing `YOURKEYCLOAKADDRESS` and `YOURREALMNAME` respectively. 
+6. Set the environment variable `MustMail__OpenIdConnect__Authority` to this value `YOURKEYCLOAKADDRESS/realms/YOURREALMNAME/`. Replacing `YOURKEYCLOAKADDRESS` and `YOURREALMNAME` respectively. 
 
 ### Microsoft Entra ID
 [Microsoft Entra ID](https://www.microsoft.com/en-gb/security/business/identity-access/microsoft-entra-id/) is a cloud-based identity and access management solution. This section details how to use it with MustMail.
@@ -154,7 +168,7 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 3. Set the app name, select web in the 'Select a platform' dropdown and set the Redirect URI. Redirect URI should be address followed by /signin-oidc.
 <img src=".images\entraid-1.png">
 
-4. Navigate to the 'Certificates and secrets' pane. Change to the 'Client secrets' tab and click 'New client secret'. Set a description and expiry date and click 'Add'. Copy the secret value and set the environment variable `OpenIdConnect__ClientSecret` to this value.
+4. Navigate to the 'Certificates and secrets' pane. Change to the 'Client secrets' tab and click 'New client secret'. Set a description and expiry date and click 'Add'. Copy the secret value and set the environment variable `MustMail__OpenIdConnect__ClientSecret` to this value.
 <img src=".images\entraid-2.png">
 
 > [!IMPORTANT]
@@ -166,19 +180,19 @@ To use MustMail you must provide an Identity provider that supports OpenID Conne
 > [!IMPORTANT]
 > You will get a popup saying "Some of these claims (email) require OpenId Connect scopes to be configured through the API permissions page or by checking the box below. Learn more". **Tick the box 'Turn on the Microsoft Graph email permission (required for claims to appear in token)'.**
 
-6.  Navigate to the 'Overview' pane and copy the 'Application (client) ID'. Set the environment variable `OpenIdConnect__ClientId` to this value.
-7.  Click 'Endpoints' and copy the 'Authority URL (Accounts in this organizational directory only)'. Set the environment variable `OpenIdConnect__Authority` to this value.
+6.  Navigate to the 'Overview' pane and copy the 'Application (client) ID'. Set the environment variable `MustMail__OpenIdConnect__ClientId` to this value.
+7.  Click 'Endpoints' and copy the 'Authority URL (Accounts in this organizational directory only)'. Set the environment variable `MustMail__OpenIdConnect__Authority` to this value.
 
 ### Generic
 This section details for how to use an Identity provider not listed. 
 
-The `OpenIdConnect__Authority` environment variable should be set to base domain, MustMail will automatically perform OpenID discovery on `/.well-known/openid-configuration`
+The `MustMail__OpenIdConnect__Authority` environment variable should be set to base domain, MustMail will automatically perform OpenID discovery on `/.well-known/openid-configuration`
 
 Redirect URL should be set to /signin-oidc
 
-Client ID and Client Secret must be created in the provider and then set with the `OpenIdConnect__ClientId` and `OpenIdConnect__ClientSecret` environment variables.
+Client ID and Client Secret must be created in the provider and then set with the `MustMail__OpenIdConnect__ClientId` and `MustMail__OpenIdConnect__ClientSecret` environment variables.
 
-MustMail will use the claim `name` by default to fetch the user's name, however this can be overridden with  `OpenIdConnect__NameClaim` environment variable.
+MustMail will use the claim `name` by default to fetch the user's name, however this can be overridden with  `MustMail__OpenIdConnect__NameClaim` environment variable.
 
 ## Running MustMail
 
@@ -193,14 +207,16 @@ Run MustMail in a container with these simple steps.
 Override any environment variable below to match your setup.
 ```bash
 docker run --name MustMail \
--e Graph__TenantId=your-tenant-id \
--e Graph__ClientId=your-client-id \
--e Graph__ClientSecret=your-client-secret \
--e OpenIdConnect__Authority=https://keycloak.example.com/realms/master/ \
--e OpenIdConnect__ClientId=mustmail \
--e OpenIdConnect__ClientSecret=your-oidc-client-secret \
+-e MustMail__Graph__TenantId=your-tenant-id \
+-e MustMail__Graph__ClientId=your-client-id \
+-e MustMail__Graph__ClientSecret=your-client-secret \
+-e MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/ \
+-e MustMail__OpenIdConnect__ClientId=mustmail \
+-e MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret \
+-e MustMail__Mail__NotificationSenderAddress=servers@example.com \
+-e MustMail__Mail__NotificationRecipientAddress=admin@example.com \
 -v mustmail-data:/app/Data \
--p 8080:8080 \
+-p 5000:5000 \
 -p 465:465 \
 -p 587:587 \
 -d ghcr.io/bxdavies/mustmail
@@ -214,12 +230,14 @@ services:
     image: ghcr.io/bxdavies/mustmail
     container_name: mustmail
     environment:
-      - Graph__TenantId=your-tenant-id
-      - Graph__ClientId=your-client-id
-      - Graph__ClientSecret=your-client-secret
-      - OpenIdConnect__Authority=https://keycloak.example.com/realms/master/
-      - OpenIdConnect__ClientId=mustmail
-      - OpenIdConnect__ClientSecret=your-oidc-client-secret
+      - MustMail__Graph__TenantId=your-tenant-id
+      - MustMail__Graph__ClientId=your-client-id
+      - MustMail__Graph__ClientSecret=your-client-secret
+      - MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/
+      - MustMail__OpenIdConnect__ClientId=mustmail
+      - MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret
+      - MustMail__Mail__NotificationSenderAddress=servers@example.com
+      - MustMail__Mail__NotificationRecipientAddress=admin@example.com
     volumes:
       - ./data/mustmail:/app/Data
     ports:
@@ -229,20 +247,22 @@ services:
     restart: unless-stopped
 ```
 
-Application will start the web interface on port 8080 by default and SMTP server on 465 and 587 using TLS and authentication
+Application will start the web interface on port 5000 by default and SMTP server on 465 and 587 using TLS and authentication
 
 ### Windows
 1. Download the binary release `MustMail-v0.0.0-win-x64.zip` (where 0.0.0 is the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
 2. Extract the zip file to `C:\MustMail`.
 3. Open a Command Prompt window and use the following commands to set the environment variables 
 ```
-setx Graph__TenantId "your-tenant-id"
-setx Graph__ClientId "your-client-id"
-setx Graph__ClientSecret "your-client-secret"
-setx OpenIdConnect__Authority "https://keycloak.example.com/realms/master/"
-setx OpenIdConnect__ClientId "mustmail"
-setx OpenIdConnect__ClientSecret "your-oidc-client-secret"
-setx Certificate__Password "password"
+setx MustMail__Graph__TenantId "your-tenant-id"
+setx MustMail__Graph__ClientId "your-client-id"
+setx MustMail__Graph__ClientSecret "your-client-secret"
+setx MustMail__OpenIdConnect__Authority "https://keycloak.example.com/realms/master/"
+setx MustMail__OpenIdConnect__ClientId "mustmail"
+setx MustMail__OpenIdConnect__ClientSecret "your-oidc-client-secret"
+setx MustMail__Certificate__Password "password"
+setx MustMail__Mail__NotificationSenderAddress=servers@example.com
+setx MustMail__Mail__NotificationRecipientAddress=admin@example.com
 
 ```
 4. Launch the executable, approve the firewall prompt, and test with [SmtpTest ](https://www.softpedia.com/get/Internet/E-mail/Mail-Utilities/SmtpTest.shtml).
@@ -281,13 +301,16 @@ ExecStart=/opt/MustMail/MustMail
 Restart=always
 RestartSec=10
 
-Environment="Graph__TenantId=your-tenant-id"
-Environment="Graph__ClientId=your-client-id"
-Environment="Graph__ClientSecret=your-client-secret"
+Environment="MustMail__Graph__TenantId=your-tenant-id"
+Environment="MustMail__Graph__ClientId=your-client-id"
+Environment="MustMail__Graph__ClientSecret=your-client-secret"
 
-Environment="OpenIdConnect__Authority=https://keycloak.example.com/realms/master/"
-Environment="OpenIdConnect__ClientId=mustmail"
-Environment="OpenIdConnect__ClientSecret=your-oidc-client-secret"
+Environment="MustMail__OpenIdConnect__Authority=https://keycloak.example.com/realms/master/"
+Environment="MustMail__OpenIdConnect__ClientId=mustmail"
+Environment="MustMail__OpenIdConnect__ClientSecret=your-oidc-client-secret"
+
+Environment="MustMail__Mail__NotificationSenderAddress=servers@example.com"
+Environment=" MustMail__Mail__NotificationRecipientAddress=admin@example.com"
 
 [Install]
 WantedBy=multi-user.target
@@ -303,7 +326,7 @@ Application will start the web interface on port 5000 by default and SMTP server
 
 ## First run
 > [!TIP]
-> You can skip this step by setting the environment variable `Bootstrap__SMTPAccounts=username:password|username2:password2` (Accounts are created only if they do not already exist)
+> You can skip this step by setting the environment variable `MustMail__Bootstrap__SMTPAccounts=username:password|username2:password2` (Accounts are created only if they do not already exist)
 
 Before we can use MustMail we need to login and create a SMTP account. Navigate to the web app, you should be redirect to your identity provider to login.  The first account to sign in is automatically assigned an admin role (more users can be set to admin's from the Admin page).
 
@@ -425,13 +448,15 @@ For example, the following setting in `appsettings.json`, `Smtp:Host` becomes th
 
 For security reasons, the following settings must be provided using environment variables and cannot be loaded from appsettings.json:
 
-- `Graph__TenantId`
-- `Graph__ClientId`
-- `Graph__ClientSecret`
-- `OpenIdConnect__Authority`
-- `OpenIdConnect__ClientId`
-- `OpenIdConnect__ClientSecret`
-- `Certificate__Password` (required only when Certificate__Format is set to PFX, which is the default on Windows)
+- `MustMail__Graph__TenantId`
+- `MustMail__Graph__ClientId`
+- `MustMail__Graph__ClientSecret`
+- `MustMail__OpenIdConnect__Authority`
+- `MustMail__OpenIdConnect__ClientId`
+- `MustMail__OpenIdConnect__ClientSecret`
+- `MustMail__Certificate__Password` (required only when MustMail__Certificate__Format is set to PFX, which is the default on Windows)
+- `MustMail__Mail__NotificationSenderAddress`
+- `MustMail__Mail__NotificationRecipientAddress`
 
 MustMail will fail to start if any required environment variables are missing.
 
@@ -447,40 +472,40 @@ By default MustMail uses an SQLite database stored in the Data directory. When r
 Example connection strings are provided below, set the environment variable and MustMail will create the tables. 
 
 ```
-ConnectionStrings__Sqlite=Data Source=/path/mounted/databasename.db
-ConnectionStrings__Postgres=Host=postgresql;Port=5432;Database=mustmail;Username=mustmail;Password=password
-ConnectionStrings__MySQL=Server=mysql;Port=3306;Database=mustmail;Uid=mustmail;Pwd=password;
-ConnectionStrings__SqlServer=Server=sqlserver;Database=mustmail;User Id=mustmail;Password=password
-ConnectionStrings__AzureSql=Server=tcp:myserver.database.windows.net,1433;Database=mustmail;User ID=mustmail@myserver;Password=password;Trusted_Connection=False;Encrypt=True;
+MustMail__ConnectionStrings__Sqlite=Data Source=/path/mounted/databasename.db
+MustMail__ConnectionStrings__Postgres=Host=postgresql;Port=5432;Database=mustmail;Username=mustmail;Password=password
+MustMail__ConnectionStrings__MySQL=Server=mysql;Port=3306;Database=mustmail;Uid=mustmail;Pwd=password;
+MustMail__ConnectionStrings__SqlServer=Server=sqlserver;Database=mustmail;User Id=mustmail;Password=password
+MustMail__ConnectionStrings__AzureSql=Server=tcp:myserver.database.windows.net,1433;Database=mustmail;User ID=mustmail@myserver;Password=password;Trusted_Connection=False;Encrypt=True;
  ```
 
 More configuration options are available for each connection string. For detailed examples and provider-specific settings, see [ConnectionStrings.com](https://www.connectionstrings.com) or click the relevant database link above.
 
 ### Certificate  
-By default, MustMail will manage and create a self-signed certificate and store it in the data folder. Setting `Certificate__Managed=False` allows you to provide your own certificate files.
+By default, MustMail will manage and create a self-signed certificate and store it in the data folder. Setting `MustMail__Certificate__Managed=False` allows you to provide your own certificate files.
 
 The certificate format is automatically detected based on the operating system:
 
 * On Windows, the default format is `PFX`
 * On Linux/macOS, the default format is `PEM`
 
-You can override this with `Certificate__Format=PEM` or `Certificate__Format=PFX`.
+You can override this with `MustMail__Certificate__Format=PEM` or `MustMail__Certificate__Format=PFX`.
 
 PEM example:
 
 ```
-Certificate__Managed=False
-Certificate__Format=PEM
-Certificate__PEMCertPath=
-Certificate__PEMKeyPath=
+MustMail__Certificate__Managed=False
+MustMail__Certificate__Format=PEM
+MustMail__Certificate__PEMCertPath=
+MustMail__Certificate__PEMKeyPath=
 ```
 
 PFX example:
 
 ```
-Certificate__Managed=False
-Certificate__Format=PFX
-Certificate__PFXPath=
+MustMail__Certificate__Managed=False
+MustMail__Certificate__Format=PFX
+MustMail__Certificate__PFXPath=
 ```
 
 ### Logging
@@ -512,7 +537,7 @@ Configure a file logging sink in Serilog.
 ```json
 {
   "AllowedHosts": "*",
-  "Urls": "https://localhost:5001/;http://localhost:5000/",
+  "Urls": "http://localhost:5000/",
   "Smtp": {
     "Host": "localhost",
     "AllowInsecure": false,
@@ -520,12 +545,9 @@ Configure a file logging sink in Serilog.
     "ImplicitTLSPort": 465,
     "StartTLSPort": 587
   },
-  "OpenIdConnect": {
-    "NameClaim": "name"
-  },
-  "MustMail": {
+  "Mail": {
     "TrustFrom": true,
-    "StoreEmails": true,
+    "StoreMail": true,
     "RetentionDays": 7,
     "AllowedSenders": [],
     "AllowedRecipients": [],
