@@ -2,6 +2,7 @@
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MimeKit;
+using System.Net.Sockets;
 
 namespace MustMail.Tests;
 
@@ -41,8 +42,27 @@ public class Graph
 
     private static async Task<SmtpClient> ConnectClientAsync(int port)
     {
-        SmtpClient client = new();
-        client.ServerCertificateValidationCallback = (_, _, _, _) => true;
+        DateTime end = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+
+        while (DateTime.UtcNow < end)
+        {
+            try
+            {
+                using TcpClient tcp = new();
+                await tcp.ConnectAsync("127.0.0.1", port);
+                break;
+            }
+            catch (SocketException)
+            {
+                await Task.Delay(100);
+            }
+        }
+
+        SmtpClient client = new()
+        {
+            Timeout = 10000,
+            ServerCertificateValidationCallback = (_, _, _, _) => true
+        };
 
         SecureSocketOptions socketOptions = port switch
         {
@@ -51,8 +71,7 @@ public class Graph
             _ => SecureSocketOptions.Auto
         };
 
-        await client.ConnectAsync("localhost", port, socketOptions);
-        client.Timeout = 10000;// 10 seconds
+        await client.ConnectAsync("127.0.0.1", port, socketOptions);
         return client;
     }
 
