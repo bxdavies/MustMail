@@ -29,7 +29,7 @@ public partial class MessageStorage(IDbContextFactory<DatabaseContext> dbFactory
             // Add message to database
             appUser.Messages.Add(new Models.Message
             {
-                Id = message.MessageId,
+                Id = message.MessageId!,
                 SenderName = sender.Name!,
                 SenderEmail = sender.Address!,
                 Timestamp = message.Date.DateTime.ToUniversalTime(),
@@ -80,7 +80,7 @@ public partial class MessageStorage(IDbContextFactory<DatabaseContext> dbFactory
                                                                  "Data",
                                                                  "maildrop",
                                                                  appUser.Id,
-                                                                 message.MessageId,
+                                                                 message.MessageId!,
                                                                  fileName);
 
                             // Sanitize file path
@@ -105,7 +105,7 @@ public partial class MessageStorage(IDbContextFactory<DatabaseContext> dbFactory
                                                                  "Data",
                                                                  "maildrop",
                                                                  appUser.Id,
-                                                                 message.MessageId,
+                                                                 message.MessageId!,
                                                                  $"{embeddedName}.eml");
 
                             // Sanitize file path

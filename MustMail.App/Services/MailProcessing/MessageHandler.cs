@@ -55,7 +55,7 @@ public partial class MessageHandler(ILogger<MessageHandler> logger, GraphService
         // If an SMTP response is provided return it
         if (sender.SmtpResponse != null)
         {
-            await errorNotificationHandler.Notify(sender.FailureReason, message, sender, cancellationToken);
+            await errorNotificationHandler.Notify(sender.FailureReason!, message, sender, cancellationToken);
             return sender.SmtpResponse;
         }
 
