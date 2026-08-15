@@ -1,15 +1,15 @@
 <div align="center">
     <img src="https://img.shields.io/badge/.NET-5C2D91">
-    <img src="https://img.shields.io/github/languages/top/bxdavies/MustMail">
-    <img src="https://img.shields.io/github/v/release/bxdavies/MustMail">
-    <img src="https://qlty.sh/gh/bxdavies/projects/MustMail/maintainability.png">
-    <a href="https://github.com/bxdavies/mustmail/actions/workflows/run_unit_tests.yml">
-    <img src="https://github.com/bxdavies/mustmail/actions/workflows/run_unit_tests.yml/badge.svg" alt="Tests">
+    <img src="https://img.shields.io/github/languages/top/bechoforest/MustMail">
+    <img src="https://img.shields.io/github/v/release/bechoforest/MustMail">
+    <img src="https://qlty.sh/gh/bechoforest/projects/MustMail/maintainability.png">
+    <a href="https://github.com/bechoforest/mustmail/actions/workflows/run_unit_tests.yml">
+    <img src="https://github.com/bechoforest/mustmail/actions/workflows/run_unit_tests.yml/badge.svg" alt="Tests">
   </a>
 </div>
 <br />
 <div align="center">
-  <a href="https://github.com/bxdavies/MustMail">
+  <a href="https://github.com/bechoforest/MustMail">
     <img src=".images/logo.png" alt="Logo" width="200" height="200">
   </a>
 </div>
@@ -17,11 +17,11 @@
 <p align="center">
     MustMail is a small SMTP server that receives emails and then sends them using Microsoft Graph.
     <br>
-    <a href="https://github.com/bxdavies/MustMail/issues">Report Bug</a>
+    <a href="https://github.com/bechoforest/MustMail/issues">Report Bug</a>
     ·
-    <a href="https://github.com/bxdavies/MustMail/discussions">Request Feature</a>
+    <a href="https://github.com/bechoforest/MustMail/discussions">Request Feature</a>
     ·
-    <a href="https://github.com/bxdavies/MustMail/discussions">Get Support</a>
+    <a href="https://github.com/bechoforest/MustMail/discussions">Get Support</a>
 </p>
 
 ## About
@@ -219,7 +219,7 @@ docker run --name MustMail \
 -p 5000:5000 \
 -p 465:465 \
 -p 587:587 \
--d ghcr.io/bxdavies/mustmail
+-d ghcr.io/bechoforest/mustmail
 ```
 
 #### Docker compose
@@ -227,7 +227,7 @@ Use Docker Compose for easier management. Fill in your values and you’re ready
 ```yml
 services:
   mustmail:
-    image: ghcr.io/bxdavies/mustmail
+    image: ghcr.io/bechoforest/mustmail
     container_name: mustmail
     environment:
       - MustMail__Graph__TenantId=your-tenant-id
@@ -250,7 +250,7 @@ services:
 Application will start the web interface on port 5000 by default and SMTP server on 465 and 587 using TLS and authentication
 
 ### Windows
-1. Download the binary release `MustMail-v0.0.0-win-x64.zip` (where 0.0.0 is the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
+1. Download the binary release `MustMail-v0.0.0-win-x64.zip` (where 0.0.0 is the latest version) from [here](https://github.com/bechoforest/MustMail/releases/latest).
 2. Extract the zip file to `C:\MustMail`.
 3. Open a Command Prompt window and use the following commands to set the environment variables 
 ```
@@ -277,7 +277,7 @@ setx MustMail__Mail__NotificationRecipientAddress=admin@example.com
 Application will start the web interface on port 5000 by default and SMTP server on 465 and 587 using TLS and authentication
 
 #### Linux (untested)
-1. Download the binary release `MustMail-v0.0.0-linux-x64.tar.gz` (replace `0.0.0` with the latest version) from [here](https://github.com/bxdavies/MustMail/releases/latest).
+1. Download the binary release `MustMail-v0.0.0-linux-x64.tar.gz` (replace `0.0.0` with the latest version) from [here](https://github.com/bechoforest/MustMail/releases/latest).
 2. Extract the archive to `/opt/MustMail` (you may need sudo):
 ```bash
 sudo mkdir -p /opt/MustMail

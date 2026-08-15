@@ -94,7 +94,7 @@ namespace MustMail.App.Services.MailProcessing
                         <!-- Header -->
                         <tr>
                           <td style="padding:28px 36px;text-align:center;">
-                            <img src="https://raw.githubusercontent.com/bxdavies/MustMail/refs/heads/main/.images/logo-transparent.png"> </img>
+                            <img src="https://raw.githubusercontent.com/bechoforest/MustMail/refs/heads/main/.images/logo-transparent.png"> </img>
                           </td>
                         </tr>
 
