@@ -336,6 +336,7 @@ builder.Services.AddAuthentication(options => {
         options.ClientSecret = mustMailConfiguration.OpenIdConnect.ClientSecret;
         options.Scope.Add("openid");
         options.Scope.Add("profile");
+        options.Scope.Add("email");
         options.TokenValidationParameters.NameClaimType = mustMailConfiguration.OpenIdConnect.NameClaim;
         options.ResponseType = OpenIdConnectResponseType.Code;
         options.Events = new OpenIdConnectEvents
